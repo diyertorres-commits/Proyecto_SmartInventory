@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition>
+    <!---Header del Proyecto -->
+    <div class="card">
+        <h:form>
+            <p:growl id="messages" showDetail="true"/>
+
+            <p:toolbar>
+                <p:toolbarGroup>
+                    <p:commandButton type="button" value="New" icon="pi pi-file" styleClass="mr-2" />
+                    <p:commandButton type="button" value="Open" icon="pi pi-folder-open" styleClass="ui-button-success" />
+
+                    <i class="pi pi-bars px-2"/>
+
+                    <p:commandButton type="button" title="Save" icon="pi pi-save" styleClass="ui-button-help mr-2" />
+                    <p:commandButton type="button" title="Print" icon="pi pi-print" styleClass="ui-button-warning mr-2"/>
+                    <p:commandButton type="button" title="Delete" icon="pi pi-trash" styleClass="ui-button-danger"/>
+                </p:toolbarGroup>
+
+                <p:toolbarGroup align="right">
+                    <p:menuButton value="Options">
+                        <p:menuitem value="Save" action="#{toolbarView.save}" update="messages" icon="pi pi-save"/>
+                        <p:menuitem value="Update" action="#{toolbarView.update}" update="messages" icon="pi pi-refresh"/>
+                        <p:menuitem value="Delete" action="#{toolbarView.delete}" ajax="false" icon="pi pi-times"/>
+                        <p:menuitem value="Homepage" url="http://www.primefaces.org" icon="pi pi-home"/>
+                    </p:menuButton>
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+    </div>
+</ui:composition>
+</html>
