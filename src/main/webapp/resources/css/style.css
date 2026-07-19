@@ -133,6 +133,13 @@ html, body {
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.si-sidebar-menu.ui-menu .ui-submenu > h3 .ui-icon {
+    margin-right: 0;
 }
 
 .si-sidebar-menu.ui-menu .ui-submenu .ui-menuitem-link {

@@ -62,23 +62,23 @@
                         </p:inputText>
                         
                         <p:selectOneMenu id="filtroCategoria" value="#{productoBean.filtroCategoria}" style="width:200px;padding:0.75rem;border-radius:8px;">
-                            <f:selectItem itemLabel="📂 Todas las categorías" itemValue="#{null}" />
+                            <f:selectItem itemLabel="Todas las categorías" itemValue="#{null}" />
                             <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat}" itemValue="#{cat}" />
                             <p:ajax listener="#{productoBean.filter()}" update="tablaProductos" />
                         </p:selectOneMenu>
                         
                         <p:selectOneMenu id="filtroEstado" value="#{productoBean.filtroEstado}" style="width:150px;padding:0.75rem;border-radius:8px;">
-                            <f:selectItem itemLabel="📊 Todos los estados" itemValue="#{null}" />
-                            <f:selectItem itemLabel="✅ Disponible" itemValue="disponible" />
-                            <f:selectItem itemLabel="⚠️ Stock bajo" itemValue="bajo" />
-                            <f:selectItem itemLabel="❌ Agotado" itemValue="agotado" />
+                            <f:selectItem itemLabel="Todos los estados" itemValue="#{null}" />
+                            <f:selectItem itemLabel="Disponible" itemValue="disponible" />
+                            <f:selectItem itemLabel="Stock bajo" itemValue="bajo" />
+                            <f:selectItem itemLabel="Agotado" itemValue="agotado" />
                             <p:ajax listener="#{productoBean.filter()}" update="tablaProductos" />
                         </p:selectOneMenu>
                     </div>
                     
                     <div style="display:flex;gap:0.5rem;">
                         <p:commandButton icon="pi pi-filter-slash" title="Limpiar filtros" action="#{productoBean.clearFilters()}" update="productsForm" styleClass="p-button-outlined p-button-secondary" />
-                        <p:button value="🛒 Adquirir Producto" icon="pi pi-shopping-cart" outcome="/purchase.xhtml" styleClass="p-button-rounded p-button-primary" />
+                        <p:button value="Adquirir Producto" icon="pi pi-shopping-cart" outcome="/purchase.xhtml" styleClass="p-button-rounded p-button-primary" />
                     </div>
                 </div>
             </div>
@@ -86,16 +86,16 @@
             <!-- ===== Tabla de productos ===== -->
             <div class="si-glass-card">
                 <p:dataTable id="tablaProductos" value="#{productoBean.productosFiltrados}" var="p"
-                             emptyMessage="📭 No se encontraron productos."
+                             emptyMessage="No se encontraron productos."
                              rows="15" paginator="true" paginatorPosition="bottom"
                              style="width:100%" filteredValue="#{productoBean.productosFiltrados}"
                              rowStyleClass="#{p.stock lt p.stockMinimo ? 'row-warning' : ''}">
                     
-                    <p:column headerText="🏷️ Código" width="10%" filterBy="#{p.codigo}" filterMatchMode="contains">
+                    <p:column headerText="Código" width="10%" filterBy="#{p.codigo}" filterMatchMode="contains">
                         <div style="font-weight:600;color:var(--si-primary);">#{p.codigo}</div>
                     </p:column>
                     
-                    <p:column headerText="📦 Producto" width="28%" filterBy="#{p.nombre}" filterMatchMode="contains">
+                    <p:column headerText="Producto" width="28%" filterBy="#{p.nombre}" filterMatchMode="contains">
                         <div style="display:flex;align-items:center;gap:1rem;">
                             <div style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--si-primary) 0%,var(--si-primary-dark) 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;">
                                 <i class="pi pi-box" />
@@ -107,18 +107,18 @@
                         </div>
                     </p:column>
                     
-                    <p:column headerText="📂 Categoría" width="12%" filterBy="#{p.categoria}" filterMatchMode="contains">
+                    <p:column headerText="Categoría" width="12%" filterBy="#{p.categoria}" filterMatchMode="contains">
                         <span style="background:var(--si-bg);padding:0.4rem 0.8rem;border-radius:6px;font-size:0.85rem;font-weight:500;color:var(--si-text-secondary);">#{p.categoria}</span>
                     </p:column>
                     
-                    <p:column headerText="📊 Stock" width="12%" sortBy="#{p.stock}">
+                    <p:column headerText="Stock" width="12%" sortBy="#{p.stock}">
                         <div style="text-align:center;">
                             <h:outputText value="#{p.stock}" style="font-weight:700;font-size:1.1rem;" styleClass="#{p.stock lt p.stockMinimo ? 'text-danger' : 'text-success'}" />
                             <div style="font-size:0.75rem;color:var(--si-text-secondary);margin-top:0.25rem;">Mín: #{p.stockMinimo}</div>
                         </div>
                     </p:column>
                     
-                    <p:column headerText="💰 Precio Venta" width="12%" sortBy="#{p.precio}">
+                    <p:column headerText="Precio Venta" width="12%" sortBy="#{p.precio}">
                         <div style="font-weight:600;color:var(--si-success);font-size:1rem;">
                             <h:outputText value="#{p.precio}">
                                 <f:convertNumber type="currency" currencySymbol="$" />
@@ -126,7 +126,7 @@
                         </div>
                     </p:column>
                     
-                    <p:column headerText="📉 Precio Compra" width="12%" sortBy="#{p.precioCompra}">
+                    <p:column headerText="Precio Compra" width="12%" sortBy="#{p.precioCompra}">
                         <div style="font-weight:500;color:var(--si-text-secondary);font-size:0.9rem;">
                             <h:outputText value="#{p.precioCompra}">
                                 <f:convertNumber type="currency" currencySymbol="$" />
@@ -134,11 +134,11 @@
                         </div>
                     </p:column>
                     
-                    <p:column headerText="🎯 Estado" width="10%">
+                    <p:column headerText="Estado" width="10%">
                         <span class="product-badge #{p.estadoCss}" style="font-size:0.8rem;padding:0.4rem 0.8rem;border-radius:6px;">#{p.estado.texto}</span>
                     </p:column>
                     
-                    <p:column headerText="⚙️ Acciones" width="14%" style="text-align:center;">
+                    <p:column headerText="Acciones" width="14%" style="text-align:center;">
                         <div style="display:flex;gap:0.5rem;justify-content:center;">
                             <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button ui-button-info"
                                             action="#{productoBean.editar(p)}" update="dialogProducto" oncomplete="PF('dialogProducto').show()" />

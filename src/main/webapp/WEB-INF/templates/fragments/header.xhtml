@@ -17,19 +17,22 @@
             <!-- Menú de navegación -->
             <h:form id="navForm">
                 <p:menu styleClass="si-sidebar-menu">
-                    <p:menuitem value="📦 Inventario" icon="pi pi-warehouse" outcome="/products.xhtml" />
-                    <p:menuitem value="💰 Ventas" icon="pi pi-money-bill" outcome="/sell.xhtml" />
-                    <p:menuitem value="🛒 Compras" icon="pi pi-shopping-cart" outcome="/purchase.xhtml" />
-                    <p:submenu label="📂 Categorías y Ajustes" icon="pi pi-box">
+                    <p:menuitem value="Inventario" icon="pi pi-warehouse" outcome="/products.xhtml" />
+                    <p:menuitem value="Ventas" icon="pi pi-money-bill" outcome="/sell.xhtml" />
+                    <p:menuitem value="Compras" icon="pi pi-shopping-cart" outcome="/purchase.xhtml" />
+
+                    <p:submenu label="Categorías y Ajustes" icon="pi pi-box">
                         <p:menuitem value="Categorías" icon="pi pi-th-large" outcome="/categories.xhtml" />
                         <p:menuitem value="Ajustes de Stock" icon="pi pi-sliders-h" outcome="/adjustments.xhtml" />
                     </p:submenu>
-                    <p:submenu label="👥 Gestión" icon="pi pi-cog">
+
+                    <p:submenu label="Gestión" icon="pi pi-cog">
                         <p:menuitem value="Proveedores" icon="pi pi-truck" outcome="/suppliers.xhtml" />
                         <p:menuitem value="Clientes" icon="pi pi-users" outcome="/customers.xhtml" />
                     </p:submenu>
-                    <p:menuitem value="📊 Reportes" icon="pi pi-file-pdf" outcome="/reports.xhtml" />
-                    <p:menuitem value="📈 Dashboard" icon="pi pi-chart-bar" outcome="/dashboard.xhtml" />
+
+                    <p:menuitem value="Reportes" icon="pi pi-file-pdf" outcome="/reports.xhtml" />
+                    <p:menuitem value="Dashboard" icon="pi pi-chart-bar" outcome="/dashboard.xhtml" />
                 </p:menu>
             </h:form>
 
