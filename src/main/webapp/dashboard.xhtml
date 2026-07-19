@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-chart-bar" />
+            <span>Dashboard de Gestión</span>
+        </div>
+
+        <!-- ===== KPIs ===== -->
+        <div class="si-kpi-grid">
+            <div class="si-kpi-card">
+                <span class="si-kpi-icon blue"><i class="pi pi-box" /></span>
+                <div>
+                    <div class="si-kpi-value">#{dashboardBean.totalProductos}</div>
+                    <div class="si-kpi-label">Total Productos</div>
+                </div>
+            </div>
+            <div class="si-kpi-card">
+                <span class="si-kpi-icon purple"><i class="pi pi-dollar" /></span>
+                <div>
+                    <div class="si-kpi-value">
+                        <h:outputText value="#{dashboardBean.valorTotalInventario}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </div>
+                    <div class="si-kpi-label">Valor Inventario</div>
+                </div>
+            </div>
+            <div class="si-kpi-card">
+                <span class="si-kpi-icon green"><i class="pi pi-arrow-up" /></span>
+                <div>
+                    <div class="si-kpi-value">
+                        <h:outputText value="#{dashboardBean.totalVentas}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </div>
+                    <div class="si-kpi-label">Ventas Totales</div>
+                </div>
+            </div>
+            <div class="si-kpi-card">
+                <span class="si-kpi-icon orange"><i class="pi pi-exclamation-triangle" /></span>
+                <div>
+                    <div class="si-kpi-value">#{dashboardBean.productosBajoStock}</div>
+                    <div class="si-kpi-label">Stock Bajo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Gráficos ===== -->
+        <div class="si-dash-grid">
+
+            <div class="si-glass-card si-chart-card">
+                <h5><i class="pi pi-percentage" style="margin-right:.4rem;color:var(--si-primary);" />Valor por Categoría</h5>
+                <p:chart value="#{dashboardBean.chartValorPorCategoria}" style="height:280px" />
+            </div>
+
+            <div class="si-glass-card si-chart-card">
+                <h5><i class="pi pi-chart-bar" style="margin-right:.4rem;color:var(--si-primary);" />Productos Más Vendidos</h5>
+                <p:chart value="#{dashboardBean.chartVentasPorProducto}" style="height:280px" />
+            </div>
+
+            <div class="si-glass-card si-chart-card">
+                <h5><i class="pi pi-circle" style="margin-right:.4rem;color:var(--si-success);" />Estado del Stock</h5>
+                <p:chart value="#{dashboardBean.chartEstadoStock}" style="height:280px" />
+            </div>
+
+        </div>
+
+        <!-- ===== Alertas de Stock ===== -->
+        <div class="si-section-title">
+            <i class="pi pi-exclamation-triangle" />
+            <span>Alertas de Reposición</span>
+        </div>
+
+        <div class="si-glass-card">
+            <h:form>
+                <p:dataTable value="#{inventarioBean.productosStockCritico}" var="p" 
+                             emptyMessage="No hay productos con stock crítico."
+                             style="width:100%">
+                    <p:column headerText="Producto" width="25%">
+                        <h:outputText value="#{p.nombre}" />
+                    </p:column>
+                    <p:column headerText="Categoría" width="20%">
+                        <h:outputText value="#{p.categoria}" />
+                    </p:column>
+                    <p:column headerText="Stock Actual" width="15%">
+                        <h:outputText value="#{p.stock}" />
+                    </p:column>
+                    <p:column headerText="Stock Mínimo" width="15%">
+                        <h:outputText value="#{p.stockMinimo}" />
+                    </p:column>
+                    <p:column headerText="Estado" width="25%">
+                        <span class="product-badge #{p.estadoCss}">#{p.estado.texto}</span>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+        </div>
+
+    </ui:define>
+</ui:composition>
+</html>

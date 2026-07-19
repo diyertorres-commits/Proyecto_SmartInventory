@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-file-pdf" />
+            <span>Reportes y Análisis</span>
+        </div>
+
+        <h:form id="reportsForm">
+            <p:growl id="msgReportes" showDetail="true" life="4000" />
+
+            <!-- ===== Filtros de reportes ===== -->
+            <div class="si-glass-card" style="margin-bottom:1.5rem;">
+                <h5 style="margin-top:0;color:var(--si-text-primary);">Filtros del Reporte</h5>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+                    <div class="p-field">
+                        <label for="tipoReporte">Tipo de Reporte:</label>
+                        <p:selectOneMenu id="tipoReporte" value="#{reporteBean.tipoReporte}" style="width:100%">
+                            <f:selectItem itemLabel="Ventas por Período" itemValue="ventas" />
+                            <f:selectItem itemLabel="Compras por Período" itemValue="compras" />
+                            <f:selectItem itemLabel="Rotación de Inventario" itemValue="rotacion" />
+                            <f:selectItem itemLabel="Productos con Stock Bajo" itemValue="stockBajo" />
+                            <f:selectItem itemLabel="Ganancias y Pérdidas" itemValue="ganancias" />
+                            <f:selectItem itemLabel="Ventas por Cliente" itemValue="ventasCliente" />
+                        </p:selectOneMenu>
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="fechaInicio">Fecha Inicio:</label>
+                        <p:datePicker id="fechaInicio" value="#{reporteBean.fechaInicio}" showIcon="true" style="width:100%" />
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="fechaFin">Fecha Fin:</label>
+                        <p:datePicker id="fechaFin" value="#{reporteBean.fechaFin}" showIcon="true" style="width:100%" />
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="categoria">Categoría:</label>
+                        <p:selectOneMenu id="categoria" value="#{reporteBean.categoria}" style="width:100%">
+                            <f:selectItem itemLabel="Todas las categorías" itemValue="#{null}" />
+                            <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat}" itemValue="#{cat}" />
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                
+                <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+                    <p:commandButton value="Generar Reporte" icon="pi pi-search" action="#{reporteBean.generarReporte()}" 
+                                    update="reportePanel msgReportes" styleClass="p-button-rounded" />
+                    <p:commandButton value="Exportar PDF" icon="pi pi-file-pdf" action="#{reporteBean.exportarPDF()}" 
+                                    styleClass="p-button-rounded p-button-secondary" />
+                    <p:commandButton value="Exportar Excel" icon="pi pi-file-excel" action="#{reporteBean.exportarExcel()}" 
+                                    styleClass="p-button-rounded p-button-success" />
+                </div>
+            </div>
+
+            <!-- ===== Panel de resultados ===== -->
+            <div class="si-glass-card" id="reportePanel">
+                <h5 style="margin-top:0;color:var(--si-text-primary);">Resultados del Reporte</h5>
+                
+                <!-- ===== Resumen de KPIs del reporte ===== -->
+                <div class="si-kpi-grid" style="margin-bottom:1.5rem;">
+                    <div class="si-kpi-card">
+                        <span class="si-kpi-icon blue"><i class="pi pi-dollar" /></span>
+                        <div>
+                            <div class="si-kpi-value">
+                                <h:outputText value="#{reporteBean.totalVentas}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                            <div class="si-kpi-label">Total Ventas</div>
+                        </div>
+                    </div>
+                    <div class="si-kpi-card">
+                        <span class="si-kpi-icon green"><i class="pi pi-chart-line" /></span>
+                        <div>
+                            <div class="si-kpi-value">
+                                <h:outputText value="#{reporteBean.ganancia}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                            <div class="si-kpi-label">Ganancia Neta</div>
+                        </div>
+                    </div>
+                    <div class="si-kpi-card">
+                        <span class="si-kpi-icon orange"><i class="pi pi-shopping-cart" /></span>
+                        <div>
+                            <div class="si-kpi-value">#{reporteBean.totalTransacciones}</div>
+                            <div class="si-kpi-label">Transacciones</div>
+                        </div>
+                    </div>
+                    <div class="si-kpi-card">
+                        <span class="si-kpi-icon purple"><i class="pi pi-percentage" /></span>
+                        <div>
+                            <div class="si-kpi-value">#{reporteBean.margenPromedio}%</div>
+                            <div class="si-kpi-label">Margen Promedio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Tabla de detalles del reporte ===== -->
+                <p:dataTable id="tablaReporte" value="#{reporteBean.datosReporte}" var="dato"
+                             emptyMessage="Seleccione un tipo de reporte y haga clic en Generar."
+                             rows="15" paginator="true" paginatorPosition="bottom"
+                             style="width:100%">
+                    
+                    <p:column headerText="Fecha">
+                        <h:outputText value="#{dato.fecha}" />
+                    </p:column>
+                    
+                    <p:column headerText="Producto/Servicio">
+                        <h:outputText value="#{dato.descripcion}" />
+                    </p:column>
+                    
+                    <p:column headerText="Cantidad">
+                        <h:outputText value="#{dato.cantidad}" />
+                    </p:column>
+                    
+                    <p:column headerText="Precio Unitario">
+                        <h:outputText value="#{dato.precioUnitario}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </p:column>
+                    
+                    <p:column headerText="Total">
+                        <h:outputText value="#{dato.total}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </p:column>
+                    
+                    <p:column headerText="Cliente/Proveedor">
+                        <h:outputText value="#{dato.tercero}" />
+                    </p:column>
+                    
+                    <p:column headerText="Método">
+                        <h:outputText value="#{dato.metodo}" />
+                    </p:column>
+                    
+                    <p:column headerText="Ganancia">
+                        <h:outputText value="#{dato.ganancia}" styleClass="#{dato.ganancia lt 0 ? 'text-red-600' : 'text-green-600'}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <!-- ===== Gráficos del reporte ===== -->
+            <div class="si-section-title">
+                <i class="pi pi-chart-bar" />
+                <span>Gráficos del Reporte</span>
+            </div>
+
+            <div class="si-dash-grid">
+                <div class="si-glass-card si-chart-card">
+                    <h5><i class="pi pi-chart-bar" style="margin-right:.4rem;color:var(--si-primary);" />Ventas por Categoría</h5>
+                    <p:chart value="#{reporteBean.chartVentasCategoria}" style="height:280px" />
+                </div>
+
+                <div class="si-glass-card si-chart-card">
+                    <h5><i class="pi pi-chart-line" style="margin-right:.4rem;color:var(--si-success);" />Tendencia de Ventas</h5>
+                    <p:chart value="#{reporteBean.chartTendenciaVentas}" style="height:280px" />
+                </div>
+
+                <div class="si-glass-card si-chart-card">
+                    <h5><i class="pi pi-chart-pie" style="margin-right:.4rem;color:var(--si-accent);" />Distribución por Método de Pago</h5>
+                    <p:chart value="#{reporteBean.chartMetodosPago}" style="height:280px" />
+                </div>
+            </div>
+
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+</html>

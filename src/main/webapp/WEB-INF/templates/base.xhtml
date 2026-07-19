@@ -6,21 +6,37 @@
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="primefaces">
 
-<ui:insert name="Componet">
-    <ui:include src="fragments/header.xhtml">
-
-    </ui:include>
-
-</ui:insert>
 <h:head>
-    <title>SmartInventory</title>
+    <title>SmartInventory · Gestión de inventario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <h:outputStylesheet name="css/style.css" />
 </h:head>
-<h:body>
-    <ui:insert name="content2">
-        
-    </ui:insert>
-    <h1>Trabajo 2</h1>
-</h:body>
 
+<h:body>
+    <!-- Fondo difuminado (blobs) detrás de toda la aplicación -->
+    <div class="si-background">
+        <div class="si-blob b1" />
+        <div class="si-blob b2" />
+        <div class="si-blob b3" />
+    </div>
+
+    <!-- Layout principal con sidebar -->
+    <div class="si-layout">
+        <!-- Sidebar de navegación -->
+        <ui:include src="fragments/header.xhtml" />
+
+        <!-- Contenido principal -->
+        <div class="si-main-content">
+            <!-- Contenido de cada página -->
+            <div class="si-page">
+                <ui:insert name="content">
+                    <h3>Contenido no definido</h3>
+                </ui:insert>
+            </div>
+
+            <ui:include src="fragments/footer.xhtml" />
+        </div>
+    </div>
+</h:body>
 
 </html>

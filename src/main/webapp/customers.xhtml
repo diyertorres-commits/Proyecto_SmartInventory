@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-users" />
+            <span>Gestión de Clientes</span>
+        </div>
+
+        <h:form id="customersForm">
+            <p:growl id="msgClientes" showDetail="true" life="4000" />
+
+            <!-- ===== Toolbar de búsqueda y acciones ===== -->
+            <div class="si-glass-card" style="margin-bottom:1.5rem;">
+                <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                    <p:inputText id="search" value="#{clienteBean.searchTerm}" placeholder="Buscar por nombre, DNI o email" 
+                                style="flex:1;min-width:250px;">
+                        <p:ajax event="keyup" listener="#{clienteBean.search()}" update="tablaClientes" delay="300" />
+                    </p:inputText>
+                    
+                    <p:commandButton icon="pi pi-search" title="Buscar" action="#{clienteBean.search()}" update="tablaClientes" />
+                    <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda" action="#{clienteBean.clearSearch()}" update="customersForm" />
+                    <p:commandButton value="Nuevo Cliente" icon="pi pi-plus" onclick="PF('dialogCliente').show()" styleClass="p-button-rounded" />
+                </div>
+            </div>
+
+            <!-- ===== Tabla de clientes ===== -->
+            <div class="si-glass-card">
+                <p:dataTable id="tablaClientes" value="#{clienteBean.clientesFiltrados}" var="cli"
+                             emptyMessage="No se encontraron clientes."
+                             rows="10" paginator="true" paginatorPosition="bottom"
+                             style="width:100%">
+                    
+                    <p:column headerText="DNI/CI" width="15%" filterBy="#{cli.dni}" filterMatchMode="contains">
+                        <h:outputText value="#{cli.dni}" />
+                    </p:column>
+                    
+                    <p:column headerText="Cliente" width="25%" filterBy="#{cli.nombre}" filterMatchMode="contains">
+                        <div style="font-weight:600;color:var(--si-text-primary);">#{cli.nombre} #{cli.apellido}</div>
+                        <div style="font-size:0.8rem;color:var(--si-text-secondary);">#{cli.empresa}</div>
+                    </p:column>
+                    
+                    <p:column headerText="Contacto" width="20%">
+                        <div><i class="pi pi-phone" style="font-size:0.8rem;margin-right:0.3rem;" />#{cli.telefono}</div>
+                        <div style="font-size:0.85rem;color:var(--si-text-secondary);"><i class="pi pi-envelope" style="font-size:0.8rem;margin-right:0.3rem;" />#{cli.email}</div>
+                    </p:column>
+                    
+                    <p:column headerText="Dirección" width="18%">
+                        <h:outputText value="#{cli.direccion}" style="font-size:0.85rem;" />
+                    </p:column>
+                    
+                    <p:column headerText="Crédito" width="12%">
+                        <div style="text-align:center;">
+                            <h:outputText value="#{cli.limiteCredito}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                            <div style="font-size:0.75rem;color:var(--si-text-secondary);">Límite</div>
+                        </div>
+                    </p:column>
+                    
+                    <p:column headerText="Acciones" width="10%">
+                        <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button mr-2"
+                                        action="#{clienteBean.editar(cli)}" update="dialogCliente" oncomplete="PF('dialogCliente').show()" />
+                        <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="rounded-button ui-button-danger"
+                                        action="#{clienteBean.eliminar(cli)}" update="msgClientes tablaClientes" />
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:form>
+
+        <!-- ===== Diálogo para crear/editar cliente ===== -->
+        <p:dialog widgetVar="dialogCliente" header="#{clienteBean.cliente.id == null ? 'Nuevo Cliente' : 'Editar Cliente'}" 
+                  modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade">
+            
+            <h:form id="clienteForm">
+                <p:growl id="msgClienteForm" showDetail="true" life="4000" />
+                
+                <div class="si-form-card">
+                    <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
+                        
+                        <p:outputLabel for="dni" value="DNI/CI:" />
+                        <p:inputText id="dni" value="#{clienteBean.cliente.dni}" placeholder="Número de identificación" required="true" style="width:100%" />
+                        
+                        <p:outputLabel for="nombre" value="Nombre:" />
+                        <p:inputText id="nombre" value="#{clienteBean.cliente.nombre}" placeholder="Nombres" required="true" style="width:100%" />
+                        
+                        <p:outputLabel for="apellido" value="Apellido:" />
+                        <p:inputText id="apellido" value="#{clienteBean.cliente.apellido}" placeholder="Apellidos" required="true" style="width:100%" />
+                        
+                        <p:outputLabel for="empresa" value="Empresa:" />
+                        <p:inputText id="empresa" value="#{clienteBean.cliente.empresa}" placeholder="Nombre de empresa (opcional)" style="width:100%" />
+                        
+                        <p:outputLabel for="telefono" value="Teléfono:" />
+                        <p:inputText id="telefono" value="#{clienteBean.cliente.telefono}" placeholder="Número de teléfono" required="true" style="width:100%" />
+                        
+                        <p:outputLabel for="email" value="Email:" />
+                        <p:inputText id="email" value="#{clienteBean.cliente.email}" placeholder="correo@ejemplo.com" style="width:100%" />
+                        
+                        <p:outputLabel for="direccion" value="Dirección:" />
+                        <p:inputTextarea id="direccion" value="#{clienteBean.cliente.direccion}" rows="2" style="width:100%" />
+                        
+                        <p:outputLabel for="limiteCredito" value="Límite Crédito:" />
+                        <p:inputNumber id="limiteCredito" value="#{clienteBean.cliente.limiteCredito}" symbol="$" decimalPlaces="2" style="width:100%" />
+                        
+                        <p:outputLabel for="activo" value="Estado:" />
+                        <p:selectBooleanCheckbox id="activo" value="#{clienteBean.cliente.activo}" itemLabel="Cliente activo" />
+                        
+                    </p:panelGrid>
+                    
+                    <div style="margin-top:1.5rem;text-align:right;">
+                        <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogCliente').hide()" 
+                                        styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
+                        <p:commandButton value="Guardar" icon="pi pi-check" action="#{clienteBean.guardar()}" 
+                                        update="msgClienteForm customersForm:tablaClientes" oncomplete="if(!args.validationFailed) PF('dialogCliente').hide()" />
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+
+    </ui:define>
+</ui:composition>
+</html>

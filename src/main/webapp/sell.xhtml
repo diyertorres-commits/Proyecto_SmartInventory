@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-money-bill" />
+            <span>Punto de Venta</span>
+        </div>
+
+        <h:form id="ventaForm">
+            <p:growl id="msgVenta" showDetail="true" life="4000" />
+
+            <div class="si-form-grid">
+                <!-- ===== Sección de productos ===== -->
+                <div class="si-glass-card si-form-card">
+                    <h5 style="margin-top:0;color:var(--si-text-primary);">Agregar Productos</h5>
+                    
+                    <div class="p-field">
+                        <label for="producto">Producto</label>
+                        <p:selectOneMenu id="producto" value="#{ventaBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{inventarioBean.productos}" var="p"
+                                           itemLabel="#{p.nombre} (disponible: #{p.stock} - $#{p.precio})" itemValue="#{p.id}" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="p-field">
+                        <label for="cantidad">Cantidad</label>
+                        <p:spinner id="cantidad" value="#{ventaBean.cantidad}" min="1" max="1000" style="width:100%" />
+                    </div>
+
+                    <p:commandButton value="Agregar al Carrito" icon="pi pi-plus" action="#{ventaBean.agregarAlCarrito()}"
+                                      update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel" styleClass="p-button-rounded" style="margin-top:.5rem" />
+                    
+                    <p:divider />
+                    
+                    <!-- ===== Carrito de compras ===== -->
+                    <h6 style="color:var(--si-text-primary);">Carrito de Compras</h6>
+                    <p:dataTable id="carritoTable" value="#{ventaBean.itemsCarrito}" var="item"
+                                 emptyMessage="El carrito está vacío" style="width:100%" size="small">
+                        <p:column headerText="Producto">
+                            <h:outputText value="#{item.productoNombre}" />
+                        </p:column>
+                        <p:column headerText="Cant." style="text-align:center;">
+                            <h:outputText value="#{item.cantidad}" />
+                        </p:column>
+                        <p:column headerText="Precio">
+                            <h:outputText value="#{item.precio}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="Subtotal">
+                            <h:outputText value="#{item.subtotal}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column headerText="" style="width:50px;">
+                            <p:commandButton icon="pi pi-times" styleClass="rounded-button ui-button-danger"
+                                            action="#{ventaBean.eliminarDelCarrito(item)}" update="ventaForm:carritoTable ventaForm:resumenPanel" />
+                        </p:column>
+                    </p:dataTable>
+                </div>
+
+                <!-- ===== Panel lateral con resumen ===== -->
+                <h:panelGroup id="resumenPanel" styleClass="si-glass-card">
+                    <h5 style="margin-top:0;color:var(--si-text-primary);">Resumen de Venta</h5>
+                    
+                    <div class="p-field">
+                        <label for="cliente">Cliente</label>
+                        <p:selectOneMenu id="cliente" value="#{ventaBean.clienteId}" style="width:100%" filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Cliente Mostrador" itemValue="#{null}" />
+                            <f:selectItems value="#{clienteBean.clientes}" var="c"
+                                           itemLabel="#{c.nombre} #{c.apellido}" itemValue="#{c.id}" />
+                        </p:selectOneMenu>
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="metodoPago">Método de Pago</label>
+                        <p:selectOneRadio id="metodoPago" value="#{ventaBean.metodoPago}" layout="responsive" columns="1">
+                            <f:selectItem itemLabel="Efectivo" itemValue="efectivo" />
+                            <f:selectItem itemLabel="Tarjeta" itemValue="tarjeta" />
+                            <f:selectItem itemLabel="Transferencia" itemValue="transferencia" />
+                            <f:selectItem itemLabel="Crédito" itemValue="credito" />
+                        </p:selectOneRadio>
+                    </div>
+                    
+                    <p:divider />
+                    
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span>Subtotal:</span>
+                        <span>
+                            <h:outputText value="#{ventaBean.subtotal}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                        </span>
+                    </div>
+                    
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span>IVA (12%):</span>
+                        <span>
+                            <h:outputText value="#{ventaBean.iva}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                        </span>
+                    </div>
+                    
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span>Descuento:</span>
+                        <p:inputNumber value="#{ventaBean.descuento}" symbol="$" decimalPlaces="2" size="8" style="text-align:right;">
+                            <p:ajax listener="#{ventaBean.calcularTotal()}" update="ventaForm:resumenPanel" />
+                        </p:inputNumber>
+                    </div>
+                    
+                    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--si-border);">
+                        <span>Total:</span>
+                        <span style="color:var(--si-primary);">
+                            <h:outputText value="#{ventaBean.total}">
+                                <f:convertNumber type="currency" currencySymbol="$" />
+                            </h:outputText>
+                        </span>
+                    </div>
+                    
+                    <p:commandButton value="Completar Venta" icon="pi pi-check" action="#{ventaBean.completarVenta()}"
+                                      update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel tablaVentas :navForm" 
+                                      styleClass="p-button-rounded p-button-success" style="width:100%;margin-top:1rem;" />
+                    
+                    <p:commandButton value="Cancelar" icon="pi pi-times" action="#{ventaBean.limpiarCarrito()}"
+                                      update="ventaForm:carritoTable ventaForm:resumenPanel" 
+                                      styleClass="p-button-outlined p-button-secondary" style="width:100%;margin-top:0.5rem;" />
+                </h:panelGroup>
+            </div>
+
+            <!-- ===== Historial de ventas ===== -->
+            <div class="si-section-title">
+                <i class="pi pi-history" />
+                <span>Ventas Recientes</span>
+            </div>
+
+            <div class="si-glass-card">
+                <p:dataTable id="tablaVentas" value="#{inventarioBean.ultimasVentas}" var="m" emptyMessage="Todavía no se han registrado ventas."
+                             rows="10" paginator="true" paginatorPosition="bottom">
+                    <p:column headerText="N° Venta">
+                        <h:outputText value="#{m.id}" />
+                    </p:column>
+                    <p:column headerText="Fecha">
+                        <h:outputText value="#{m.fechaTexto}" />
+                    </p:column>
+                    <p:column headerText="Cliente">
+                        <h:outputText value="#{m.contraparte}" />
+                    </p:column>
+                    <p:column headerText="Productos">
+                        <h:outputText value="#{m.producto}" style="font-size:0.85rem;" />
+                    </p:column>
+                    <p:column headerText="Método">
+                        <h:outputText value="#{m.metodoPago}" />
+                    </p:column>
+                    <p:column headerText="Total" style="text-align:right;">
+                        <h:outputText value="#{m.total}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="Acciones" style="width:80px;">
+                        <p:commandButton icon="pi pi-print" title="Imprimir" styleClass="rounded-button" />
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-shopping-cart"></i>
+            <span>Compras</span>
+        </div>
+
+        <h:form id="compraForm">
+            <p:growl id="msgCompra" showDetail="true" life="4000" />
+
+            <div class="si-form-grid">
+                <!-- ===== Formulario ===== -->
+                <div class="si-glass-card si-form-card">
+                    <!-- Contenedor actualizable para los campos dinámicos -->
+                    <p:tabView id="panelCampos" style="border:none;">
+                        <p:tab title="🔄 Reabastecer Producto Existente">
+                            <!-- Campos para REABASTECER -->
+                        <div class="p-field">
+                            <label for="producto">Producto</label>
+                            <p:selectOneMenu id="producto" value="#{compraBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
+                                <f:selectItem itemLabel="🔍 Buscar por nombre o código..." itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{inventarioBean.productos}" var="p"
+                                               itemLabel="#{p.nombre} (#{p.codigo}) - Stock: #{p.stock}" itemValue="#{p.id}" />
+                            </p:selectOneMenu>
+                        </div>
+
+                        <div class="p-field">
+                            <label for="cantidad">Cantidad a agregar</label>
+                            <p:spinner id="cantidad" value="#{compraBean.cantidad}" min="1" max="1000" style="width:100%" />
+                        </div>
+                        </p:tab>
+                        
+                        <p:tab title="🆕 Adquirir Nuevo Producto">
+                            <!-- Campos para ADQUIRIR NUEVO PRODUCTO -->
+                        <div class="p-field">
+                            <label for="codigo">Código/SKU</label>
+                            <p:inputText id="codigo" value="#{compraBean.codigo}" placeholder="Ej. CAF-001" style="width:100%" />
+                        </div>
+
+                        <div class="p-field">
+                            <label for="nombre">Nombre del Producto</label>
+                            <p:inputText id="nombre" value="#{compraBean.nombre}" placeholder="Nombre del producto" style="width:100%" />
+                        </div>
+
+                        <div class="p-field">
+                            <label for="categoria">Categoría</label>
+                            <p:selectOneMenu id="categoria" value="#{compraBean.categoria}" style="width:100%">
+                                <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
+                                <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat}" itemValue="#{cat}" />
+                            </p:selectOneMenu>
+                        </div>
+
+                        <div class="p-field">
+                            <label for="descripcion">Descripción</label>
+                            <p:inputTextarea id="descripcion" value="#{compraBean.descripcion}" rows="3" style="width:100%" />
+                        </div>
+
+                        <div class="p-field">
+                            <label for="precioVenta">Precio Venta</label>
+                            <p:inputNumber id="precioVenta" value="#{compraBean.precioVenta}" symbol="$" decimalPlaces="2" style="width:100%" />
+                        </div>
+
+                        <div class="p-field">
+                            <label for="stockInicial">Stock Inicial</label>
+                            <p:spinner id="stockInicial" value="#{compraBean.stockInicial}" min="1" max="1000" style="width:100%" />
+                        </div>
+
+                        <div class="p-field">
+                            <label for="stockMinimo">Stock Mínimo</label>
+                            <p:spinner id="stockMinimo" value="#{compraBean.stockMinimo}" min="0" style="width:100%" />
+                        </div>
+
+                        <div class="p-field">
+                            <label for="imagen">Imagen</label>
+                            <p:inputText id="imagen" value="#{compraBean.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
+                        </div>
+                        </p:tab>
+                    </p:tabView>
+
+                    <!-- Campo común: Proveedor/Distribuidor -->
+                    <div class="p-field">
+                        <label for="proveedor">🚚 Proveedor/Distribuidor</label>
+                        <p:selectOneMenu id="proveedor" value="#{compraBean.proveedorId}" style="width:100%" filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Seleccionar proveedor" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{proveedorBean.proveedores}" var="prov"
+                                           itemLabel="#{prov.nombre} (#{prov.ruc})" itemValue="#{prov.id}" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <!-- Campo común: Precio compra unitario -->
+                    <div class="p-field">
+                        <label for="precioCompra">💰 Precio Compra Unitario</label>
+                        <p:inputNumber id="precioCompra" value="#{compraBean.precioCompra}" symbol="$" decimalPlaces="2" style="width:100%" />
+                    </div>
+
+                    <p:commandButton value="Registrar Compra" icon="pi pi-check" action="#{compraBean.registrarCompra()}"
+                                      update="msgCompra tablaCompras :navForm" styleClass="p-button-rounded p-button-primary" style="margin-top:.5rem" />
+                </div>
+
+                <!-- ===== Panel lateral con resumen ===== -->
+                <div class="si-glass-card">
+                    <h5 style="margin-top:0;color:var(--si-text-primary);">📋 Tipos de Compra</h5>
+                    <div style="margin-top:1rem;">
+                        <div style="margin-bottom:1rem;padding:1rem;background:var(--si-bg);border-radius:8px;border-left:4px solid var(--si-primary);">
+                            <div style="font-weight:600;color:var(--si-text-primary);margin-bottom:0.5rem;">🆕 Adquirir Nuevo Producto</div>
+                            <p style="color:var(--si-text-secondary);font-size:0.85rem;margin:0;">Agrega un producto nuevo al inventario. Crea el registro del producto y establece el stock inicial.</p>
+                        </div>
+                        <div style="padding:1rem;background:var(--si-bg);border-radius:8px;border-left:4px solid var(--si-success);">
+                            <div style="font-weight:600;color:var(--si-text-primary);margin-bottom:0.5rem;">🔄 Reabastecer Producto Existente</div>
+                            <p style="color:var(--si-text-secondary);font-size:0.85rem;margin:0;">Aumenta el stock de un producto existente. Solo modifica la cantidad disponible.</p>
+                        </div>
+                    </div>
+                    <p:divider />
+                    <div class="si-kpi-card" style="background:transparent;box-shadow:none;border:none;padding:0;">
+                        <span class="si-kpi-icon blue"><i class="pi pi-shopping-cart" /></span>
+                        <div>
+                            <div class="si-kpi-value">
+                                <h:outputText value="#{inventarioBean.totalCompras}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                            <div class="si-kpi-label">Total Compras (histórico)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Historial de compras ===== -->
+            <div class="si-section-title">
+                <i class="pi pi-history" />
+                <span>Historial de Compras</span>
+            </div>
+
+            <div class="si-glass-card">
+                <p:dataTable id="tablaCompras" value="#{inventarioBean.ultimasCompras}" var="m" emptyMessage="📭 Todavía no se han registrado compras." rows="15" paginator="true">
+                    <p:column headerText="📅 Fecha">
+                        <h:outputText value="#{m.fechaTexto}" />
+                    </p:column>
+                    <p:column headerText="📦 Producto">
+                        <h:outputText value="#{m.producto}" />
+                    </p:column>
+                    <p:column headerText="📊 Cantidad">
+                        <h:outputText value="#{m.cantidad}" />
+                    </p:column>
+                    <p:column headerText="🚚 Proveedor">
+                        <h:outputText value="#{m.contraparte}" />
+                    </p:column>
+                    <p:column headerText="💰 Costo">
+                        <h:outputText value="#{m.total}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="🎯 Tipo">
+                        <span class="product-badge #{m.tipoCompra eq 'adquirir' ? 'badge-success' : 'badge-info'}">#{m.tipoCompra}</span>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+</html>

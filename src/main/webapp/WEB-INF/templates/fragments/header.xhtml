@@ -1,39 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="primefaces">
 
-<ui:composition>
-    <!---Header del Proyecto -->
-    <div class="card">
-        <h:form>
-            <p:growl id="messages" showDetail="true"/>
+    <!-- Sidebar de navegación -->
+    <div class="si-sidebar">
+        <div class="si-sidebar-inner">
+            <!-- Logo y marca -->
+            <h:link outcome="/products.xhtml" class="si-brand-sidebar">
+                <span class="si-logo-badge-sidebar"><i class="pi pi-shopping-bag" /></span>
+                <span>SmartInventory</span>
+            </h:link>
 
-            <p:toolbar>
-                <p:toolbarGroup>
-                    <p:commandButton type="button" value="New" icon="pi pi-file" styleClass="mr-2" />
-                    <p:commandButton type="button" value="Open" icon="pi pi-folder-open" styleClass="ui-button-success" />
+            <!-- Menú de navegación -->
+            <h:form id="navForm">
+                <p:menu styleClass="si-sidebar-menu">
+                    <p:menuitem value="📦 Inventario" icon="pi pi-warehouse" outcome="/products.xhtml" />
+                    <p:menuitem value="💰 Ventas" icon="pi pi-money-bill" outcome="/sell.xhtml" />
+                    <p:menuitem value="🛒 Compras" icon="pi pi-shopping-cart" outcome="/purchase.xhtml" />
+                    <p:submenu label="📂 Categorías y Ajustes" icon="pi pi-box">
+                        <p:menuitem value="Categorías" icon="pi pi-th-large" outcome="/categories.xhtml" />
+                        <p:menuitem value="Ajustes de Stock" icon="pi pi-sliders-h" outcome="/adjustments.xhtml" />
+                    </p:submenu>
+                    <p:submenu label="👥 Gestión" icon="pi pi-cog">
+                        <p:menuitem value="Proveedores" icon="pi pi-truck" outcome="/suppliers.xhtml" />
+                        <p:menuitem value="Clientes" icon="pi pi-users" outcome="/customers.xhtml" />
+                    </p:submenu>
+                    <p:menuitem value="📊 Reportes" icon="pi pi-file-pdf" outcome="/reports.xhtml" />
+                    <p:menuitem value="📈 Dashboard" icon="pi pi-chart-bar" outcome="/dashboard.xhtml" />
+                </p:menu>
+            </h:form>
 
-                    <i class="pi pi-bars px-2"/>
-
-                    <p:commandButton type="button" title="Save" icon="pi pi-save" styleClass="ui-button-help mr-2" />
-                    <p:commandButton type="button" title="Print" icon="pi pi-print" styleClass="ui-button-warning mr-2"/>
-                    <p:commandButton type="button" title="Delete" icon="pi pi-trash" styleClass="ui-button-danger"/>
-                </p:toolbarGroup>
-
-                <p:toolbarGroup align="right">
-                    <p:menuButton value="Options">
-                        <p:menuitem value="Save" action="#{toolbarView.save}" update="messages" icon="pi pi-save"/>
-                        <p:menuitem value="Update" action="#{toolbarView.update}" update="messages" icon="pi pi-refresh"/>
-                        <p:menuitem value="Delete" action="#{toolbarView.delete}" ajax="false" icon="pi pi-times"/>
-                        <p:menuitem value="Homepage" url="http://www.primefaces.org" icon="pi pi-home"/>
-                    </p:menuButton>
-                </p:toolbarGroup>
-            </p:toolbar>
-        </h:form>
+            <!-- Sección de usuario -->
+            <div class="si-user-section-sidebar">
+                <span class="si-user-info-sidebar">
+                    <i class="pi pi-user" />
+                    <span>Administrador</span>
+                </span>
+                <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión" styleClass="p-button-rounded p-button-text p-button-danger" />
+            </div>
+        </div>
     </div>
+
 </ui:composition>
-</html>

@@ -1,0 +1,543 @@
+/* =========================================================
+   SmartInventory - estilos generales
+   Cafetería · gestión de inventario con PrimeFaces 15
+   ========================================================= */
+
+:root {
+    --si-primary: #2563eb;
+    --si-primary-dark: #1e40af;
+    --si-secondary: #64748b;
+    --si-accent: #0891b2;
+    --si-success: #059669;
+    --si-warning: #d97706;
+    --si-danger: #dc2626;
+    --si-bg: #f8fafc;
+    --si-surface: #ffffff;
+    --si-border: #e2e8f0;
+    --si-text-primary: #0f172a;
+    --si-text-secondary: #64748b;
+    --si-glass: rgba(255, 255, 255, 0.95);
+    --si-radius: 8px;
+    --si-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+html, body {
+    background: var(--si-bg);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* -------- Professional background -------- */
+.si-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* -------- Layout general -------- */
+.si-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.si-sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.si-sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.5rem;
+}
+
+.si-brand-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #ffffff;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.si-logo-badge-sidebar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--si-primary) 0%, var(--si-primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.si-sidebar-menu.ui-menu {
+    background: transparent;
+    border: none;
+    padding: 0;
+    flex: 1;
+}
+
+.si-sidebar-menu.ui-menu .ui-menuitem-link {
+    border-radius: 8px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.85rem 1rem;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+.si-sidebar-menu.ui-menu .ui-menuitem-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transform: translateX(4px);
+}
+
+.si-sidebar-menu.ui-menu .ui-menuitem-link.ui-state-active {
+    background: linear-gradient(135deg, var(--si-primary) 0%, var(--si-primary-dark) 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.si-sidebar-menu.ui-menu .ui-submenu {
+    margin-left: 0;
+    margin-top: 0.5rem;
+}
+
+.si-sidebar-menu.ui-menu .ui-submenu > h3 {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.si-sidebar-menu.ui-menu .ui-submenu .ui-menuitem-link {
+    padding: 0.6rem 1rem 0.6rem 2rem;
+    font-size: 0.9rem;
+}
+
+.si-user-section-sidebar {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.si-user-info-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.si-user-info-sidebar i {
+    color: var(--si-primary);
+    font-size: 1.1rem;
+}
+
+.si-main-content {
+    flex: 1;
+    margin-left: 280px;
+    min-height: 100vh;
+    background: var(--si-bg);
+    width: calc(100% - 280px);
+}
+
+.si-page {
+    width: 100%;
+    padding: 2rem 1.5rem 3rem;
+    margin: 0;
+}
+
+/* -------- Header / navbar -------- */
+.si-topbar {
+    background: var(--si-surface);
+    border-bottom: 1px solid var(--si-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--si-shadow);
+}
+
+.si-topbar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    gap: 2rem;
+}
+
+.si-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--si-text-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.si-brand .si-logo-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--si-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.si-menubar.ui-menubar {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.si-menubar.ui-menubar .ui-menuitem-link {
+    border-radius: 4px;
+    font-weight: 500;
+    color: var(--si-text-secondary);
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s;
+}
+
+.si-menubar.ui-menubar .ui-menuitem-link:hover {
+    background: var(--si-bg);
+    color: var(--si-primary);
+}
+
+.si-admin-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--si-bg);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--si-text-secondary);
+    border: 1px solid var(--si-border);
+}
+
+.si-user-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.si-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--si-bg);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--si-text-secondary);
+    border: 1px solid var(--si-border);
+}
+
+/* -------- Hero / portada -------- */
+.si-hero {
+    border-radius: var(--si-radius);
+    padding: 2.5rem 2rem;
+    margin: 1.5rem 0;
+    background: var(--si-primary);
+    color: #fff;
+    box-shadow: var(--si-shadow);
+    border: 1px solid var(--si-primary-dark);
+}
+
+.si-hero h1 {
+    font-size: 1.75rem;
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+}
+
+.si-hero p {
+    font-size: 0.95rem;
+    opacity: 0.95;
+    max-width: 700px;
+    line-height: 1.6;
+}
+
+.si-hero-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.si-hero-actions .p-button {
+    border-radius: var(--si-radius) !important;
+    font-weight: 500;
+}
+
+/* -------- Professional cards -------- */
+.si-glass-card {
+    background: var(--si-surface);
+    border-radius: var(--si-radius);
+    border: 1px solid var(--si-border);
+    box-shadow: var(--si-shadow);
+    padding: 1.5rem;
+}
+
+/* -------- KPI strip -------- */
+.si-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+}
+
+.si-kpi-card {
+    background: var(--si-surface);
+    border-radius: var(--si-radius);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--si-border);
+    box-shadow: var(--si-shadow);
+    transition: all 0.2s;
+}
+
+.si-kpi-card:hover {
+    border-color: var(--si-primary);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.si-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.si-kpi-icon.blue { background: var(--si-primary); }
+.si-kpi-icon.green { background: var(--si-success); }
+.si-kpi-icon.orange { background: var(--si-warning); }
+.si-kpi-icon.red { background: var(--si-danger); }
+.si-kpi-icon.purple { background: var(--si-accent); }
+
+.si-kpi-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--si-text-primary);
+    line-height: 1.2;
+}
+
+.si-kpi-label {
+    font-size: 0.85rem;
+    color: var(--si-text-secondary);
+    font-weight: 500;
+}
+
+/* -------- Sección genérica con título -------- */
+.si-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 2rem 0 1rem;
+    font-weight: 600;
+    color: var(--si-text-primary);
+    font-size: 1.15rem;
+    border-bottom: 2px solid var(--si-border);
+    padding-bottom: 0.5rem;
+}
+
+.si-section-title i {
+    color: var(--si-primary);
+}
+
+.text-danger {
+    color: var(--si-danger) !important;
+}
+
+.text-success {
+    color: var(--si-success) !important;
+}
+
+.row-warning {
+    background-color: rgba(217, 119, 6, 0.1) !important;
+}
+
+/* =========================================================
+   Product cards
+   ========================================================= */
+.si-carousel-card .p-carousel-header,
+.si-carousel-card .ui-carousel-header {
+    font-weight: 600;
+    color: var(--si-text-primary);
+    font-size: 1rem;
+}
+
+.product-item {
+    padding: 0.75rem;
+}
+
+.product-item .product-item-content {
+    border-radius: var(--si-radius);
+    background: var(--si-surface);
+    padding: 1.25rem;
+    text-align: center;
+    transition: all 0.2s;
+    box-shadow: var(--si-shadow);
+    border: 1px solid var(--si-border);
+}
+
+.product-item .product-item-content:hover {
+    border-color: var(--si-primary);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.product-image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: var(--si-radius);
+    background: var(--si-bg);
+    padding: 8px;
+}
+
+.product-item h4 {
+    margin: 0.75rem 0 0.25rem;
+    color: var(--si-text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.product-item h6 {
+    color: var(--si-primary);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.product-badge {
+    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-disponible {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--si-success);
+}
+
+.status-bajo {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--si-warning);
+}
+
+.status-agotado {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--si-danger);
+}
+
+.rounded-button.p-button {
+    border-radius: var(--si-radius) !important;
+    width: 2rem;
+    height: 2rem;
+}
+
+/* =========================================================
+   Categorías (tabs + grid de productos)
+   ========================================================= */
+.si-category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.1rem;
+    margin-top: 1rem;
+}
+
+/* =========================================================
+   Formularios (Comprar / Vender)
+   ========================================================= */
+.si-form-card .p-field,
+.si-form-card .ui-field {
+    margin-bottom: 1.25rem;
+}
+
+.si-form-card label {
+    font-weight: 500;
+    color: var(--si-text-primary);
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.si-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 0.85fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 960px) {
+    .si-form-grid { grid-template-columns: 1fr; }
+    .si-hero { padding: 2rem 1.4rem; }
+}
+
+/* -------- Dashboard -------- */
+.si-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.si-chart-card h5 {
+    margin: 0 0 0.75rem;
+    color: var(--si-text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* -------- Footer -------- */
+.si-footer {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+}

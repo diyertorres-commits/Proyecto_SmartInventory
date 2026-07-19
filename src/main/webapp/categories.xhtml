@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:c="jakarta.tags.core"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-th-large" />
+            <span>Categorías y productos</span>
+        </div>
+
+        <h:form id="catForm">
+            <div class="si-glass-card">
+                <p:tabView>
+                    <c:forEach items="#{inventarioBean.categorias}" var="cat">
+                        <p:tab title="#{cat}">
+                            <div class="si-category-grid">
+                                <ui:repeat value="#{inventarioBean.productosPorCategoria(cat)}" var="p">
+                                    <div class="product-item">
+                                        <div class="product-item-content">
+                                            <p:graphicImage library="images" name="products/#{p.imagen}" styleClass="product-image" />
+                                            <h4>#{p.nombre}</h4>
+                                            <p style="color:#6b7280;font-size:.8rem;min-height:2.4em;">#{p.descripcion}</p>
+                                            <h6>
+                                                <h:outputText value="#{p.precio}">
+                                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                                </h:outputText>
+                                            </h6>
+                                            <span class="product-badge #{p.estadoCss}">#{p.estado.texto} · #{p.stock} u.</span>
+                                        </div>
+                                    </div>
+                                </ui:repeat>
+                            </div>
+                        </p:tab>
+                    </c:forEach>
+                </p:tabView>
+            </div>
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+
+<ui:composition template="WEB-INF/templates/base.xhtml">
+    <ui:define name="content">
+
+        <div class="si-section-title">
+            <i class="pi pi-sliders-h" />
+            <span>Ajustes de Inventario</span>
+        </div>
+
+        <h:form id="ajustesForm">
+            <p:growl id="msgAjustes" showDetail="true" life="4000" />
+
+            <!-- ===== Formulario de ajuste ===== -->
+            <div class="si-glass-card" style="margin-bottom:1.5rem;">
+                <h5 style="margin-top:0;color:var(--si-text-primary);">Registrar Ajuste de Inventario</h5>
+                
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;">
+                    <div class="p-field">
+                        <label for="producto">Producto:</label>
+                        <p:selectOneMenu id="producto" value="#{ajusteBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}" noSelectionOption="true" />
+                            <f:selectItems value="#{inventarioBean.productos}" var="p"
+                                           itemLabel="#{p.nombre} (stock actual: #{p.stock})" itemValue="#{p.id}" />
+                        </p:selectOneMenu>
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="tipoAjuste">Tipo de Ajuste:</label>
+                        <p:selectOneMenu id="tipoAjuste" value="#{ajusteBean.tipoAjuste}" style="width:100%">
+                            <f:selectItem itemLabel="Merma (Pérdida)" itemValue="merma" />
+                            <f:selectItem itemLabel="Robo/Hurto" itemValue="robo" />
+                            <f:selectItem itemLabel="Daño/Deterioro" itemValue="dano" />
+                            <f:selectItem itemLabel="Vencimiento" itemValue="vencimiento" />
+                            <f:selectItem itemLabel="Error de Conteo" itemValue="error" />
+                            <f:selectItem itemLabel="Transferencia" itemValue="transferencia" />
+                            <f:selectItem itemLabel="Ajuste Manual" itemValue="manual" />
+                        </p:selectOneMenu>
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="cantidad">Cantidad a Ajustar:</label>
+                        <p:spinner id="cantidad" value="#{ajusteBean.cantidad}" min="1" max="1000" style="width:100%" />
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="operacion">Operación:</label>
+                        <p:selectOneRadio id="operacion" value="#{ajusteBean.operacion}" layout="responsive" columns="2">
+                            <f:selectItem itemLabel="Restar (-)" itemValue="restar" />
+                            <f:selectItem itemLabel="Sumar (+)" itemValue="sumar" />
+                        </p:selectOneRadio>
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="motivo">Motivo/Observación:</label>
+                        <p:inputText id="motivo" value="#{ajusteBean.motivo}" placeholder="Descripción del ajuste" style="width:100%" />
+                    </div>
+                    
+                    <div class="p-field">
+                        <label for="responsable">Responsable:</label>
+                        <p:inputText id="responsable" value="#{ajusteBean.responsable}" placeholder="Persona autorizada" style="width:100%" />
+                    </div>
+                </div>
+                
+                <div style="margin-top:1rem;">
+                    <p:commandButton value="Registrar Ajuste" icon="pi pi-check" action="#{ajusteBean.registrarAjuste()}"
+                                    update="msgAjustes tablaAjustes" styleClass="p-button-rounded p-button-warning" />
+                </div>
+            </div>
+
+            <!-- ===== Historial de ajustes ===== -->
+            <div class="si-section-title">
+                <i class="pi pi-history" />
+                <span>Historial de Ajustes</span>
+            </div>
+
+            <div class="si-glass-card">
+                <p:dataTable id="tablaAjustes" value="#{ajusteBean.ajustes}" var="ajuste"
+                             emptyMessage="No hay ajustes registrados."
+                             rows="10" paginator="true" paginatorPosition="bottom"
+                             style="width:100%">
+                    
+                    <p:column headerText="Fecha">
+                        <h:outputText value="#{ajuste.fechaTexto}" />
+                    </p:column>
+                    
+                    <p:column headerText="Producto">
+                        <h:outputText value="#{ajuste.productoNombre}" />
+                    </p:column>
+                    
+                    <p:column headerText="Tipo">
+                        <span class="product-badge #{ajuste.tipoCss}">#{ajuste.tipoAjuste}</span>
+                    </p:column>
+                    
+                    <p:column headerText="Operación">
+                        <h:outputText value="#{ajuste.operacion}" styleClass="#{ajuste.operacion eq 'restar' ? 'text-red-600' : 'text-green-600'}" />
+                    </p:column>
+                    
+                    <p:column headerText="Cantidad">
+                        <h:outputText value="#{ajuste.cantidad}" />
+                    </p:column>
+                    
+                    <p:column headerText="Stock Anterior">
+                        <h:outputText value="#{ajuste.stockAnterior}" />
+                    </p:column>
+                    
+                    <p:column headerText="Stock Nuevo">
+                        <h:outputText value="#{ajuste.stockNuevo}" style="font-weight:600;" />
+                    </p:column>
+                    
+                    <p:column headerText="Motivo">
+                        <h:outputText value="#{ajuste.motivo}" style="font-size:0.85rem;" />
+                    </p:column>
+                    
+                    <p:column headerText="Responsable">
+                        <h:outputText value="#{ajuste.responsable}" />
+                    </p:column>
+                    
+                    <p:column headerText="Acciones" style="width:80px;">
+                        <p:commandButton icon="pi pi-undo" title="Revertir" styleClass="rounded-button ui-button-secondary"
+                                        action="#{ajusteBean.revertir(ajuste)}" update="msgAjustes tablaAjustes" />
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <!-- ===== Resumen de ajustes por tipo ===== -->
+            <div class="si-section-title">
+                <i class="pi pi-chart-pie" />
+                <span>Resumen de Ajustes por Tipo</span>
+            </div>
+
+            <div class="si-dash-grid">
+                <div class="si-glass-card si-chart-card">
+                    <h5><i class="pi pi-chart-pie" style="margin-right:.4rem;color:var(--si-primary);" />Distribución por Tipo</h5>
+                    <p:chart value="#{ajusteBean.chartPorTipo}" style="height:280px" />
+                </div>
+
+                <div class="si-glass-card">
+                    <h5 style="margin-top:0;color:var(--si-text-primary);">Estadísticas de Ajustes</h5>
+                    <div class="si-kpi-grid" style="margin-top:1rem;">
+                        <div class="si-kpi-card">
+                            <span class="si-kpi-icon orange"><i class="pi pi-minus" /></span>
+                            <div>
+                                <div class="si-kpi-value">#{ajusteBean.totalRestado}</div>
+                                <div class="si-kpi-label">Total Restado</div>
+                            </div>
+                        </div>
+                        <div class="si-kpi-card">
+                            <span class="si-kpi-icon green"><i class="pi pi-plus" /></span>
+                            <div>
+                                <div class="si-kpi-value">#{ajusteBean.totalSumado}</div>
+                                <div class="si-kpi-label">Total Sumado</div>
+                            </div>
+                        </div>
+                        <div class="si-kpi-card">
+                            <span class="si-kpi-icon blue"><i class="pi pi-list" /></span>
+                            <div>
+                                <div class="si-kpi-value">#{ajusteBean.totalAjustes}</div>
+                                <div class="si-kpi-label">Total Ajustes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </h:form>
+
+    </ui:define>
+</ui:composition>
+</html>

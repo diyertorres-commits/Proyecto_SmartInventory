@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="primefaces">
+
+<h:head>
+    <title>SmartInventory · Iniciar sesión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <h:outputStylesheet name="css/style.css" />
+    <style>
+        :root {
+            --si-primary: #2563eb;
+            --si-primary-dark: #1e40af;
+            --si-bg: #f8fafc;
+            --si-surface: #ffffff;
+            --si-border: #e2e8f0;
+            --si-text-primary: #0f172a;
+            --si-text-secondary: #64748b;
+            --si-radius: 8px;
+            --si-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+        
+        body {
+            background: var(--si-bg);
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .login-card {
+            background: var(--si-surface);
+            border-radius: var(--si-radius);
+            border: 1px solid var(--si-border);
+            box-shadow: var(--si-shadow);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-header .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            background: var(--si-primary);
+            border-radius: var(--si-radius);
+            margin-bottom: 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .login-header h1 {
+            color: var(--si-text-primary);
+            margin: 0.5rem 0 0.25rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .login-header p {
+            color: var(--si-text-secondary);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .login-form .p-field {
+            margin-bottom: 1.25rem;
+        }
+        
+        .login-form label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--si-text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .login-form .ui-inputfield,
+        .login-form .ui-spinner-input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--si-border);
+            border-radius: var(--si-radius);
+            background: var(--si-surface);
+            font-size: 0.9rem;
+        }
+        
+        .login-form .ui-inputfield:focus,
+        .login-form .ui-spinner-input:focus {
+            outline: none;
+            border-color: var(--si-primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--si-primary);
+            border: none;
+            border-radius: var(--si-radius);
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .login-button:hover {
+            background: var(--si-primary-dark);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--si-border);
+        }
+        
+        .login-footer a {
+            color: var(--si-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-badge">
+                    <i class="pi pi-shopping-bag" />
+                </div>
+                <h1>SmartInventory</h1>
+                <p>Sistema de Gestión de Inventario</p>
+            </div>
+
+            <h:form id="loginForm" class="login-form">
+                <p:growl id="msgLogin" showDetail="true" life="4000" />
+
+                <div class="p-field">
+                    <label for="username">Usuario</label>
+                    <p:inputText id="username" value="#{loginBean.username}" 
+                                 placeholder="Ingrese su usuario" 
+                                 style="width:100%" />
+                </div>
+
+                <div class="p-field">
+                    <label for="password">Contraseña</label>
+                    <p:password id="password" value="#{loginBean.password}" 
+                                placeholder="Ingrese su contraseña" 
+                                style="width:100%" />
+                </div>
+
+                <div class="p-field" style="display:flex;align-items:center;gap:0.5rem;">
+                    <p:selectBooleanCheckbox value="#{loginBean.rememberMe}" />
+                    <label for="remember" style="margin:0;font-size:0.85rem;">Recordar sesión</label>
+                </div>
+
+                <p:commandButton value="Iniciar sesión" 
+                                icon="pi pi-sign-in" 
+                                action="#{loginBean.login()}"
+                                update="msgLogin" 
+                                styleClass="login-button" 
+                                style="margin-top:0.5rem;" />
+            </h:form>
+
+            <div class="login-footer">
+                <p style="color:var(--si-text-secondary);font-size:0.85rem;margin:0;">
+                    Sistema de gestión de inventario para cafeterías
+                </p>
+            </div>
+        </div>
+    </div>
+</h:body>
+
+</html>
