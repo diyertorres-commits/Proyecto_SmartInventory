@@ -2,13 +2,15 @@ package unl.edu.cc.rest.jbrew.domain.People;
 
 public abstract class Person {
     private int id;
+    private String identificationNumber; // DNI/RUC
     private String name;
     private String phone;
     private String email;
     private String address;
 
-    public Person(int id, String name, String phone, String email, String address) {
+    public Person(int id, String identificationNumber, String name, String phone, String email, String address) {
         this.id = id;
+        this.identificationNumber = identificationNumber;
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -22,6 +24,14 @@ public abstract class Person {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getIdentificationNumber() {
+        return identificationNumber;
+    }
+
+    public void setIdentificationNumber(String identificationNumber) {
+        this.identificationNumber = identificationNumber;
     }
 
     public String getName() {

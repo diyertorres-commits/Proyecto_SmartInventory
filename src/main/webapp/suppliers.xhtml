@@ -37,18 +37,18 @@
                              rows="10" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
                     
-                    <p:column headerText="RUC/DNI" width="15%" filterBy="#{prov.ruc}" filterMatchMode="contains">
-                        <h:outputText value="#{prov.ruc}" />
+                    <p:column headerText="RUC/DNI" width="15%" filterBy="#{prov.identificationNumber}" filterMatchMode="contains">
+                        <h:outputText value="#{prov.identificationNumber}" />
                     </p:column>
                     
-                    <p:column headerText="Empresa" width="25%" filterBy="#{prov.nombre}" filterMatchMode="contains">
-                        <div style="font-weight:600;color:var(--si-text-primary);">#{prov.nombre}</div>
+                    <p:column headerText="Empresa" width="25%" filterBy="#{prov.name}" filterMatchMode="contains">
+                        <div style="font-weight:600;color:var(--si-text-primary);">#{prov.name}</div>
                         <div style="font-size:0.8rem;color:var(--si-text-secondary);">#{prov.razonSocial}</div>
                     </p:column>
                     
                     <p:column headerText="Contacto" width="20%">
                         <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:0.3rem;" />#{prov.contacto}</div>
-                        <div style="font-size:0.85rem;color:var(--si-text-secondary);"><i class="pi pi-phone" style="font-size:0.8rem;margin-right:0.3rem;" />#{prov.telefono}</div>
+                        <div style="font-size:0.85rem;color:var(--si-text-secondary);"><i class="pi pi-phone" style="font-size:0.8rem;margin-right:0.3rem;" />#{prov.phone}</div>
                     </p:column>
                     
                     <p:column headerText="Email" width="18%">
@@ -56,7 +56,7 @@
                     </p:column>
                     
                     <p:column headerText="Dirección" width="12%">
-                        <h:outputText value="#{prov.direccion}" style="font-size:0.85rem;" />
+                        <h:outputText value="#{prov.address}" style="font-size:0.85rem;" />
                     </p:column>
                     
                     <p:column headerText="Acciones" width="10%">
@@ -80,10 +80,10 @@
                     <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
                         
                         <p:outputLabel for="ruc" value="RUC/DNI:" />
-                        <p:inputText id="ruc" value="#{proveedorBean.proveedor.ruc}" placeholder="Número de identificación" required="true" style="width:100%" />
+                        <p:inputText id="ruc" value="#{proveedorBean.proveedor.identificationNumber}" placeholder="Número de identificación" required="true" style="width:100%" />
                         
                         <p:outputLabel for="nombre" value="Nombre Comercial:" />
-                        <p:inputText id="nombre" value="#{proveedorBean.proveedor.nombre}" placeholder="Nombre de la empresa" required="true" style="width:100%" />
+                        <p:inputText id="nombre" value="#{proveedorBean.proveedor.name}" placeholder="Nombre de la empresa" required="true" style="width:100%" />
                         
                         <p:outputLabel for="razonSocial" value="Razón Social:" />
                         <p:inputText id="razonSocial" value="#{proveedorBean.proveedor.razonSocial}" placeholder="Razón social completa" style="width:100%" />
@@ -92,24 +92,14 @@
                         <p:inputText id="contacto" value="#{proveedorBean.proveedor.contacto}" placeholder="Nombre del contacto" required="true" style="width:100%" />
                         
                         <p:outputLabel for="telefono" value="Teléfono:" />
-                        <p:inputText id="telefono" value="#{proveedorBean.proveedor.telefono}" placeholder="Número de teléfono" required="true" style="width:100%" />
+                        <p:inputText id="telefono" value="#{proveedorBean.proveedor.phone}" placeholder="Número de teléfono" required="true" style="width:100%" />
                         
                         <p:outputLabel for="email" value="Email:" />
                         <p:inputText id="email" value="#{proveedorBean.proveedor.email}" placeholder="correo@empresa.com" style="width:100%" />
                         
                         <p:outputLabel for="direccion" value="Dirección:" />
-                        <p:inputTextarea id="direccion" value="#{proveedorBean.proveedor.direccion}" rows="2" style="width:100%" />
+                        <p:inputTextarea id="direccion" value="#{proveedorBean.proveedor.address}" rows="2" style="width:100%" />
                         
-                        <p:outputLabel for="condicionesPago" value="Condiciones Pago:" />
-                        <p:selectOneMenu id="condicionesPago" value="#{proveedorBean.proveedor.condicionesPago}" style="width:100%">
-                            <f:selectItem itemLabel="Contado" itemValue="contado" />
-                            <f:selectItem itemLabel="30 días" itemValue="30" />
-                            <f:selectItem itemLabel="60 días" itemValue="60" />
-                            <f:selectItem itemLabel="90 días" itemValue="90" />
-                        </p:selectOneMenu>
-                        
-                        <p:outputLabel for="activo" value="Estado:" />
-                        <p:selectBooleanCheckbox id="activo" value="#{proveedorBean.proveedor.activo}" itemLabel="Proveedor activo" />
                         
                     </p:panelGrid>
                     

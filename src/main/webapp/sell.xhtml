@@ -26,7 +26,7 @@
                         <p:selectOneMenu id="producto" value="#{ventaBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}" noSelectionOption="true" />
                             <f:selectItems value="#{inventarioBean.productos}" var="p"
-                                           itemLabel="#{p.nombre} (disponible: #{p.stock} - $#{p.precio})" itemValue="#{p.id}" />
+                                           itemLabel="#{p.name} (disponible: #{p.stock} - $#{p.salePrice})" itemValue="#{p.idProduct}" />
                         </p:selectOneMenu>
                     </div>
 
@@ -76,7 +76,7 @@
                         <p:selectOneMenu id="cliente" value="#{ventaBean.clienteId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Cliente Mostrador" itemValue="#{null}" />
                             <f:selectItems value="#{clienteBean.clientes}" var="c"
-                                           itemLabel="#{c.nombre} #{c.apellido}" itemValue="#{c.id}" />
+                                           itemLabel="#{c.name} #{c.apellido}" itemValue="#{c.idCustomer}" />
                         </p:selectOneMenu>
                     </div>
                     

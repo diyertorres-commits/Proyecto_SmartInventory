@@ -11,28 +11,39 @@ import java.util.List;
 public class Product {
 
     private int idProduct;
+    private String codigo; // SKU/Código del producto
     private String name;
     private String description;
+    private String categoria; // Categoría del producto
+    private String imagen; // Nombre del archivo de imagen
     private double salePrice;
     private double purchasePrice;
     private int stock;
     private int minStock;
+    private ProductStatus estado; // Estado del producto
     private List<Kardex> kardexList; // Relación 1 → 0..* con Kardex
 
     public Product() {
         salePrice = 0;
         purchasePrice = 0;
+        this.estado = ProductStatus.DISPONIBLE;
         this.kardexList = new ArrayList<>();
     }
 
-    public Product(int idProduct, String name, String description, double salePrice, double purchasePrice, int stock, int minStock) throws InvalidProductNameException, InvalidProductPriceException, InvalidProductStockException {
+    public Product(int idProduct, String codigo, String name, String description, String categoria, String imagen, 
+                   double salePrice, double purchasePrice, int stock, int minStock) 
+            throws InvalidProductNameException, InvalidProductPriceException, InvalidProductStockException {
         this.idProduct = idProduct;
+        this.codigo = codigo;
         setName(name);
         this.description = description;
+        this.categoria = categoria;
+        this.imagen = imagen;
         setSalePrice(salePrice);
         this.purchasePrice = purchasePrice;
         setStock(stock);
         this.minStock = minStock;
+        this.estado = calculateEstado();
         this.kardexList = new ArrayList<>();
     }
     public void updateProduct(String name, Double salePrice) throws InvalidProductNameException, InvalidProductPriceException {
@@ -42,6 +53,17 @@ public class Product {
 
     public void modifyStock(int quantity) {
         stock += quantity;
+        this.estado = calculateEstado();
+    }
+
+    private ProductStatus calculateEstado() {
+        if (stock == 0) {
+            return ProductStatus.AGOTADO;
+        } else if (stock <= minStock) {
+            return ProductStatus.STOCK_BAJO;
+        } else {
+            return ProductStatus.DISPONIBLE;
+        }
     }
 
     public boolean verifyStockMinimo() {
@@ -83,6 +105,14 @@ public class Product {
         this.idProduct = idProduct;
     }
 
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
     public String getName() {
         return name;
     }
@@ -98,6 +128,30 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public String getImagen() {
+        return imagen;
+    }
+
+    public void setImagen(String imagen) {
+        this.imagen = imagen;
+    }
+
+    public ProductStatus getEstado() {
+        return estado;
+    }
+
+    public void setEstado(ProductStatus estado) {
+        this.estado = estado;
     }
 
     public double getSalePrice() {

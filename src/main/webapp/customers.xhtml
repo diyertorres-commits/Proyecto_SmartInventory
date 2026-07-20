@@ -37,22 +37,22 @@
                              rows="10" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
                     
-                    <p:column headerText="DNI/CI" width="15%" filterBy="#{cli.dni}" filterMatchMode="contains">
-                        <h:outputText value="#{cli.dni}" />
+                    <p:column headerText="DNI/CI" width="15%" filterBy="#{cli.identificationNumber}" filterMatchMode="contains">
+                        <h:outputText value="#{cli.identificationNumber}" />
                     </p:column>
                     
-                    <p:column headerText="Cliente" width="25%" filterBy="#{cli.nombre}" filterMatchMode="contains">
-                        <div style="font-weight:600;color:var(--si-text-primary);">#{cli.nombre} #{cli.apellido}</div>
+                    <p:column headerText="Cliente" width="25%" filterBy="#{cli.name}" filterMatchMode="contains">
+                        <div style="font-weight:600;color:var(--si-text-primary);">#{cli.name} #{cli.apellido}</div>
                         <div style="font-size:0.8rem;color:var(--si-text-secondary);">#{cli.empresa}</div>
                     </p:column>
                     
                     <p:column headerText="Contacto" width="20%">
-                        <div><i class="pi pi-phone" style="font-size:0.8rem;margin-right:0.3rem;" />#{cli.telefono}</div>
+                        <div><i class="pi pi-phone" style="font-size:0.8rem;margin-right:0.3rem;" />#{cli.phone}</div>
                         <div style="font-size:0.85rem;color:var(--si-text-secondary);"><i class="pi pi-envelope" style="font-size:0.8rem;margin-right:0.3rem;" />#{cli.email}</div>
                     </p:column>
                     
                     <p:column headerText="Dirección" width="18%">
-                        <h:outputText value="#{cli.direccion}" style="font-size:0.85rem;" />
+                        <h:outputText value="#{cli.address}" style="font-size:0.85rem;" />
                     </p:column>
                     
                     <p:column headerText="Crédito" width="12%">
@@ -85,10 +85,10 @@
                     <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
                         
                         <p:outputLabel for="dni" value="DNI/CI:" />
-                        <p:inputText id="dni" value="#{clienteBean.cliente.dni}" placeholder="Número de identificación" required="true" style="width:100%" />
+                        <p:inputText id="dni" value="#{clienteBean.cliente.identificationNumber}" placeholder="Número de identificación" required="true" style="width:100%" />
                         
                         <p:outputLabel for="nombre" value="Nombre:" />
-                        <p:inputText id="nombre" value="#{clienteBean.cliente.nombre}" placeholder="Nombres" required="true" style="width:100%" />
+                        <p:inputText id="nombre" value="#{clienteBean.cliente.name}" placeholder="Nombres" required="true" style="width:100%" />
                         
                         <p:outputLabel for="apellido" value="Apellido:" />
                         <p:inputText id="apellido" value="#{clienteBean.cliente.apellido}" placeholder="Apellidos" required="true" style="width:100%" />
@@ -97,19 +97,17 @@
                         <p:inputText id="empresa" value="#{clienteBean.cliente.empresa}" placeholder="Nombre de empresa (opcional)" style="width:100%" />
                         
                         <p:outputLabel for="telefono" value="Teléfono:" />
-                        <p:inputText id="telefono" value="#{clienteBean.cliente.telefono}" placeholder="Número de teléfono" required="true" style="width:100%" />
+                        <p:inputText id="telefono" value="#{clienteBean.cliente.phone}" placeholder="Número de teléfono" required="true" style="width:100%" />
                         
                         <p:outputLabel for="email" value="Email:" />
                         <p:inputText id="email" value="#{clienteBean.cliente.email}" placeholder="correo@ejemplo.com" style="width:100%" />
                         
                         <p:outputLabel for="direccion" value="Dirección:" />
-                        <p:inputTextarea id="direccion" value="#{clienteBean.cliente.direccion}" rows="2" style="width:100%" />
+                        <p:inputTextarea id="direccion" value="#{clienteBean.cliente.address}" rows="2" style="width:100%" />
                         
                         <p:outputLabel for="limiteCredito" value="Límite Crédito:" />
                         <p:inputNumber id="limiteCredito" value="#{clienteBean.cliente.limiteCredito}" symbol="$" decimalPlaces="2" style="width:100%" />
                         
-                        <p:outputLabel for="activo" value="Estado:" />
-                        <p:selectBooleanCheckbox id="activo" value="#{clienteBean.cliente.activo}" itemLabel="Cliente activo" />
                         
                     </p:panelGrid>
                     

@@ -28,7 +28,7 @@
                             <p:selectOneMenu id="producto" value="#{compraBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
                                 <f:selectItem itemLabel="🔍 Buscar por nombre o código..." itemValue="#{null}" noSelectionOption="true" />
                                 <f:selectItems value="#{inventarioBean.productos}" var="p"
-                                               itemLabel="#{p.nombre} (#{p.codigo}) - Stock: #{p.stock}" itemValue="#{p.id}" />
+                                               itemLabel="#{p.name} (#{p.codigo}) - Stock: #{p.stock}" itemValue="#{p.idProduct}" />
                             </p:selectOneMenu>
                         </div>
 
@@ -70,7 +70,7 @@
 
                         <div class="p-field">
                             <label for="stockInicial">Stock Inicial</label>
-                            <p:spinner id="stockInicial" value="#{compraBean.stockInicial}" min="1" max="1000" style="width:100%" />
+                            <p:spinner id="stockInicial" value="#{compraBean.stock}" min="1" max="1000" style="width:100%" />
                         </div>
 
                         <div class="p-field">
@@ -91,7 +91,7 @@
                         <p:selectOneMenu id="proveedor" value="#{compraBean.proveedorId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Seleccionar proveedor" itemValue="#{null}" noSelectionOption="true" />
                             <f:selectItems value="#{proveedorBean.proveedores}" var="prov"
-                                           itemLabel="#{prov.nombre} (#{prov.ruc})" itemValue="#{prov.id}" />
+                                           itemLabel="#{prov.name} (#{prov.identificationNumber})" itemValue="#{prov.idSupplier}" />
                         </p:selectOneMenu>
                     </div>
 
@@ -123,7 +123,7 @@
                         <span class="si-kpi-icon blue"><i class="pi pi-shopping-cart" /></span>
                         <div>
                             <div class="si-kpi-value">
-                                <h:outputText value="#{inventarioBean.totalCompras}">
+                                <h:outputText value="#{compraBean.totalCompras}">
                                     <f:convertNumber type="currency" currencySymbol="$" />
                                 </h:outputText>
                             </div>
@@ -140,18 +140,18 @@
             </div>
 
             <div class="si-glass-card">
-                <p:dataTable id="tablaCompras" value="#{inventarioBean.ultimasCompras}" var="m" emptyMessage="📭 Todavía no se han registrado compras." rows="15" paginator="true">
+                <p:dataTable id="tablaCompras" value="#{compraBean.compras}" var="m" emptyMessage="📭 Todavía no se han registrado compras." rows="15" paginator="true">
                     <p:column headerText="📅 Fecha">
                         <h:outputText value="#{m.fechaTexto}" />
                     </p:column>
                     <p:column headerText="📦 Producto">
-                        <h:outputText value="#{m.producto}" />
+                        <h:outputText value="#{m.productoNombre}" />
                     </p:column>
                     <p:column headerText="📊 Cantidad">
                         <h:outputText value="#{m.cantidad}" />
                     </p:column>
                     <p:column headerText="🚚 Proveedor">
-                        <h:outputText value="#{m.contraparte}" />
+                        <h:outputText value="#{m.proveedorNombre}" />
                     </p:column>
                     <p:column headerText="💰 Costo">
                         <h:outputText value="#{m.total}">
@@ -159,7 +159,7 @@
                         </h:outputText>
                     </p:column>
                     <p:column headerText="🎯 Tipo">
-                        <span class="product-badge #{m.tipoCompra eq 'adquirir' ? 'badge-success' : 'badge-info'}">#{m.tipoCompra}</span>
+                        <span class="product-badge #{m.tipo eq 'ADQUIRIR' ? 'badge-success' : 'badge-info'}">#{m.tipo}</span>
                     </p:column>
                 </p:dataTable>
             </div>
