@@ -41,7 +41,19 @@ public class ProductoBean implements Serializable {
     }
     
     public void editar(Product producto) {
-        this.producto = producto;
+        // Crear una copia del producto para editar
+        this.producto = new Product(
+            producto.getIdProduct(),
+            producto.getCodigo(),
+            producto.getName(),
+            producto.getDescription(),
+            producto.getCategoria(),
+            producto.getImagen(),
+            producto.getSalePrice(),
+            producto.getPurchasePrice(),
+            producto.getStock(),
+            producto.getMinStock()
+        );
     }
     
     public String guardar() {

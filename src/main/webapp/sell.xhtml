@@ -143,27 +143,21 @@
             </div>
 
             <div class="si-glass-card">
-                <p:dataTable id="tablaVentas" value="#{inventarioBean.ultimasVentas}" var="m" emptyMessage="Todavía no se han registrado ventas."
+                <p:dataTable id="tablaVentas" value="#{ventaBean.facturas}" var="m" emptyMessage="Todavía no se han registrado ventas."
                              rows="10" paginator="true" paginatorPosition="bottom">
-                    <p:column headerText="N° Venta">
-                        <h:outputText value="#{m.id}" />
+                    <p:column headerText="N° Factura">
+                        <h:outputText value="#{m.invoiceNumber}" />
                     </p:column>
                     <p:column headerText="Fecha">
-                        <h:outputText value="#{m.fechaTexto}" />
+                        <h:outputText value="#{m.invoiceDate}">
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                        </h:outputText>
                     </p:column>
                     <p:column headerText="Cliente">
-                        <h:outputText value="#{m.contraparte}" />
-                    </p:column>
-                    <p:column headerText="Productos">
-                        <h:outputText value="#{m.producto}" style="font-size:0.85rem;" />
+                        <h:outputText value="#{m.customer != null ? m.customer.name : 'Cliente Mostrador'}" />
                     </p:column>
                     <p:column headerText="Método">
-                        <h:outputText value="#{m.metodoPago}" />
-                    </p:column>
-                    <p:column headerText="Total" style="text-align:right;">
-                        <h:outputText value="#{m.total}">
-                            <f:convertNumber type="currency" currencySymbol="$" />
-                        </h:outputText>
+                        <h:outputText value="#{m.paymentMethod}" />
                     </p:column>
                     <p:column headerText="Acciones" style="width:80px;">
                         <p:commandButton icon="pi pi-print" title="Imprimir" styleClass="rounded-button" />
