@@ -89,7 +89,7 @@
                              emptyMessage="No se encontraron productos."
                              rows="15" paginator="true" paginatorPosition="bottom"
                              style="width:100%" filteredValue="#{productoBean.productosFiltrados}"
-                             rowStyleClass="#{p.stock lt p.stockMinimo ? 'row-warning' : ''}">
+                             rowStyleClass="#{p.stock lt p.minStock ? 'row-warning' : ''}">
                     
                     <p:column headerText="Código" width="10%" filterBy="#{p.codigo}" filterMatchMode="contains">
                         <div style="font-weight:600;color:var(--si-primary);">#{p.codigo}</div>
@@ -141,20 +141,18 @@
                     <p:column headerText="Acciones" width="14%" style="text-align:center;">
                         <div style="display:flex;gap:0.5rem;justify-content:center;">
                             <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button ui-button-info"
-                                            action="#{productoBean.editar(p)}" update="dialogProducto" oncomplete="PF('dialogProducto').show()" />
+                                            action="#{productoBean.editar(p)}" update="productsForm:dialogProducto" oncomplete="PF('dialogProducto').show()" />
                             <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="rounded-button ui-button-danger"
                                             action="#{productoBean.eliminar(p)}" update="msgProductos tablaProductos" />
                         </div>
                     </p:column>
                 </p:dataTable>
             </div>
-        </h:form>
 
-        <!-- ===== Diálogo para crear/editar producto ===== -->
-        <p:dialog widgetVar="dialogProducto" header="#{productoBean.producto.id == null ? 'Nuevo Producto' : 'Editar Producto'}" 
-                  modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade">
-            
-            <h:form id="productoForm">
+            <!-- ===== Diálogo para crear/editar producto ===== -->
+            <p:dialog id="dialogProducto" widgetVar="dialogProducto" header="#{productoBean.producto.idProduct == null ? 'Nuevo Producto' : 'Editar Producto'}" 
+                      modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade">
+                
                 <p:growl id="msgProductoForm" showDetail="true" life="4000" />
                 
                 <div class="si-form-card">
@@ -199,8 +197,9 @@
                                         update="msgProductoForm productsForm:tablaProductos" oncomplete="PF('dialogProducto').hide()" />
                     </div>
                 </div>
-            </h:form>
-        </p:dialog>
+            </p:dialog>
+
+        </h:form>
 
     </ui:define>
 </ui:composition>

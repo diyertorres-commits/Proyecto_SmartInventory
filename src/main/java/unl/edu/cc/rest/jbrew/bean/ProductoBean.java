@@ -213,4 +213,16 @@ public class ProductoBean implements Serializable {
     public void setStockDisponible(int stockDisponible) {
         this.stockDisponible = stockDisponible;
     }
+    
+    public int getTotalProductos() {
+        return inventarioBean.getProductos().size();
+    }
+    
+    public double getValorTotalInventario() {
+        double total = 0;
+        for (Product p : inventarioBean.getProductos()) {
+            total += p.getStock() * p.getPurchasePrice();
+        }
+        return total;
+    }
 }
