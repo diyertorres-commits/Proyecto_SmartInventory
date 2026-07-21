@@ -18,22 +18,24 @@
             <div class="si-glass-card">
                 <p:tabView>
                     <c:forEach items="#{inventarioBean.categorias}" var="cat">
-                        <p:tab title="#{cat}">
+                        <p:tab title="#{cat.name}">
                             <div class="si-category-grid">
-                                <ui:repeat value="#{inventarioBean.productosPorCategoria(cat)}" var="p">
-                                    <div class="product-item">
-                                        <div class="product-item-content">
-                                            <p:graphicImage library="images" name="products/#{p.imagen}" styleClass="product-image" />
-                                            <h4>#{p.name}</h4>
-                                            <p style="color:#6b7280;font-size:.8rem;min-height:2.4em;">#{p.description}</p>
-                                            <h6>
-                                                <h:outputText value="#{p.salePrice}">
-                                                    <f:convertNumber type="currency" currencySymbol="$" />
-                                                </h:outputText>
-                                            </h6>
-                                            <span class="product-badge #{p.estado.cssClass}">#{p.estado.texto} · #{p.stock} u.</span>
+                                <ui:repeat value="#{inventarioBean.productos}" var="p">
+                                    <h:panelGroup rendered="#{p.categoria eq cat.name}">
+                                        <div class="product-item">
+                                            <div class="product-item-content">
+                                                <p:graphicImage library="images" name="products/#{p.imagen}" styleClass="product-image" />
+                                                <h4>#{p.name}</h4>
+                                                <p style="color:#6b7280;font-size:.8rem;min-height:2.4em;">#{p.description}</p>
+                                                <h6>
+                                                    <h:outputText value="#{p.salePrice}">
+                                                        <f:convertNumber type="currency" currencySymbol="$" />
+                                                    </h:outputText>
+                                                </h6>
+                                                <span class="product-badge #{p.estado.cssClass}">#{p.estado.texto} · #{p.stock} u.</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </h:panelGroup>
                                 </ui:repeat>
                             </div>
                         </p:tab>

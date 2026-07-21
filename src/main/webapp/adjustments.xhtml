@@ -26,7 +26,7 @@
                         <p:selectOneMenu id="producto" value="#{ajusteBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}" noSelectionOption="true" />
                             <f:selectItems value="#{inventarioBean.productos}" var="p"
-                                           itemLabel="#{p.nombre} (stock actual: #{p.stock})" itemValue="#{p.id}" />
+                                           itemLabel="#{p.name} (stock actual: #{p.stock})" itemValue="#{p.idProduct}" />
                         </p:selectOneMenu>
                     </div>
                     

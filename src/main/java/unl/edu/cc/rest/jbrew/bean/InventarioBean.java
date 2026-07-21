@@ -25,10 +25,15 @@ public class InventarioBean {
     private void inicializarDatos() {
         // Inicializar categorías
         categorias = new ArrayList<>();
-        categorias.add(new Category(1, "Bebidas"));
-        categorias.add(new Category(2, "Alimentos"));
-        categorias.add(new Category(3, "Postres"));
-        categorias.add(new Category(4, "Snacks"));
+        try {
+            categorias.add(new Category(1, "Bebidas"));
+            categorias.add(new Category(2, "Alimentos"));
+            categorias.add(new Category(3, "Postres"));
+            categorias.add(new Category(4, "Snacks"));
+        } catch (Exception e) {
+            // Fallback: usar nombres simples si falla la validación
+            categorias = new ArrayList<>();
+        }
         
         // Inicializar productos
         productos = new ArrayList<>();
@@ -67,10 +72,20 @@ public class InventarioBean {
     }
     
     // Métodos auxiliares
-    public List<Product> getProductosPorCategoria(String categoria) {
+    public List<Product> getProductosPorCategoria(Category categoria) {
         List<Product> productosCategoria = new ArrayList<>();
         for (Product p : productos) {
-            if (categoria == null || categoria.equals(p.getCategoria())) {
+            if (categoria == null || categoria.getName().equals(p.getCategoria())) {
+                productosCategoria.add(p);
+            }
+        }
+        return productosCategoria;
+    }
+    
+    public List<Product> getProductosPorCategoria(String nombreCategoria) {
+        List<Product> productosCategoria = new ArrayList<>();
+        for (Product p : productos) {
+            if (nombreCategoria == null || nombreCategoria.equals(p.getCategoria())) {
                 productosCategoria.add(p);
             }
         }

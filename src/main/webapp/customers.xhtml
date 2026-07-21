@@ -72,13 +72,11 @@
                     </p:column>
                 </p:dataTable>
             </div>
-        </h:form>
 
-        <!-- ===== Diálogo para crear/editar cliente ===== -->
-        <p:dialog widgetVar="dialogCliente" header="#{clienteBean.cliente.id == null ? 'Nuevo Cliente' : 'Editar Cliente'}" 
-                  modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade">
-            
-            <h:form id="clienteForm">
+            <!-- ===== Diálogo para crear/editar cliente ===== -->
+            <p:dialog id="dialogCliente" widgetVar="dialogCliente" header="#{clienteBean.cliente.idCustomer == null ? 'Nuevo Cliente' : 'Editar Cliente'}" 
+                      modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade">
+                
                 <p:growl id="msgClienteForm" showDetail="true" life="4000" />
                 
                 <div class="si-form-card">
@@ -118,8 +116,9 @@
                                         update="msgClienteForm customersForm:tablaClientes" oncomplete="if(!args.validationFailed) PF('dialogCliente').hide()" />
                     </div>
                 </div>
-            </h:form>
-        </p:dialog>
+            </p:dialog>
+
+        </h:form>
 
     </ui:define>
 </ui:composition>

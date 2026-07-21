@@ -63,7 +63,7 @@
                         
                         <p:selectOneMenu id="filtroCategoria" value="#{productoBean.filtroCategoria}" style="width:200px;padding:0.75rem;border-radius:8px;">
                             <f:selectItem itemLabel="Todas las categorías" itemValue="#{null}" />
-                            <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat}" itemValue="#{cat}" />
+                            <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
                             <p:ajax listener="#{productoBean.filter()}" update="tablaProductos" />
                         </p:selectOneMenu>
                         
@@ -167,7 +167,7 @@
                         <p:outputLabel for="categoria" value="Categoría:" />
                         <p:selectOneMenu id="categoria" value="#{productoBean.producto.categoria}" required="true" style="width:100%">
                             <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
-                            <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat}" itemValue="#{cat}" />
+                            <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
                         </p:selectOneMenu>
                         
                         <p:outputLabel for="descripcion" value="Descripción:" />

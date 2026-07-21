@@ -121,30 +121,62 @@ html, body {
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
-.si-sidebar-menu.ui-menu .ui-submenu {
-    margin-left: 0;
-    margin-top: 0.5rem;
+/* Submenu container styles */
+.si-sidebar-menu .ui-submenu {
+    margin-left: 0 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-left: 0 !important;
+    border-left: 3px solid rgba(255, 255, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 0 0.5rem 0.5rem !important;
 }
 
-.si-sidebar-menu.ui-menu .ui-submenu > h3 {
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+.si-sidebar-menu .ui-submenu > h3 {
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin: 0 !important;
 }
 
-.si-sidebar-menu.ui-menu .ui-submenu > h3 .ui-icon {
-    margin-right: 0;
+.si-sidebar-menu .ui-submenu > h3 .ui-icon {
+    margin-right: 0 !important;
 }
 
-.si-sidebar-menu.ui-menu .ui-submenu .ui-menuitem-link {
-    padding: 0.6rem 1rem 0.6rem 2rem;
-    font-size: 0.9rem;
+.si-sidebar-menu .ui-submenu .ui-menu-list {
+    padding-left: 0 !important;
+    margin: 0 !important;
+}
+
+.si-sidebar-menu .ui-submenu .ui-menuitem {
+    padding-left: 0 !important;
+    margin: 0 !important;
+}
+
+.si-sidebar-menu .ui-submenu .ui-menuitem-link {
+    padding: 0.5rem 1rem 0.5rem 2.5rem !important;
+    font-size: 0.85rem !important;
+    margin-left: 0.5rem !important;
+    border-radius: 6px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.si-sidebar-menu .ui-submenu .ui-menuitem-link:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateX(4px) !important;
+    color: #ffffff !important;
+}
+
+.si-sidebar-menu .ui-submenu .ui-menuitem-link.ui-state-active {
+    background: rgba(37, 99, 235, 0.3) !important;
+    color: #ffffff !important;
 }
 
 .si-user-section-sidebar {

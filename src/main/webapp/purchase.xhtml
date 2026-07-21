@@ -54,7 +54,7 @@
                             <label for="categoria">Categoría</label>
                             <p:selectOneMenu id="categoria" value="#{compraBean.categoria}" style="width:100%">
                                 <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
-                                <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat}" itemValue="#{cat}" />
+                                <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
                             </p:selectOneMenu>
                         </div>
 
