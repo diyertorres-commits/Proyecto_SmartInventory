@@ -109,16 +109,18 @@ html, body {
     margin-bottom: 0.25rem;
 }
 
-.si-sidebar-menu.ui-menu .ui-menuitem-link:hover {
+.si-sidebar-menu.ui-menu .ui-menuitem-link.ui-state-active,
+.si-sidebar-menu.ui-menu .ui-menuitem-link.ui-state-active:hover {
+    background: rgba(37, 99, 235, 0.4) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2) !important;
+    transform: translateX(4px) !important;
+}
+
+.si-sidebar-menu.ui-menu .ui-menuitem-link:not(.ui-state-active):hover {
     background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     transform: translateX(4px);
-}
-
-.si-sidebar-menu.ui-menu .ui-menuitem-link.ui-state-active {
-    background: linear-gradient(135deg, var(--si-primary) 0%, var(--si-primary-dark) 100%);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* Submenu container styles */
@@ -177,6 +179,26 @@ html, body {
 .si-sidebar-menu .ui-submenu .ui-menuitem-link.ui-state-active {
     background: rgba(37, 99, 235, 0.3) !important;
     color: #ffffff !important;
+}
+
+/* Active menu item styling */
+.si-sidebar-menu .active-menu-item .ui-menuitem-link {
+    background: linear-gradient(135deg, var(--si-primary) 0%, var(--si-primary-dark) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    transform: translateX(4px) !important;
+}
+
+.si-sidebar-menu .active-submenu > h3 {
+    background: rgba(37, 99, 235, 0.2) !important;
+    color: #ffffff !important;
+    border-left: 3px solid var(--si-primary) !important;
+}
+
+.si-sidebar-menu .active-submenu .active-menu-item .ui-menuitem-link {
+    background: linear-gradient(135deg, var(--si-primary) 0%, var(--si-primary-dark) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
 }
 
 .si-user-section-sidebar {

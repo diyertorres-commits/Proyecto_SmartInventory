@@ -110,7 +110,16 @@ public class InventarioBean {
         }
         return null;
     }
-    
+
+    public Product buscarProductoPorNombre(String nombre) {
+        for (Product p : productos) {
+            if (p.getName().equals(nombre)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
     public Customer buscarClientePorId(int id) {
         for (Customer c : clientes) {
             if (c.getIdCustomer() == id) {

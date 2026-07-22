@@ -98,7 +98,7 @@
                     </p:column>
                     
                     <p:column headerText="Operación">
-                        <h:outputText value="#{ajuste.operacion}" styleClass="#{ajuste.operacion eq 'restar' ? 'text-red-600' : 'text-green-600'}" />
+                        <h:outputText value="#{ajuste.operacion}" styleClass="#{ajuste.operacion eq 'restar' ? 'text-danger' : 'text-success'}" />
                     </p:column>
                     
                     <p:column headerText="Cantidad">
@@ -135,11 +135,6 @@
             </div>
 
             <div class="si-dash-grid">
-                <div class="si-glass-card si-chart-card">
-                    <h5><i class="pi pi-chart-pie" style="margin-right:.4rem;color:var(--si-primary);" />Distribución por Tipo</h5>
-                    <p:chart value="#{ajusteBean.chartPorTipo}" style="height:280px" />
-                </div>
-
                 <div class="si-glass-card">
                     <h5 style="margin-top:0;color:var(--si-text-primary);">Estadísticas de Ajustes</h5>
                     <div class="si-kpi-grid" style="margin-top:1rem;">

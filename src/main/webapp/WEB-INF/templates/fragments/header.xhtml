@@ -35,6 +35,33 @@
                     <p:menuitem value="Reportes" icon="pi pi-chart-line" outcome="/reports.xhtml" />
                     <p:menuitem value="Dashboard" icon="pi pi-chart-bar" outcome="/dashboard.xhtml" />
                 </p:menu>
+                
+                <script type="text/javascript">
+                //<![CDATA[
+                    var currentPath = window.location.pathname;
+                    var links = document.querySelectorAll('.si-sidebar-menu a');
+                    
+                    links.forEach(function(link) {
+                        var href = link.getAttribute('href');
+                        var isActive = href && (currentPath === href || currentPath.includes(href.replace(/^\//, '')));
+                        
+                        if (isActive) {
+                            link.classList.add('ui-state-active');
+                        }
+                        
+                        // Add event listeners to handle hover states
+                        link.addEventListener('mouseenter', function() {
+                            this.classList.add('ui-state-active');
+                        });
+                        
+                        link.addEventListener('mouseleave', function() {
+                            if (!isActive) {
+                                this.classList.remove('ui-state-active');
+                            }
+                        });
+                    });
+                //]]>
+                </script>
             </h:form>
 
             <!-- Sección de usuario -->
