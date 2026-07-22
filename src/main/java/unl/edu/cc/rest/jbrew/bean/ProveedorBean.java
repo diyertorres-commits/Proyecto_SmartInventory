@@ -1,62 +1,47 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class ProveedorBean implements Serializable {
     
     @Inject
-    private InventarioBean inventarioBean;
+    private InventoryService inventoryService;
     
-    private Supplier proveedor;
-    private List<Supplier> proveedores;
-    private List<Supplier> proveedoresFiltrados;
+    private Supplier selectedSupplier;
+    private List<Supplier> filteredSuppliers;
     private String searchTerm;
     
     public ProveedorBean() {
-        this.proveedor = new Supplier();
-        this.proveedores = new ArrayList<>();
-        this.proveedoresFiltrados = new ArrayList<>();
+        this.selectedSupplier = new Supplier();
+        this.filteredSuppliers = List.of();
         this.searchTerm = "";
     }
     
-    public void prepararNuevo() {
-        this.proveedor = new Supplier();
+    public void prepareNewSupplier() {
+        this.selectedSupplier = new Supplier();
     }
     
-    public void editar(Supplier proveedor) {
-        this.proveedor = proveedor;
+    public void editSupplier(Supplier supplier) {
+        this.selectedSupplier = supplier;
     }
     
-    public String guardar() {
+    public String saveSupplier() {
         try {
-            if (proveedor.getIdSupplier() == 0) {
-                // Nuevo proveedor
-                proveedor.setIdSupplier(inventarioBean.getProveedores().size() + 1);
-                inventarioBean.getProveedores().add(proveedor);
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Proveedor creado correctamente"));
-            } else {
-                // Editar proveedor existente
-                for (int i = 0; i < inventarioBean.getProveedores().size(); i++) {
-                    if (inventarioBean.getProveedores().get(i).getIdSupplier() == proveedor.getIdSupplier()) {
-                        inventarioBean.getProveedores().set(i, proveedor);
-                        break;
-                    }
-                }
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Proveedor actualizado correctamente"));
-            }
-            prepararNuevo();
+            inventoryService.saveSupplier(selectedSupplier);
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
+                    selectedSupplier.getIdSupplier() == 0 ? "Proveedor creado correctamente" : "Proveedor actualizado correctamente"));
+            prepareNewSupplier();
             return null;
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
@@ -65,9 +50,9 @@ public class ProveedorBean implements Serializable {
         }
     }
     
-    public void eliminar(Supplier proveedor) {
+    public void deleteSupplier(Supplier supplier) {
         try {
-            inventarioBean.getProveedores().remove(proveedor);
+            inventoryService.deleteSupplier(supplier);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Proveedor eliminado correctamente"));
         } catch (Exception e) {
@@ -76,60 +61,86 @@ public class ProveedorBean implements Serializable {
         }
     }
     
-    // Getters y Setters
-    public Supplier getProveedor() {
-        return proveedor;
-    }
-    
-    public void setProveedor(Supplier proveedor) {
-        this.proveedor = proveedor;
-    }
-    
-    public List<Supplier> getProveedores() {
-        if (proveedores.isEmpty()) {
-            proveedores = inventarioBean.getProveedores();
-            proveedoresFiltrados = new ArrayList<>(proveedores);
-        }
-        return proveedores;
-    }
-    
-    public List<Supplier> getProveedoresFiltrados() {
-        if (proveedoresFiltrados.isEmpty()) {
-            proveedoresFiltrados = new ArrayList<>(inventarioBean.getProveedores());
-        }
-        return proveedoresFiltrados;
-    }
-    
-    public void setProveedoresFiltrados(List<Supplier> proveedoresFiltrados) {
-        this.proveedoresFiltrados = proveedoresFiltrados;
-    }
-    
-    public void search() {
-        proveedoresFiltrados = new ArrayList<>();
-        for (Supplier s : inventarioBean.getProveedores()) {
-            if (searchTerm == null || searchTerm.isEmpty() || 
-                s.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                s.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                s.getContacto().toLowerCase().contains(searchTerm.toLowerCase())) {
-                proveedoresFiltrados.add(s);
-            }
-        }
+    public void searchSuppliers() {
+        filteredSuppliers = inventoryService.getAllSuppliers().stream()
+                .filter(s -> searchTerm == null || searchTerm.isEmpty() || 
+                    s.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                    s.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                    s.getContacto().toLowerCase().contains(searchTerm.toLowerCase()))
+                .toList();
     }
     
     public void clearSearch() {
         searchTerm = "";
-        proveedoresFiltrados = new ArrayList<>(inventarioBean.getProveedores());
+        filteredSuppliers = inventoryService.getAllSuppliers();
+    }
+    
+    // Getters and Setters
+    public Supplier getSelectedSupplier() {
+        return selectedSupplier;
+    }
+    
+    public Supplier getProveedorSeleccionado() {
+        return getSelectedSupplier();
+    }
+    
+    public Supplier getProveedor() {
+        return getSelectedSupplier();
+    }
+    
+    public int getProveedorId() {
+        return selectedSupplier != null ? selectedSupplier.getIdSupplier() : 0;
+    }
+    
+    public void setSelectedSupplier(Supplier selectedSupplier) {
+        this.selectedSupplier = selectedSupplier;
+    }
+    
+    public void setProveedorId(int supplierId) {
+        Supplier supplier = inventoryService.findSupplierById(supplierId).orElse(null);
+        setSelectedSupplier(supplier);
+    }
+    
+    public void setProveedorSeleccionado(Supplier selectedSupplier) {
+        setSelectedSupplier(selectedSupplier);
+    }
+    
+    public List<Supplier> getFilteredSuppliers() {
+        if (filteredSuppliers.isEmpty()) {
+            filteredSuppliers = inventoryService.getAllSuppliers();
+        }
+        return filteredSuppliers;
+    }
+    
+    public List<Supplier> getProveedoresFiltrados() {
+        return getFilteredSuppliers();
+    }
+    
+    public List<Supplier> getProveedores() {
+        return getFilteredSuppliers();
+    }
+    
+    public void setFilteredSuppliers(List<Supplier> filteredSuppliers) {
+        this.filteredSuppliers = filteredSuppliers;
+    }
+    
+    public void setProveedoresFiltrados(List<Supplier> filteredSuppliers) {
+        setFilteredSuppliers(filteredSuppliers);
     }
     
     public String getSearchTerm() {
         return searchTerm;
     }
     
+    public String getTerminoBusqueda() {
+        return getSearchTerm();
+    }
+    
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
     }
     
-    public void setProveedores(List<Supplier> proveedores) {
-        this.proveedores = proveedores;
+    public void setTerminoBusqueda(String searchTerm) {
+        setSearchTerm(searchTerm);
     }
 }

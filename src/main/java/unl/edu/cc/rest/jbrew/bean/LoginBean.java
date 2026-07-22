@@ -1,49 +1,42 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.AuthenticationService;
 import java.io.Serializable;
 
 @Named
-@SessionScoped
+@RequestScoped
 public class LoginBean implements Serializable {
+    
+    @Inject
+    private AuthenticationService authenticationService;
     
     private String username;
     private String password;
     private boolean rememberMe;
-    private boolean loggedIn;
     
     public LoginBean() {
     }
     
     public String login() {
-        // Validación básica - en producción esto debería ir contra base de datos
-        if (username != null && password != null && 
-            !username.isEmpty() && !password.isEmpty()) {
-            
-            // Para demo: usuario específico
-            // En producción: validar contra base de datos real
-            if (username.equals("admin") && password.equals("admin123")) {
-                loggedIn = true;
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Bienvenido " + username));
-                return "/products.xhtml?faces-redirect=true";
-            } else {
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Usuario o contraseña incorrectos"));
-                return null;
-            }
+        AuthenticationService.AuthenticationResult result = authenticationService.authenticate(username, password);
+        
+        if (result.isSuccess()) {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
+            return "/products.xhtml?faces-redirect=true";
         } else {
             FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Por favor ingrese usuario y contraseña"));
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
             return null;
         }
     }
     
     public String logout() {
-        loggedIn = false;
         username = null;
         password = null;
         rememberMe = false;
@@ -54,11 +47,7 @@ public class LoginBean implements Serializable {
         return "/login.xhtml?faces-redirect=true";
     }
     
-    public boolean isLoggedIn() {
-        return loggedIn;
-    }
-    
-    // Getters y Setters
+    // Getters and Setters
     public String getUsername() {
         return username;
     }
@@ -81,9 +70,5 @@ public class LoginBean implements Serializable {
     
     public void setRememberMe(boolean rememberMe) {
         this.rememberMe = rememberMe;
-    }
-    
-    public void setLoggedIn(boolean loggedIn) {
-        this.loggedIn = loggedIn;
     }
 }

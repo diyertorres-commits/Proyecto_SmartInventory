@@ -1,10 +1,12 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.SalesService;
+import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
 import java.io.Serializable;
@@ -14,154 +16,213 @@ import java.util.Date;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class FacturaBean implements Serializable {
     
     @Inject
-    private VentaBean ventaBean;
+    private SalesService salesService;
     
     @Inject
-    private CompraBean compraBean;
+    private PurchaseService purchaseService;
     
-    private String tipoFactura;
-    private List<FacturaInfo> facturasFiltradas;
-    private FacturaInfo facturaSeleccionada;
+    private String invoiceType;
+    private List<InvoiceInfo> filteredInvoices;
+    private InvoiceInfo selectedInvoice;
     
     public FacturaBean() {
-        this.tipoFactura = "venta";
-        this.facturasFiltradas = new ArrayList<>();
-        this.facturaSeleccionada = new FacturaInfo();
+        this.invoiceType = "venta";
+        this.filteredInvoices = new ArrayList<>();
+        this.selectedInvoice = new InvoiceInfo();
     }
     
-    public void filtrar() {
-        facturasFiltradas = new ArrayList<>();
+    public void filterInvoices() {
+        filteredInvoices = new ArrayList<>();
         
-        if ("venta".equals(tipoFactura)) {
-            for (SaleInvoice factura : ventaBean.getFacturas()) {
-                FacturaInfo info = new FacturaInfo();
-                info.setNumero(factura.getInvoiceNumber());
-                info.setFecha(factura.getInvoiceDate());
-                info.setTipo("VENTA");
-                info.setTercero(factura.getCustomer() != null ? 
-                    factura.getCustomer().getName() + " " + factura.getCustomer().getApellido() : "Cliente Mostrador");
-                info.setMetodo(factura.getPaymentMethod());
-                info.setTotal(0); // Se puede calcular si se agregan items
-                facturasFiltradas.add(info);
+        if ("venta".equals(invoiceType)) {
+            for (SaleInvoice invoice : salesService.getSaleInvoices()) {
+                InvoiceInfo info = new InvoiceInfo();
+                info.setNumber(invoice.getInvoiceNumber());
+                info.setDate(invoice.getInvoiceDate());
+                info.setType("VENTA");
+                info.setThirdParty(invoice.getCustomer() != null ? 
+                    invoice.getCustomer().getName() + " " + invoice.getCustomer().getApellido() : "Cliente Mostrador");
+                info.setMethod(invoice.getPaymentMethod());
+                info.setTotal(0);
+                filteredInvoices.add(info);
             }
         } else {
-            for (PurchaseInvoice factura : compraBean.getFacturas()) {
-                FacturaInfo info = new FacturaInfo();
-                info.setNumero(factura.getInvoiceNumber());
-                info.setFecha(factura.getInvoiceDate());
-                info.setTipo("COMPRA");
-                info.setTercero(factura.getSupplier() != null ? factura.getSupplier().getName() : "N/A");
-                info.setMetodo(factura.getPurchaseOrderNumber());
-                info.setTotal(0); // Se puede calcular si se agregan items
-                facturasFiltradas.add(info);
+            for (PurchaseInvoice invoice : purchaseService.getPurchaseInvoices()) {
+                InvoiceInfo info = new InvoiceInfo();
+                info.setNumber(invoice.getInvoiceNumber());
+                info.setDate(invoice.getInvoiceDate());
+                info.setType("COMPRA");
+                info.setThirdParty(invoice.getSupplier() != null ? invoice.getSupplier().getName() : "N/A");
+                info.setMethod(invoice.getPurchaseOrderNumber());
+                info.setTotal(0);
+                filteredInvoices.add(info);
             }
         }
     }
     
-    public void verDetalle(FacturaInfo factura) {
-        this.facturaSeleccionada = factura;
+    public void viewDetail(InvoiceInfo invoice) {
+        this.selectedInvoice = invoice;
     }
     
-    public void imprimir(FacturaInfo factura) {
+    public void printInvoice(InvoiceInfo invoice) {
         FacesContext.getCurrentInstance().addMessage(null, 
-            new FacesMessage(FacesMessage.SEVERITY_INFO, "Impresión", "Factura #" + factura.getNumero() + " enviada a impresión"));
-        // Aquí se podría agregar lógica real de impresión
+            new FacesMessage(FacesMessage.SEVERITY_INFO, "Impresión", "Factura #" + invoice.getNumber() + " enviada a impresión"));
     }
     
-    // Getters y Setters
+    // Getters and Setters
+    public String getInvoiceType() {
+        return invoiceType;
+    }
+    
     public String getTipoFactura() {
-        return tipoFactura;
+        return getInvoiceType();
     }
     
-    public void setTipoFactura(String tipoFactura) {
-        this.tipoFactura = tipoFactura;
+    public void setInvoiceType(String invoiceType) {
+        this.invoiceType = invoiceType;
     }
     
-    public List<FacturaInfo> getFacturasFiltradas() {
-        if (facturasFiltradas.isEmpty()) {
-            filtrar();
+    public void setTipoFactura(String invoiceType) {
+        setInvoiceType(invoiceType);
+    }
+    
+    public List<InvoiceInfo> getFilteredInvoices() {
+        if (filteredInvoices.isEmpty()) {
+            filterInvoices();
         }
-        return facturasFiltradas;
+        return filteredInvoices;
     }
     
-    public void setFacturasFiltradas(List<FacturaInfo> facturasFiltradas) {
-        this.facturasFiltradas = facturasFiltradas;
+    public List<InvoiceInfo> getFacturasFiltradas() {
+        return getFilteredInvoices();
     }
     
-    public FacturaInfo getFacturaSeleccionada() {
-        return facturaSeleccionada;
+    public List<InvoiceInfo> getFacturas() {
+        return getFilteredInvoices();
     }
     
-    public void setFacturaSeleccionada(FacturaInfo facturaSeleccionada) {
-        this.facturaSeleccionada = facturaSeleccionada;
+    public void setFilteredInvoices(List<InvoiceInfo> filteredInvoices) {
+        this.filteredInvoices = filteredInvoices;
     }
     
-    // Clase interna para información de factura
-    public static class FacturaInfo implements Serializable {
-        private String numero;
-        private Date fecha;
-        private String tipo;
-        private String tercero;
-        private String metodo;
+    public InvoiceInfo getSelectedInvoice() {
+        return selectedInvoice;
+    }
+    
+    public InvoiceInfo getFacturaSeleccionada() {
+        return getSelectedInvoice();
+    }
+    
+    public void setSelectedInvoice(InvoiceInfo selectedInvoice) {
+        this.selectedInvoice = selectedInvoice;
+    }
+    
+    public void setFacturaSeleccionada(InvoiceInfo selectedInvoice) {
+        setSelectedInvoice(selectedInvoice);
+    }
+    
+    // Inner class for invoice information
+    public static class InvoiceInfo implements Serializable {
+        private String number;
+        private Date date;
+        private String type;
+        private String thirdParty;
+        private String method;
         private double total;
         
+        public String getNumber() {
+            return number;
+        }
+        
         public String getNumero() {
-            return numero;
+            return getNumber();
         }
         
-        public void setNumero(String numero) {
-            this.numero = numero;
+        public void setNumber(String number) {
+            this.number = number;
         }
         
-        public Date getFecha() {
-            return fecha;
+        public void setNumero(String number) {
+            setNumber(number);
         }
         
-        public void setFecha(Date fecha) {
-            this.fecha = fecha;
+        public Date getDate() {
+            return date;
+        }
+        
+        public void setDate(Date date) {
+            this.date = date;
+        }
+        
+        public String getType() {
+            return type;
         }
         
         public String getTipo() {
-            return tipo;
+            return getType();
         }
         
-        public void setTipo(String tipo) {
-            this.tipo = tipo;
+        public void setType(String type) {
+            this.type = type;
+        }
+        
+        public String getThirdParty() {
+            return thirdParty;
         }
         
         public String getTercero() {
-            return tercero;
+            return getThirdParty();
         }
         
-        public void setTercero(String tercero) {
-            this.tercero = tercero;
+        public void setThirdParty(String thirdParty) {
+            this.thirdParty = thirdParty;
+        }
+        
+        public String getMethod() {
+            return method;
         }
         
         public String getMetodo() {
-            return metodo;
+            return getMethod();
         }
         
-        public void setMetodo(String metodo) {
-            this.metodo = metodo;
+        public void setMethod(String method) {
+            this.method = method;
+        }
+        
+        public void setMetodo(String method) {
+            setMethod(method);
         }
         
         public double getTotal() {
             return total;
         }
         
+        public double getMonto() {
+            return getTotal();
+        }
+        
         public void setTotal(double total) {
             this.total = total;
         }
         
-        public String getFechaTexto() {
-            if (fecha != null) {
-                return new SimpleDateFormat("dd/MM/yyyy HH:mm").format(fecha);
+        public void setMonto(double total) {
+            setTotal(total);
+        }
+        
+        public String getFormattedDate() {
+            if (date != null) {
+                return new SimpleDateFormat("dd/MM/yyyy HH:mm").format(date);
             }
             return "";
+        }
+        
+        public String getFechaTexto() {
+            return getFormattedDate();
         }
     }
 }

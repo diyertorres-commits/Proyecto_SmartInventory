@@ -1,9 +1,11 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 
 import java.io.Serializable;
@@ -13,12 +15,13 @@ import java.util.Date;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class AjusteBean implements Serializable {
 
-    private InventarioBean inventarioBean;
+    @Inject
+    private InventoryService inventoryService;
 
-    private int productoId;
+    private Product selectedProduct;
     private String tipoAjuste;
     private int cantidad;
     private String operacion;
@@ -29,31 +32,18 @@ public class AjusteBean implements Serializable {
     private int contadorAjustes;
 
     public AjusteBean() {
-        // Default constructor required for CDI
-    }
-
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        inventarioBean = new InventarioBean();
-        ajustes = new ArrayList<>();
-        contadorAjustes = 1;
+        this.ajustes = new ArrayList<>();
+        this.contadorAjustes = 1;
     }
 
     public String registrarAjuste() {
-        if (productoId == 0 || tipoAjuste == null || cantidad <= 0 || operacion == null) {
+        if (selectedProduct == null || tipoAjuste == null || cantidad <= 0 || operacion == null) {
             FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Por favor complete todos los campos requeridos"));
             return null;
         }
 
-        Product producto = inventarioBean.buscarProductoPorId(productoId);
-        if (producto == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Producto no encontrado"));
-            return null;
-        }
-
-        int stockAnterior = producto.getStock();
+        int stockAnterior = selectedProduct.getStock();
         int stockNuevo = stockAnterior;
 
         if ("restar".equals(operacion)) {
@@ -67,12 +57,13 @@ public class AjusteBean implements Serializable {
             stockNuevo = stockAnterior + cantidad;
         }
 
-        producto.setStock(stockNuevo);
+        selectedProduct.setStock(stockNuevo);
+        inventoryService.saveProduct(selectedProduct);
 
         Ajuste ajuste = new Ajuste(
             contadorAjustes++,
             new Date(),
-            producto.getName(),
+            selectedProduct.getName(),
             tipoAjuste,
             operacion,
             cantidad,
@@ -92,9 +83,10 @@ public class AjusteBean implements Serializable {
     }
 
     public void revertir(Ajuste ajuste) {
-        Product producto = inventarioBean.buscarProductoPorNombre(ajuste.getProductoNombre());
+        Product producto = inventoryService.findProductByName(ajuste.getProductoNombre()).orElse(null);
         if (producto != null) {
             producto.setStock(ajuste.getStockAnterior());
+            inventoryService.saveProduct(producto);
             ajustes.remove(ajuste);
             FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
@@ -105,7 +97,7 @@ public class AjusteBean implements Serializable {
     }
 
     private void limpiarCampos() {
-        productoId = 0;
+        selectedProduct = null;
         tipoAjuste = null;
         cantidad = 0;
         operacion = null;
@@ -131,13 +123,38 @@ public class AjusteBean implements Serializable {
         return ajustes.size();
     }
 
-    // Getters y Setters
+    // Getters and Setters
+    public Product getSelectedProduct() {
+        return selectedProduct;
+    }
+    
+    public Product getProducto() {
+        return getSelectedProduct();
+    }
+    
     public int getProductoId() {
-        return productoId;
+        return selectedProduct != null ? selectedProduct.getIdProduct() : 0;
     }
 
-    public void setProductoId(int productoId) {
-        this.productoId = productoId;
+    public void setSelectedProduct(Product selectedProduct) {
+        this.selectedProduct = selectedProduct;
+    }
+    
+    public void setProducto(Product selectedProduct) {
+        setSelectedProduct(selectedProduct);
+    }
+    
+    public void setProductoId(int productId) {
+        Product product = inventoryService.findProductById(productId).orElse(null);
+        setSelectedProduct(product);
+    }
+
+    public List<Product> getAvailableProducts() {
+        return inventoryService.getAllProducts();
+    }
+    
+    public List<Product> getProductos() {
+        return getAvailableProducts();
     }
 
     public String getTipoAjuste() {

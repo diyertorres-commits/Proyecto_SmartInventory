@@ -1,140 +1,69 @@
 package unl.edu.cc.rest.jbrew.bean;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
-import java.util.ArrayList;
 import java.util.List;
 
 @Named
 @ApplicationScoped
 public class InventarioBean {
     
-    private List<Product> productos;
-    private List<Category> categorias;
-    private List<Customer> clientes;
-    private List<Supplier> proveedores;
+    @Inject
+    private InventoryService inventoryService;
     
     public InventarioBean() {
-        inicializarDatos();
+        // Constructor vacío, la inicialización se maneja en InventoryService
     }
     
-    private void inicializarDatos() {
-        // Inicializar categorías
-        categorias = new ArrayList<>();
-        try {
-            categorias.add(new Category(1, "Bebidas"));
-            categorias.add(new Category(2, "Alimentos"));
-            categorias.add(new Category(3, "Postres"));
-            categorias.add(new Category(4, "Snacks"));
-        } catch (Exception e) {
-            // Fallback: usar nombres simples si falla la validación
-            categorias = new ArrayList<>();
-        }
-        
-        // Inicializar productos
-        productos = new ArrayList<>();
-        productos.add(new Product(1, "CAF-001", "Café Americano", "Café americano tradicional", "Bebidas", "cafe_americano.jpg", 2.50, 1.20, 50, 10));
-        productos.add(new Product(2, "CAF-002", "Cappuccino", "Cappuccino italiano", "Bebidas", "cappuccino.jpg", 3.50, 1.80, 30, 8));
-        productos.add(new Product(3, "POS-001", "Sandwich de Pollo", "Sandwich de pollo con vegetales", "Alimentos", "sandwich_pollo.jpg", 5.00, 2.50, 25, 5));
-        productos.add(new Product(4, "POS-002", "Croissant", "Croissant de mantequilla", "Snacks", "croissant.jpg", 2.00, 0.80, 40, 15));
-        productos.add(new Product(5, "DES-001", "Cheesecake", "Cheesecake de frutos rojos", "Postres", "cheesecake.jpg", 4.50, 2.00, 15, 5));
-        
-        // Inicializar clientes
-        clientes = new ArrayList<>();
-        clientes.add(new Customer(1, "0912345678", "Juan", "Pérez", "0991234567", "juan.perez@email.com", "Av. Principal 123", "Empresa ABC", 1000.00));
-        clientes.add(new Customer(2, "0923456789", "María", "García", "0992345678", "maria.garcia@email.com", "Calle Secundaria 456", "Comercial XYZ", 500.00));
-        
-        // Inicializar proveedores
-        proveedores = new ArrayList<>();
-        proveedores.add(new Supplier(1, "1712345678001", "Distribuidora Central", "Distribuidora Central S.A.", "Carlos Rodríguez", "022345678", "central@distribuidora.com", "Av. Industrial 789"));
-        proveedores.add(new Supplier(2, "1723456789001", "Proveedores del Sur", "Proveedores del Sur Ltda.", "Ana Martínez", "022345679", "sur@proveedores.com", "Calle Comercial 321"));
-    }
-    
-    // Getters para las listas
+    // Getters delegados a InventoryService
     public List<Product> getProductos() {
-        return productos;
+        return inventoryService.getAllProducts();
     }
     
     public List<Category> getCategorias() {
-        return categorias;
+        return inventoryService.getAllCategories();
     }
     
     public List<Customer> getClientes() {
-        return clientes;
+        return inventoryService.getAllCustomers();
     }
     
     public List<Supplier> getProveedores() {
-        return proveedores;
+        return inventoryService.getAllSuppliers();
     }
     
-    // Métodos auxiliares
+    // Métodos auxiliares delegados a InventoryService
     public List<Product> getProductosPorCategoria(Category categoria) {
-        List<Product> productosCategoria = new ArrayList<>();
-        for (Product p : productos) {
-            if (categoria == null || categoria.getName().equals(p.getCategoria())) {
-                productosCategoria.add(p);
-            }
-        }
-        return productosCategoria;
+        return inventoryService.findProductsByCategory(categoria);
     }
     
     public List<Product> getProductosPorCategoria(String nombreCategoria) {
-        List<Product> productosCategoria = new ArrayList<>();
-        for (Product p : productos) {
-            if (nombreCategoria == null || nombreCategoria.equals(p.getCategoria())) {
-                productosCategoria.add(p);
-            }
-        }
-        return productosCategoria;
+        return inventoryService.findProductsByCategory(nombreCategoria);
     }
     
     public List<Product> getProductosStockCritico() {
-        List<Product> stockCritico = new ArrayList<>();
-        for (Product p : productos) {
-            if (p.getStock() <= p.getMinStock()) {
-                stockCritico.add(p);
-            }
-        }
-        return stockCritico;
+        return inventoryService.findProductsWithCriticalStock();
     }
     
     public Product buscarProductoPorId(int id) {
-        for (Product p : productos) {
-            if (p.getIdProduct() == id) {
-                return p;
-            }
-        }
-        return null;
+        return inventoryService.findProductById(id).orElse(null);
     }
 
     public Product buscarProductoPorNombre(String nombre) {
-        for (Product p : productos) {
-            if (p.getName().equals(nombre)) {
-                return p;
-            }
-        }
-        return null;
+        return inventoryService.findProductByName(nombre).orElse(null);
     }
 
     public Customer buscarClientePorId(int id) {
-        for (Customer c : clientes) {
-            if (c.getIdCustomer() == id) {
-                return c;
-            }
-        }
-        return null;
+        return inventoryService.findCustomerById(id).orElse(null);
     }
     
     public Supplier buscarProveedorPorId(int id) {
-        for (Supplier s : proveedores) {
-            if (s.getIdSupplier() == id) {
-                return s;
-            }
-        }
-        return null;
+        return inventoryService.findSupplierById(id).orElse(null);
     }
 }

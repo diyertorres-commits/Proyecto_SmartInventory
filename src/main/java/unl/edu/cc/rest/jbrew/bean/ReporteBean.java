@@ -1,10 +1,13 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.SalesService;
+import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
@@ -14,17 +17,17 @@ import java.util.Date;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class ReporteBean implements Serializable {
     
     @Inject
-    private InventarioBean inventarioBean;
+    private InventoryService inventoryService;
     
     @Inject
-    private VentaBean ventaBean;
+    private SalesService salesService;
     
     @Inject
-    private CompraBean compraBean;
+    private PurchaseService purchaseService;
     
     private String tipoReporte;
     private Date fechaInicio;
@@ -67,14 +70,14 @@ public class ReporteBean implements Serializable {
     }
     
     private void generarReporteVentas() {
-        for (SaleInvoice factura : ventaBean.getFacturas()) {
+        for (SaleInvoice factura : salesService.getSaleInvoices()) {
             DatoReporte dato = new DatoReporte();
             dato.setId(factura.getIdInvoice());
             dato.setFecha(factura.getInvoiceDate());
             dato.setTipo(factura.getInvoiceNumber());
             dato.setCliente(factura.getCustomer() != null ? factura.getCustomer().getName() : "Cliente Mostrador");
             dato.setMetodo(factura.getPaymentMethod());
-            dato.setTotal(0); // Se puede calcular si se agregan items
+            dato.setTotal(0);
             datosReporte.add(dato);
             
             totalTransacciones++;
@@ -82,14 +85,14 @@ public class ReporteBean implements Serializable {
     }
     
     private void generarReporteCompras() {
-        for (PurchaseInvoice factura : compraBean.getFacturas()) {
+        for (PurchaseInvoice factura : purchaseService.getPurchaseInvoices()) {
             DatoReporte dato = new DatoReporte();
             dato.setId(factura.getIdInvoice());
             dato.setFecha(factura.getInvoiceDate());
             dato.setTipo(factura.getInvoiceNumber());
             dato.setCliente(factura.getSupplier() != null ? factura.getSupplier().getName() : "N/A");
             dato.setMetodo(factura.getPurchaseOrderNumber());
-            dato.setTotal(0); // Se puede calcular si se agregan items
+            dato.setTotal(0);
             datosReporte.add(dato);
             
             totalTransacciones++;
@@ -97,7 +100,7 @@ public class ReporteBean implements Serializable {
     }
     
     private void generarReporteRotacion() {
-        for (Product producto : inventarioBean.getProductos()) {
+        for (Product producto : inventoryService.getAllProducts()) {
             DatoReporte dato = new DatoReporte();
             dato.setId(producto.getIdProduct());
             dato.setTipo(producto.getName());
@@ -107,7 +110,7 @@ public class ReporteBean implements Serializable {
             datosReporte.add(dato);
         }
         
-        totalTransacciones = inventarioBean.getProductos().size();
+        totalTransacciones = inventoryService.getAllProducts().size();
     }
     
     public void exportarPDF() {

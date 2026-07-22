@@ -1,82 +1,68 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Inventory.ProductStatus;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class ProductoBean implements Serializable {
     
     @Inject
-    private InventarioBean inventarioBean;
+    private InventoryService inventoryService;
     
-    private Product producto;
-    private List<Product> productosFiltrados;
+    private Product selectedProduct;
+    private List<Product> filteredProducts;
     private String searchTerm;
-    private String filtroCategoria;
-    private String filtroEstado;
+    private String categoryFilter;
+    private String statusFilter;
     
-    private int stockTotal;
-    private int stockBajo;
-    private int stockDisponible;
+    private int totalStock;
+    private int lowStockCount;
+    private int availableStockCount;
     
     public ProductoBean() {
-        this.producto = new Product();
-        this.productosFiltrados = new ArrayList<>();
+        this.selectedProduct = new Product();
+        this.filteredProducts = List.of();
         this.searchTerm = "";
-        this.filtroCategoria = null;
-        this.filtroEstado = null;
+        this.categoryFilter = null;
+        this.statusFilter = null;
     }
     
-    public void prepararNuevo() {
-        this.producto = new Product();
+    public void prepareNewProduct() {
+        this.selectedProduct = new Product();
     }
     
-    public void editar(Product producto) {
-        // Crear una copia del producto para editar
-        this.producto = new Product(
-            producto.getIdProduct(),
-            producto.getCodigo(),
-            producto.getName(),
-            producto.getDescription(),
-            producto.getCategoria(),
-            producto.getImagen(),
-            producto.getSalePrice(),
-            producto.getPurchasePrice(),
-            producto.getStock(),
-            producto.getMinStock()
+    public void editProduct(Product product) {
+        this.selectedProduct = new Product(
+            product.getIdProduct(),
+            product.getCodigo(),
+            product.getName(),
+            product.getDescription(),
+            product.getCategoria(),
+            product.getImagen(),
+            product.getSalePrice(),
+            product.getPurchasePrice(),
+            product.getStock(),
+            product.getMinStock()
         );
     }
     
-    public String guardar() {
+    public String saveProduct() {
         try {
-            if (producto.getIdProduct() == 0) {
-                // Nuevo producto
-                producto.setIdProduct(inventarioBean.getProductos().size() + 1);
-                inventarioBean.getProductos().add(producto);
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto creado correctamente"));
-            } else {
-                // Editar producto existente
-                for (int i = 0; i < inventarioBean.getProductos().size(); i++) {
-                    if (inventarioBean.getProductos().get(i).getIdProduct() == producto.getIdProduct()) {
-                        inventarioBean.getProductos().set(i, producto);
-                        break;
-                    }
-                }
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto actualizado correctamente"));
-            }
-            prepararNuevo();
-            actualizarEstadisticas();
+            inventoryService.saveProduct(selectedProduct);
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
+                    selectedProduct.getIdProduct() == 0 ? "Producto creado correctamente" : "Producto actualizado correctamente"));
+            prepareNewProduct();
+            updateStatistics();
             return null;
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
@@ -85,97 +71,112 @@ public class ProductoBean implements Serializable {
         }
     }
     
-    public void eliminar(Product producto) {
+    public void deleteProduct(Product product) {
         try {
-            inventarioBean.getProductos().remove(producto);
+            inventoryService.deleteProduct(product);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto eliminado correctamente"));
-            actualizarEstadisticas();
+            updateStatistics();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al eliminar producto: " + e.getMessage()));
         }
     }
     
-    public void search() {
-        productosFiltrados = new ArrayList<>();
-        for (Product p : inventarioBean.getProductos()) {
-            if (searchTerm == null || searchTerm.isEmpty() || 
-                p.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                p.getCodigo().toLowerCase().contains(searchTerm.toLowerCase())) {
-                productosFiltrados.add(p);
-            }
-        }
-        aplicarFiltros();
+    public void searchProducts() {
+        List<Product> allProducts = inventoryService.getAllProducts();
+        filteredProducts = allProducts.stream()
+                .filter(p -> searchTerm == null || searchTerm.isEmpty() || 
+                    p.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                    p.getCodigo().toLowerCase().contains(searchTerm.toLowerCase()))
+                .toList();
+        applyFilters();
     }
     
-    public void filter() {
-        search();
+    public void filterProducts() {
+        searchProducts();
     }
     
     public void clearFilters() {
         searchTerm = "";
-        filtroCategoria = null;
-        filtroEstado = null;
-        productosFiltrados = new ArrayList<>(inventarioBean.getProductos());
+        categoryFilter = null;
+        statusFilter = null;
+        filteredProducts = inventoryService.getAllProducts();
     }
     
-    private void aplicarFiltros() {
-        List<Product> filtrados = new ArrayList<>(productosFiltrados);
-        
-        if (filtroCategoria != null && !filtroCategoria.isEmpty()) {
-            filtrados.removeIf(p -> !filtroCategoria.equals(p.getCategoria()));
+    private void applyFilters() {
+        if (categoryFilter != null && !categoryFilter.isEmpty()) {
+            filteredProducts = filteredProducts.stream()
+                    .filter(p -> categoryFilter.equals(p.getCategoria()))
+                    .toList();
         }
         
-        if (filtroEstado != null && !filtroEstado.isEmpty()) {
-            filtrados.removeIf(p -> !filtroEstado.equals(getEstadoTexto(p.getEstado())));
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            filteredProducts = filteredProducts.stream()
+                    .filter(p -> statusFilter.equals(getStatusText(p.getEstado())))
+                    .toList();
         }
-        
-        productosFiltrados = filtrados;
     }
     
-    private String getEstadoTexto(ProductStatus estado) {
-        if (estado == ProductStatus.DISPONIBLE) return "disponible";
-        if (estado == ProductStatus.STOCK_BAJO) return "bajo";
-        if (estado == ProductStatus.AGOTADO) return "agotado";
+    private String getStatusText(ProductStatus status) {
+        if (status == ProductStatus.DISPONIBLE) return "disponible";
+        if (status == ProductStatus.STOCK_BAJO) return "bajo";
+        if (status == ProductStatus.AGOTADO) return "agotado";
         return "";
     }
     
-    private void actualizarEstadisticas() {
-        stockTotal = 0;
-        stockBajo = 0;
-        stockDisponible = 0;
-        
-        for (Product p : inventarioBean.getProductos()) {
-            stockTotal += p.getStock();
-            if (p.getStock() <= p.getMinStock()) {
-                stockBajo++;
-            }
-            if (p.getStock() > p.getMinStock()) {
-                stockDisponible++;
-            }
-        }
+    private void updateStatistics() {
+        List<Product> allProducts = inventoryService.getAllProducts();
+        totalStock = allProducts.stream()
+                .mapToInt(Product::getStock)
+                .sum();
+        lowStockCount = (int) allProducts.stream()
+                .filter(p -> p.getStock() <= p.getMinStock())
+                .count();
+        availableStockCount = (int) allProducts.stream()
+                .filter(p -> p.getStock() > p.getMinStock())
+                .count();
     }
     
-    // Getters y Setters
+    // Getters and Setters
+    public Product getSelectedProduct() {
+        return selectedProduct;
+    }
+    
     public Product getProducto() {
-        return producto;
+        return selectedProduct;
     }
     
-    public void setProducto(Product producto) {
-        this.producto = producto;
+    public void setSelectedProduct(Product selectedProduct) {
+        this.selectedProduct = selectedProduct;
+    }
+    
+    public void setProducto(Product selectedProduct) {
+        setSelectedProduct(selectedProduct);
+    }
+    
+    public List<Product> getFilteredProducts() {
+        if (filteredProducts.isEmpty()) {
+            filteredProducts = inventoryService.getAllProducts();
+            updateStatistics();
+        }
+        return filteredProducts;
     }
     
     public List<Product> getProductosFiltrados() {
-        if (productosFiltrados.isEmpty()) {
-            productosFiltrados = new ArrayList<>(inventarioBean.getProductos());
-            actualizarEstadisticas();
-        }
-        return productosFiltrados;
+        return getFilteredProducts();
     }
     
-    public void setProductosFiltrados(List<Product> productosFiltrados) {
-        this.productosFiltrados = productosFiltrados;
+    public List<Product> getProductos() {
+        return getFilteredProducts();
+    }
+    
+    public void setProductosFiltrados(List<Product> filteredProducts) {
+        setFilteredProducts(filteredProducts);
+    }
+    
+    public void setFilteredProducts(List<Product> filteredProducts) {
+        this.filteredProducts = filteredProducts;
     }
     
     public String getSearchTerm() {
@@ -186,55 +187,85 @@ public class ProductoBean implements Serializable {
         this.searchTerm = searchTerm;
     }
     
-    public String getFiltroCategoria() {
-        return filtroCategoria;
+    public void setTerminoBusqueda(String searchTerm) {
+        setSearchTerm(searchTerm);
     }
     
-    public void setFiltroCategoria(String filtroCategoria) {
-        this.filtroCategoria = filtroCategoria;
+    public String getCategoryFilter() {
+        return categoryFilter;
+    }
+    
+    public String getFiltroCategoria() {
+        return getCategoryFilter();
+    }
+    
+    public void setCategoryFilter(String categoryFilter) {
+        this.categoryFilter = categoryFilter;
+    }
+    
+    public String getStatusFilter() {
+        return statusFilter;
     }
     
     public String getFiltroEstado() {
-        return filtroEstado;
+        return getStatusFilter();
     }
     
-    public void setFiltroEstado(String filtroEstado) {
-        this.filtroEstado = filtroEstado;
+    public void setStatusFilter(String statusFilter) {
+        this.statusFilter = statusFilter;
     }
     
-    public int getStockTotal() {
-        return stockTotal;
+    public void setFiltroEstado(String statusFilter) {
+        setStatusFilter(statusFilter);
     }
     
-    public void setStockTotal(int stockTotal) {
-        this.stockTotal = stockTotal;
+    public int getTotalStock() {
+        return totalStock;
+    }
+    
+    public void setTotalStock(int totalStock) {
+        this.totalStock = totalStock;
+    }
+    
+    public int getLowStockCount() {
+        return lowStockCount;
     }
     
     public int getStockBajo() {
-        return stockBajo;
+        return getLowStockCount();
     }
     
-    public void setStockBajo(int stockBajo) {
-        this.stockBajo = stockBajo;
+    public void setLowStockCount(int lowStockCount) {
+        this.lowStockCount = lowStockCount;
+    }
+    
+    public int getAvailableStockCount() {
+        return availableStockCount;
     }
     
     public int getStockDisponible() {
-        return stockDisponible;
+        return getAvailableStockCount();
     }
     
-    public void setStockDisponible(int stockDisponible) {
-        this.stockDisponible = stockDisponible;
+    public void setAvailableStockCount(int availableStockCount) {
+        this.availableStockCount = availableStockCount;
+    }
+    
+    public int getTotalProducts() {
+        return inventoryService.getAllProducts().size();
     }
     
     public int getTotalProductos() {
-        return inventarioBean.getProductos().size();
+        return getTotalProducts();
+    }
+    
+    public double getTotalInventoryValue() {
+        return inventoryService.getAllProducts().stream()
+                .mapToDouble(p -> p.getStock() * p.getPurchasePrice())
+                .sum();
     }
     
     public double getValorTotalInventario() {
-        double total = 0;
-        for (Product p : inventarioBean.getProductos()) {
-            total += p.getStock() * p.getPurchasePrice();
-        }
-        return total;
+        return getTotalInventoryValue();
     }
 }

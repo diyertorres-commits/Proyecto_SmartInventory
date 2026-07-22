@@ -1,398 +1,340 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
-import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductNameException;
-import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
-import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductStockException;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class CompraBean implements Serializable {
     
     @Inject
-    private InventarioBean inventarioBean;
+    private InventoryService inventoryService;
     
-    // Campos para REABASTECER
-    private int productoId;
-    private int cantidad;
+    @Inject
+    private PurchaseService purchaseService;
     
-    // Campos para ADQUIRIR NUEVO PRODUCTO
-    private String codigo;
-    private String nombre;
-    private String categoria;
-    private String descripcion;
-    private double precioVenta;
-    private int stock;
-    private int stockMinimo;
-    private String imagen;
+    // Objects for RESTOCK operation
+    private Product selectedProductForRestock;
+    private int restockQuantity;
+    private double restockPurchasePrice;
     
-    // Campos comunes
-    private int proveedorId;
-    private double precioCompra;
+    // Object for ACQUIRE NEW PRODUCT operation
+    private Product newProduct;
     
-    // Historial de compras y facturas
-    private List<Compra> compras;
-    private List<PurchaseInvoice> facturas;
-    private int contadorFacturas;
+    // Common fields
+    private Supplier selectedSupplier;
+    
+    // Purchase history and invoices
+    private List<PurchaseService.PurchaseRecord> purchaseHistory;
+    private List<PurchaseInvoice> purchaseInvoices;
     
     public CompraBean() {
-        this.productoId = 0;
-        this.cantidad = 1;
-        this.codigo = "";
-        this.nombre = "";
-        this.categoria = "";
-        this.descripcion = "";
-        this.precioVenta = 0;
-        this.stock = 0;
-        this.stockMinimo = 0;
-        this.imagen = "";
-        this.proveedorId = 0;
-        this.precioCompra = 0;
-        this.compras = new ArrayList<>();
-        this.facturas = new ArrayList<>();
-        this.contadorFacturas = 1;
+        this.selectedProductForRestock = null;
+        this.restockQuantity = 1;
+        this.restockPurchasePrice = 0;
+        this.newProduct = new Product();
+        this.selectedSupplier = null;
+        this.purchaseHistory = List.of();
+        this.purchaseInvoices = List.of();
     }
     
-    public String registrarCompra() {
-        try {
-            // Verificar que se haya seleccionado un proveedor
-            if (proveedorId == 0) {
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un proveedor"));
-                return null;
-            }
-            
-            Supplier proveedor = inventarioBean.buscarProveedorPorId(proveedorId);
-            
-            // Determinar el tipo de compra basado en si hay productoId
-            if (productoId != 0) {
-                // REABASTECER producto existente
-                Product producto = inventarioBean.buscarProductoPorId(productoId);
-                if (producto == null) {
-                    FacesContext.getCurrentInstance().addMessage(null, 
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Producto no encontrado"));
-                    return null;
-                }
-                
-                // Actualizar stock
-                producto.modifyStock(cantidad);
-                producto.setPurchasePrice(precioCompra);
-                
-                // Registrar en historial
-                Compra compra = new Compra();
-                compra.setId(compras.size() + 1);
-                compra.setFecha(new Date());
-                compra.setTipo("REABASTECER");
-                compra.setProductoNombre(producto.getName());
-                compra.setCantidad(cantidad);
-                compra.setPrecioCompra(precioCompra);
-                compra.setTotal(cantidad * precioCompra);
-                compra.setProveedorNombre(proveedor.getName());
-                compras.add(compra);
-                
-                // Generar factura de compra
-                PurchaseInvoice factura = new PurchaseInvoice();
-                factura.setIdInvoice(contadorFacturas++);
-                factura.setInvoiceDate(new Date());
-                factura.setInvoiceNumber("FAC-COMP-" + String.format("%06d", factura.getIdInvoice()));
-                factura.setPurchaseOrderNumber("PO-" + String.format("%06d", contadorFacturas));
-                factura.setSupplier(proveedor);
-                facturas.add(factura);
-                
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Stock reabastecido correctamente. Factura #" + factura.getInvoiceNumber() + " generada"));
-                
-            } else {
-                // ADQUIRIR nuevo producto
-                if (codigo.isEmpty() || nombre.isEmpty() || categoria.isEmpty()) {
-                    FacesContext.getCurrentInstance().addMessage(null, 
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Complete los campos obligatorios"));
-                    return null;
-                }
-                
-                // Crear nuevo producto
-                Product nuevoProducto = new Product(
-                    inventarioBean.getProductos().size() + 1,
-                    codigo,
-                    nombre,
-                    descripcion,
-                    categoria,
-                    imagen,
-                    precioVenta,
-                    precioCompra,
-                    stock,
-                    stockMinimo
-                );
-                
-                inventarioBean.getProductos().add(nuevoProducto);
-                
-                // Registrar en historial
-                Compra compra = new Compra();
-                compra.setId(compras.size() + 1);
-                compra.setFecha(new Date());
-                compra.setTipo("ADQUIRIR");
-                compra.setProductoNombre(nombre);
-                compra.setCantidad(stock);
-                compra.setPrecioCompra(precioCompra);
-                compra.setTotal(stock * precioCompra);
-                compra.setProveedorNombre(proveedor.getName());
-                compras.add(compra);
-                
-                // Generar factura de compra
-                PurchaseInvoice factura = new PurchaseInvoice();
-                factura.setIdInvoice(contadorFacturas++);
-                factura.setInvoiceDate(new Date());
-                factura.setInvoiceNumber("FAC-COMP-" + String.format("%06d", factura.getIdInvoice()));
-                factura.setPurchaseOrderNumber("PO-" + String.format("%06d", contadorFacturas));
-                factura.setSupplier(proveedor);
-                facturas.add(factura);
-                
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Nuevo producto adquirido correctamente. Factura #" + factura.getInvoiceNumber() + " generada"));
-            }
-            
-            // Limpiar campos
-            limpiarCampos();
-            
-            return null;
-        } catch (InvalidProductNameException | InvalidProductPriceException | InvalidProductStockException e) {
+    public String processRestockPurchase() {
+        if (selectedSupplier == null) {
             FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error de validación: " + e.getMessage()));
-            return null;
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al registrar compra: " + e.getMessage()));
+                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un proveedor"));
             return null;
         }
+        
+        if (selectedProductForRestock == null) {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Seleccione un producto"));
+            return null;
+        }
+        
+        PurchaseService.PurchaseResult result = purchaseService.processRestockPurchase(
+            selectedProductForRestock, restockQuantity, restockPurchasePrice, selectedSupplier);
+        
+        if (result.isSuccess()) {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
+            refreshPurchaseData();
+            clearRestockFields();
+        } else {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
+        }
+        
+        return null;
     }
     
-    private void limpiarCampos() {
-        productoId = 0;
-        cantidad = 1;
-        codigo = "";
-        nombre = "";
-        categoria = "";
-        descripcion = "";
-        precioVenta = 0;
-        stock = 0;
-        stockMinimo = 0;
-        imagen = "";
-        proveedorId = 0;
-        precioCompra = 0;
+    public String processNewProductPurchase() {
+        if (selectedSupplier == null) {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un proveedor"));
+            return null;
+        }
+        
+        PurchaseService.PurchaseResult result = purchaseService.processNewProductPurchase(newProduct, selectedSupplier);
+        
+        if (result.isSuccess()) {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
+            refreshPurchaseData();
+            clearNewProductFields();
+        } else {
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
+        }
+        
+        return null;
     }
     
-    // Getters y Setters
-    public int getProductoId() {
-        return productoId;
+    private void refreshPurchaseData() {
+        this.purchaseHistory = purchaseService.getPurchaseHistory();
+        this.purchaseInvoices = purchaseService.getPurchaseInvoices();
     }
     
-    public void setProductoId(int productoId) {
-        this.productoId = productoId;
+    private void clearRestockFields() {
+        this.selectedProductForRestock = null;
+        this.restockQuantity = 1;
+        this.restockPurchasePrice = 0;
+    }
+    
+    private void clearNewProductFields() {
+        this.newProduct = new Product();
+    }
+    
+    // Getters and Setters
+    public Product getSelectedProductForRestock() {
+        return selectedProductForRestock;
+    }
+    
+    public void setSelectedProductForRestock(Product selectedProductForRestock) {
+        this.selectedProductForRestock = selectedProductForRestock;
+    }
+    
+    public int getRestockQuantity() {
+        return restockQuantity;
     }
     
     public int getCantidad() {
-        return cantidad;
+        return getRestockQuantity();
     }
     
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+    public void setRestockQuantity(int restockQuantity) {
+        this.restockQuantity = restockQuantity;
+    }
+    
+    public void setCantidad(int restockQuantity) {
+        setRestockQuantity(restockQuantity);
+    }
+    
+    public double getRestockPurchasePrice() {
+        return restockPurchasePrice;
+    }
+    
+    public void setRestockPurchasePrice(double restockPurchasePrice) {
+        this.restockPurchasePrice = restockPurchasePrice;
+    }
+    
+    public Product getNewProduct() {
+        return newProduct;
+    }
+    
+    public void setNewProduct(Product newProduct) {
+        this.newProduct = newProduct;
+    }
+    
+    public Supplier getSelectedSupplier() {
+        return selectedSupplier;
+    }
+    
+    public Supplier getProveedorSeleccionado() {
+        return getSelectedSupplier();
+    }
+    
+    public Supplier getProveedor() {
+        return getSelectedSupplier();
+    }
+    
+    public int getProductoId() {
+        return selectedProductForRestock != null ? selectedProductForRestock.getIdProduct() : 0;
     }
     
     public String getCodigo() {
-        return codigo;
-    }
-    
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
+        return selectedProductForRestock != null ? selectedProductForRestock.getCodigo() : "";
     }
     
     public String getNombre() {
-        return nombre;
-    }
-    
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-    
-    public String getCategoria() {
-        return categoria;
-    }
-    
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
+        return selectedProductForRestock != null ? selectedProductForRestock.getName() : "";
     }
     
     public String getDescripcion() {
-        return descripcion;
+        return selectedProductForRestock != null ? selectedProductForRestock.getDescription() : "";
     }
     
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
+    public String getCategoria() {
+        return selectedProductForRestock != null ? selectedProductForRestock.getCategoria() : "";
     }
     
     public double getPrecioVenta() {
-        return precioVenta;
-    }
-    
-    public void setPrecioVenta(double precioVenta) {
-        this.precioVenta = precioVenta;
-    }
-    
-    public int getStock() {
-        return stock;
-    }
-    
-    public void setStock(int stock) {
-        this.stock = stock;
-    }
-    
-    public int getStockMinimo() {
-        return stockMinimo;
-    }
-    
-    public void setStockMinimo(int stockMinimo) {
-        this.stockMinimo = stockMinimo;
-    }
-    
-    public String getImagen() {
-        return imagen;
-    }
-    
-    public void setImagen(String imagen) {
-        this.imagen = imagen;
-    }
-    
-    public int getProveedorId() {
-        return proveedorId;
-    }
-    
-    public void setProveedorId(int proveedorId) {
-        this.proveedorId = proveedorId;
+        return selectedProductForRestock != null ? selectedProductForRestock.getSalePrice() : 0;
     }
     
     public double getPrecioCompra() {
-        return precioCompra;
+        return selectedProductForRestock != null ? selectedProductForRestock.getPurchasePrice() : 0;
     }
     
-    public void setPrecioCompra(double precioCompra) {
-        this.precioCompra = precioCompra;
+    public int getStock() {
+        return selectedProductForRestock != null ? selectedProductForRestock.getStock() : 0;
     }
     
-    public List<Compra> getCompras() {
-        return compras;
+    public int getStockMinimo() {
+        return selectedProductForRestock != null ? selectedProductForRestock.getMinStock() : 0;
     }
     
-    public void setCompras(List<Compra> compras) {
-        this.compras = compras;
+    public String getImagen() {
+        return selectedProductForRestock != null ? selectedProductForRestock.getImagen() : "";
+    }
+    
+    public int getProveedorId() {
+        return selectedSupplier != null ? selectedSupplier.getIdSupplier() : 0;
+    }
+    
+    public void setSelectedSupplier(Supplier selectedSupplier) {
+        this.selectedSupplier = selectedSupplier;
+    }
+    
+    public void setProveedorSeleccionado(Supplier selectedSupplier) {
+        setSelectedSupplier(selectedSupplier);
+    }
+    
+    public void setProductoId(int productId) {
+        Product product = inventoryService.findProductById(productId).orElse(null);
+        setSelectedProductForRestock(product);
+    }
+    
+    public void setCodigo(String codigo) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setCodigo(codigo);
+        }
+    }
+    
+    public void setNombre(String nombre) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setName(nombre);
+        }
+    }
+    
+    public void setDescripcion(String descripcion) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setDescription(descripcion);
+        }
+    }
+    
+    public void setCategoria(String categoria) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setCategoria(categoria);
+        }
+    }
+    
+    public void setPrecioVenta(double precio) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setSalePrice(precio);
+        }
+    }
+    
+    public void setPrecioCompra(double precio) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setPurchasePrice(precio);
+        }
+    }
+    
+    public void setStock(int stock) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setStock(stock);
+        }
+    }
+    
+    public void setStockMinimo(int stockMinimo) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setMinStock(stockMinimo);
+        }
+    }
+    
+    public void setImagen(String imagen) {
+        if (selectedProductForRestock != null) {
+            selectedProductForRestock.setImagen(imagen);
+        }
+    }
+    
+    public void setProveedorId(int supplierId) {
+        Supplier supplier = inventoryService.findSupplierById(supplierId).orElse(null);
+        setSelectedSupplier(supplier);
+    }
+    
+    public List<PurchaseService.PurchaseRecord> getPurchaseHistory() {
+        if (purchaseHistory.isEmpty()) {
+            refreshPurchaseData();
+        }
+        return purchaseHistory;
+    }
+    
+    public List<PurchaseService.PurchaseRecord> getCompras() {
+        return getPurchaseHistory();
+    }
+    
+    public List<PurchaseInvoice> getPurchaseInvoices() {
+        if (purchaseInvoices.isEmpty()) {
+            refreshPurchaseData();
+        }
+        return purchaseInvoices;
+    }
+    
+    public double getTotalPurchases() {
+        return purchaseService.getTotalPurchases();
     }
     
     public double getTotalCompras() {
-        double total = 0;
-        for (Compra compra : compras) {
-            total += compra.getTotal();
-        }
-        return total;
+        return getTotalPurchases();
     }
     
+    public List<Product> getAvailableProducts() {
+        return inventoryService.getAllProducts();
+    }
+    
+    public List<Product> getProductosDisponibles() {
+        return getAvailableProducts();
+    }
+    
+    public List<Product> getProductos() {
+        return getAvailableProducts();
+    }
+    
+    public List<Supplier> getAvailableSuppliers() {
+        return inventoryService.getAllSuppliers();
+    }
+    
+    public List<Supplier> getProveedores() {
+        return getAvailableSuppliers();
+    }
+    
+    public List<Supplier> getProveedoresDisponibles() {
+        return getAvailableSuppliers();
+    }
+    
+    // Compatibility method for ReporteBean
     public List<PurchaseInvoice> getFacturas() {
-        return facturas;
-    }
-    
-    public void setFacturas(List<PurchaseInvoice> facturas) {
-        this.facturas = facturas;
-    }
-    
-    // Clase interna para compras
-    public static class Compra implements Serializable {
-        private int id;
-        private Date fecha;
-        private String tipo;
-        private String productoNombre;
-        private int cantidad;
-        private double precioCompra;
-        private double total;
-        private String proveedorNombre;
-        
-        public int getId() {
-            return id;
-        }
-        
-        public void setId(int id) {
-            this.id = id;
-        }
-        
-        public Date getFecha() {
-            return fecha;
-        }
-        
-        public void setFecha(Date fecha) {
-            this.fecha = fecha;
-        }
-        
-        public String getTipo() {
-            return tipo;
-        }
-        
-        public void setTipo(String tipo) {
-            this.tipo = tipo;
-        }
-        
-        public String getProductoNombre() {
-            return productoNombre;
-        }
-        
-        public void setProductoNombre(String productoNombre) {
-            this.productoNombre = productoNombre;
-        }
-        
-        public int getCantidad() {
-            return cantidad;
-        }
-        
-        public void setCantidad(int cantidad) {
-            this.cantidad = cantidad;
-        }
-        
-        public double getPrecioCompra() {
-            return precioCompra;
-        }
-        
-        public void setPrecioCompra(double precioCompra) {
-            this.precioCompra = precioCompra;
-        }
-        
-        public double getTotal() {
-            return total;
-        }
-        
-        public void setTotal(double total) {
-            this.total = total;
-        }
-        
-        public String getProveedorNombre() {
-            return proveedorNombre;
-        }
-        
-        public void setProveedorNombre(String proveedorNombre) {
-            this.proveedorNombre = proveedorNombre;
-        }
-        
-        public String getFechaTexto() {
-            if (fecha != null) {
-                return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(fecha);
-            }
-            return "";
-        }
+        return getPurchaseInvoices();
     }
 }

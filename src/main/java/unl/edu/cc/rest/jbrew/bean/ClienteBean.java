@@ -1,63 +1,47 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 @Named
-@SessionScoped
+@ViewScoped
 public class ClienteBean implements Serializable {
     
     @Inject
-    private InventarioBean inventarioBean;
+    private InventoryService inventoryService;
     
-    private Customer cliente;
-    private List<Customer> clientes;
-    private List<Customer> clientesFiltrados;
+    private Customer selectedCustomer;
+    private List<Customer> filteredCustomers;
     private String searchTerm;
     
     public ClienteBean() {
-        this.cliente = new Customer();
-        this.clientes = new ArrayList<>();
-        this.clientesFiltrados = new ArrayList<>();
+        this.selectedCustomer = new Customer();
+        this.filteredCustomers = List.of();
         this.searchTerm = "";
     }
     
-    public void prepararNuevo() {
-        this.cliente = new Customer();
+    public void prepareNewCustomer() {
+        this.selectedCustomer = new Customer();
     }
     
-    public void editar(Customer cliente) {
-        this.cliente = cliente;
+    public void editCustomer(Customer customer) {
+        this.selectedCustomer = customer;
     }
     
-    public String guardar() {
+    public String saveCustomer() {
         try {
-            if (cliente.getIdCustomer() == 0) {
-                // Nuevo cliente
-                cliente.setIdCustomer(inventarioBean.getClientes().size() + 1);
-                inventarioBean.getClientes().add(cliente);
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Cliente creado correctamente"));
-            } else {
-                // Editar cliente existente
-                // Actualizar en la lista
-                for (int i = 0; i < inventarioBean.getClientes().size(); i++) {
-                    if (inventarioBean.getClientes().get(i).getIdCustomer() == cliente.getIdCustomer()) {
-                        inventarioBean.getClientes().set(i, cliente);
-                        break;
-                    }
-                }
-                FacesContext.getCurrentInstance().addMessage(null, 
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Cliente actualizado correctamente"));
-            }
-            prepararNuevo();
+            inventoryService.saveCustomer(selectedCustomer);
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
+                    selectedCustomer.getIdCustomer() == 0 ? "Cliente creado correctamente" : "Cliente actualizado correctamente"));
+            prepareNewCustomer();
             return null;
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
@@ -66,9 +50,9 @@ public class ClienteBean implements Serializable {
         }
     }
     
-    public void eliminar(Customer cliente) {
+    public void deleteCustomer(Customer customer) {
         try {
-            inventarioBean.getClientes().remove(cliente);
+            inventoryService.deleteCustomer(customer);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Cliente eliminado correctamente"));
         } catch (Exception e) {
@@ -77,60 +61,86 @@ public class ClienteBean implements Serializable {
         }
     }
     
-    // Getters y Setters
-    public Customer getCliente() {
-        return cliente;
-    }
-    
-    public void setCliente(Customer cliente) {
-        this.cliente = cliente;
-    }
-    
-    public List<Customer> getClientes() {
-        if (clientes.isEmpty()) {
-            clientes = inventarioBean.getClientes();
-            clientesFiltrados = new ArrayList<>(clientes);
-        }
-        return clientes;
-    }
-    
-    public List<Customer> getClientesFiltrados() {
-        if (clientesFiltrados.isEmpty()) {
-            clientesFiltrados = new ArrayList<>(inventarioBean.getClientes());
-        }
-        return clientesFiltrados;
-    }
-    
-    public void setClientesFiltrados(List<Customer> clientesFiltrados) {
-        this.clientesFiltrados = clientesFiltrados;
-    }
-    
-    public void search() {
-        clientesFiltrados = new ArrayList<>();
-        for (Customer c : inventarioBean.getClientes()) {
-            if (searchTerm == null || searchTerm.isEmpty() || 
-                c.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                c.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                c.getEmail().toLowerCase().contains(searchTerm.toLowerCase())) {
-                clientesFiltrados.add(c);
-            }
-        }
+    public void searchCustomers() {
+        filteredCustomers = inventoryService.getAllCustomers().stream()
+                .filter(c -> searchTerm == null || searchTerm.isEmpty() || 
+                    c.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                    c.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                    c.getEmail().toLowerCase().contains(searchTerm.toLowerCase()))
+                .toList();
     }
     
     public void clearSearch() {
         searchTerm = "";
-        clientesFiltrados = new ArrayList<>(inventarioBean.getClientes());
+        filteredCustomers = inventoryService.getAllCustomers();
+    }
+    
+    // Getters and Setters
+    public Customer getSelectedCustomer() {
+        return selectedCustomer;
+    }
+    
+    public Customer getClienteSeleccionado() {
+        return getSelectedCustomer();
+    }
+    
+    public Customer getCliente() {
+        return getSelectedCustomer();
+    }
+    
+    public int getClienteId() {
+        return selectedCustomer != null ? selectedCustomer.getIdCustomer() : 0;
+    }
+    
+    public void setSelectedCustomer(Customer selectedCustomer) {
+        this.selectedCustomer = selectedCustomer;
+    }
+    
+    public void setClienteId(int customerId) {
+        Customer customer = inventoryService.findCustomerById(customerId).orElse(null);
+        setSelectedCustomer(customer);
+    }
+    
+    public void setClienteSeleccionado(Customer selectedCustomer) {
+        setSelectedCustomer(selectedCustomer);
+    }
+    
+    public List<Customer> getFilteredCustomers() {
+        if (filteredCustomers.isEmpty()) {
+            filteredCustomers = inventoryService.getAllCustomers();
+        }
+        return filteredCustomers;
+    }
+    
+    public List<Customer> getClientesFiltrados() {
+        return getFilteredCustomers();
+    }
+    
+    public List<Customer> getClientes() {
+        return getFilteredCustomers();
+    }
+    
+    public void setFilteredCustomers(List<Customer> filteredCustomers) {
+        this.filteredCustomers = filteredCustomers;
+    }
+    
+    public void setClientesFiltrados(List<Customer> filteredCustomers) {
+        setFilteredCustomers(filteredCustomers);
     }
     
     public String getSearchTerm() {
         return searchTerm;
     }
     
+    public String getTerminoBusqueda() {
+        return getSearchTerm();
+    }
+    
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
     }
     
-    public void setClientes(List<Customer> clientes) {
-        this.clientes = clientes;
+    public void setTerminoBusqueda(String searchTerm) {
+        setSearchTerm(searchTerm);
     }
 }
