@@ -35,7 +35,7 @@ services:
       - smart-pg-db
     networks:
       smart-pg-network:
-        ipv4_address: 172.31.0.253
+        ipv4_address: 172.31.0.254
 
   smart-view-pgadmin4:
     container_name: smart-pgadmin4-container
