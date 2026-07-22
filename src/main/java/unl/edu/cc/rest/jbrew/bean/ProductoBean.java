@@ -5,22 +5,31 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Inventory.ProductStatus;
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Named
 @ViewScoped
 public class ProductoBean implements Serializable {
     
+    private static final Logger LOGGER = Logger.getLogger(ProductoBean.class.getName());
+    
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     private Product selectedProduct;
     private List<Product> filteredProducts;
+    
+    @NotNull(message = "El término de búsqueda es requerido")
+    @Size(min = 3, message = "El término de búsqueda debe tener al menos 3 caracteres")
     private String searchTerm;
+    
     private String categoryFilter;
     private String statusFilter;
     
@@ -57,7 +66,7 @@ public class ProductoBean implements Serializable {
     
     public String saveProduct() {
         try {
-            inventoryService.saveProduct(selectedProduct);
+            inventoryFacade.saveProduct(selectedProduct);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
                     selectedProduct.getIdProduct() == 0 ? "Producto creado correctamente" : "Producto actualizado correctamente"));
@@ -73,7 +82,7 @@ public class ProductoBean implements Serializable {
     
     public void deleteProduct(Product product) {
         try {
-            inventoryService.deleteProduct(product);
+            inventoryFacade.deleteProduct(product);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto eliminado correctamente"));
             updateStatistics();
@@ -84,7 +93,7 @@ public class ProductoBean implements Serializable {
     }
     
     public void searchProducts() {
-        List<Product> allProducts = inventoryService.getAllProducts();
+        List<Product> allProducts = inventoryFacade.getAllProducts();
         filteredProducts = allProducts.stream()
                 .filter(p -> searchTerm == null || searchTerm.isEmpty() || 
                     p.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
@@ -101,7 +110,7 @@ public class ProductoBean implements Serializable {
         searchTerm = "";
         categoryFilter = null;
         statusFilter = null;
-        filteredProducts = inventoryService.getAllProducts();
+        filteredProducts = inventoryFacade.getAllProducts();
     }
     
     private void applyFilters() {
@@ -126,7 +135,7 @@ public class ProductoBean implements Serializable {
     }
     
     private void updateStatistics() {
-        List<Product> allProducts = inventoryService.getAllProducts();
+        List<Product> allProducts = inventoryFacade.getAllProducts();
         totalStock = allProducts.stream()
                 .mapToInt(Product::getStock)
                 .sum();
@@ -157,7 +166,7 @@ public class ProductoBean implements Serializable {
     
     public List<Product> getFilteredProducts() {
         if (filteredProducts.isEmpty()) {
-            filteredProducts = inventoryService.getAllProducts();
+            filteredProducts = inventoryFacade.getAllProducts();
             updateStatistics();
         }
         return filteredProducts;
@@ -252,7 +261,7 @@ public class ProductoBean implements Serializable {
     }
     
     public int getTotalProducts() {
-        return inventoryService.getAllProducts().size();
+        return inventoryFacade.getAllProducts().size();
     }
     
     public int getTotalProductos() {
@@ -260,7 +269,7 @@ public class ProductoBean implements Serializable {
     }
     
     public double getTotalInventoryValue() {
-        return inventoryService.getAllProducts().stream()
+        return inventoryFacade.getAllProducts().stream()
                 .mapToDouble(p -> p.getStock() * p.getPurchasePrice())
                 .sum();
     }

@@ -1,20 +1,29 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ejb.Stateless;
+import unl.edu.cc.rest.jbrew.exception.CredentialInvalidException;
+import unl.edu.cc.rest.jbrew.exception.EntityNotFoundException;
+import java.util.logging.Logger;
 
-@ApplicationScoped
+@Stateless
 public class AuthenticationService {
     
+    private static final Logger LOGGER = Logger.getLogger(AuthenticationService.class.getName());
+    
     public AuthenticationResult authenticate(String username, String password) {
+        LOGGER.info("Intento de autenticación para usuario: " + username);
         if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            return new AuthenticationResult(false, "Por favor ingrese usuario y contraseña", null);
+            LOGGER.warning("Autenticación fallida: credenciales vacías");
+            throw new CredentialInvalidException("Por favor ingrese usuario y contraseña");
         }
         
         if ("admin".equals(username) && "admin123".equals(password)) {
+            LOGGER.info("Autenticación exitosa para usuario: " + username);
             return new AuthenticationResult(true, "Bienvenido " + username, username);
         }
         
-        return new AuthenticationResult(false, "Usuario o contraseña incorrectos", null);
+        LOGGER.warning("Autenticación fallida: credenciales incorrectas para usuario: " + username);
+        throw new CredentialInvalidException("Usuario o contraseña incorrectos");
     }
     
     public static class AuthenticationResult {

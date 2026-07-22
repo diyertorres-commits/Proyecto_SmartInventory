@@ -32,6 +32,7 @@ public class AjusteBean implements Serializable {
     private int contadorAjustes;
 
     public AjusteBean() {
+        this.selectedProduct = new Product();
         this.ajustes = new ArrayList<>();
         this.contadorAjustes = 1;
     }

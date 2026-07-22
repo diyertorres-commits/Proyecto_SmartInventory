@@ -39,11 +39,11 @@ public class CompraBean implements Serializable {
     private List<PurchaseInvoice> purchaseInvoices;
     
     public CompraBean() {
-        this.selectedProductForRestock = null;
+        this.selectedProductForRestock = new Product();
         this.restockQuantity = 1;
         this.restockPurchasePrice = 0;
         this.newProduct = new Product();
-        this.selectedSupplier = null;
+        this.selectedSupplier = new Supplier();
         this.purchaseHistory = List.of();
         this.purchaseInvoices = List.of();
     }

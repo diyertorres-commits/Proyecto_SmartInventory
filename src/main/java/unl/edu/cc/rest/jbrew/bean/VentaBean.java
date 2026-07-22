@@ -35,9 +35,9 @@ public class VentaBean implements Serializable {
     private List<SaleInvoice> saleInvoices;
     
     public VentaBean() {
-        this.selectedProduct = null;
+        this.selectedProduct = new Product();
         this.selectedQuantity = 1;
-        this.selectedCustomer = null;
+        this.selectedCustomer = new Customer();
         this.paymentMethod = "efectivo";
         this.discount = 0;
         this.cartItems = List.of();

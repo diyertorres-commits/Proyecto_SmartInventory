@@ -1,6 +1,6 @@
 package unl.edu.cc.rest.jbrew.bean;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import unl.edu.cc.rest.jbrew.business.InventoryService;
@@ -11,8 +11,8 @@ import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.util.List;
 
 @Named
-@ApplicationScoped
-public class InventarioBean {
+@ViewScoped
+public class InventarioBean implements java.io.Serializable {
     
     @Inject
     private InventoryService inventoryService;
