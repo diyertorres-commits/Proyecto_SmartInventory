@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
@@ -18,7 +18,7 @@ import java.util.List;
 public class CompraBean implements Serializable {
     
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     @Inject
     private PurchaseService purchaseService;
@@ -229,7 +229,7 @@ public class CompraBean implements Serializable {
     }
     
     public void setProductoId(int productId) {
-        Product product = inventoryService.findProductById(productId).orElse(null);
+        Product product = inventoryFacade.findProductById(productId).orElse(null);
         setSelectedProductForRestock(product);
     }
     
@@ -288,7 +288,7 @@ public class CompraBean implements Serializable {
     }
     
     public void setProveedorId(int supplierId) {
-        Supplier supplier = inventoryService.findSupplierById(supplierId).orElse(null);
+        Supplier supplier = inventoryFacade.findSupplierById(supplierId).orElse(null);
         setSelectedSupplier(supplier);
     }
     
@@ -319,7 +319,7 @@ public class CompraBean implements Serializable {
     }
     
     public List<Product> getAvailableProducts() {
-        return inventoryService.getAllProducts();
+        return inventoryFacade.getAllProducts();
     }
     
     public List<Product> getProductosDisponibles() {
@@ -331,7 +331,7 @@ public class CompraBean implements Serializable {
     }
     
     public List<Supplier> getAvailableSuppliers() {
-        return inventoryService.getAllSuppliers();
+        return inventoryFacade.getAllSuppliers();
     }
     
     public List<Supplier> getProveedores() {

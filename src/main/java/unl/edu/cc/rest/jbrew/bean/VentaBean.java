@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.SalesService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
@@ -18,7 +18,7 @@ import java.util.List;
 public class VentaBean implements Serializable {
     
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     @Inject
     private SalesService salesService;
@@ -142,7 +142,7 @@ public class VentaBean implements Serializable {
     }
     
     public void setProductoId(int productId) {
-        Product product = inventoryService.findProductById(productId).orElse(null);
+        Product product = inventoryFacade.findProductById(productId).orElse(null);
         setSelectedProduct(product);
     }
     
@@ -175,7 +175,7 @@ public class VentaBean implements Serializable {
     }
     
     public void setClienteId(int customerId) {
-        Customer customer = inventoryService.findCustomerById(customerId).orElse(null);
+        Customer customer = inventoryFacade.findCustomerById(customerId).orElse(null);
         setSelectedCustomer(customer);
     }
     
@@ -254,7 +254,7 @@ public class VentaBean implements Serializable {
     }
     
     public List<Product> getAvailableProducts() {
-        return inventoryService.getAllProducts();
+        return inventoryFacade.getAllProducts();
     }
     
     public List<Product> getProductos() {
@@ -262,7 +262,7 @@ public class VentaBean implements Serializable {
     }
     
     public List<Customer> getAvailableCustomers() {
-        return inventoryService.getAllCustomers();
+        return inventoryFacade.getAllCustomers();
     }
     
     public List<Customer> getClientes() {
