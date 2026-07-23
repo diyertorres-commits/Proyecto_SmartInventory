@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 
 import java.io.Serializable;
@@ -19,7 +19,7 @@ import java.util.List;
 public class AjusteBean implements Serializable {
 
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
 
     private Product selectedProduct;
     private String tipoAjuste;
@@ -32,6 +32,7 @@ public class AjusteBean implements Serializable {
     private int contadorAjustes;
 
     public AjusteBean() {
+        this.selectedProduct = new Product();
         this.ajustes = new ArrayList<>();
         this.contadorAjustes = 1;
     }
@@ -58,7 +59,7 @@ public class AjusteBean implements Serializable {
         }
 
         selectedProduct.setStock(stockNuevo);
-        inventoryService.saveProduct(selectedProduct);
+        inventoryFacade.saveProduct(selectedProduct);
 
         Ajuste ajuste = new Ajuste(
             contadorAjustes++,
@@ -83,10 +84,10 @@ public class AjusteBean implements Serializable {
     }
 
     public void revertir(Ajuste ajuste) {
-        Product producto = inventoryService.findProductByName(ajuste.getProductoNombre()).orElse(null);
+        Product producto = inventoryFacade.findProductByName(ajuste.getProductoNombre()).orElse(null);
         if (producto != null) {
             producto.setStock(ajuste.getStockAnterior());
-            inventoryService.saveProduct(producto);
+            inventoryFacade.saveProduct(producto);
             ajustes.remove(ajuste);
             FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
@@ -145,12 +146,12 @@ public class AjusteBean implements Serializable {
     }
     
     public void setProductoId(int productId) {
-        Product product = inventoryService.findProductById(productId).orElse(null);
+        Product product = inventoryFacade.findProductById(productId).orElse(null);
         setSelectedProduct(product);
     }
 
     public List<Product> getAvailableProducts() {
-        return inventoryService.getAllProducts();
+        return inventoryFacade.getAllProducts();
     }
     
     public List<Product> getProductos() {

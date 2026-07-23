@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
@@ -18,7 +18,7 @@ import java.util.List;
 public class CompraBean implements Serializable {
     
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     @Inject
     private PurchaseService purchaseService;
@@ -39,11 +39,11 @@ public class CompraBean implements Serializable {
     private List<PurchaseInvoice> purchaseInvoices;
     
     public CompraBean() {
-        this.selectedProductForRestock = null;
+        this.selectedProductForRestock = new Product();
         this.restockQuantity = 1;
         this.restockPurchasePrice = 0;
         this.newProduct = new Product();
-        this.selectedSupplier = null;
+        this.selectedSupplier = new Supplier();
         this.purchaseHistory = List.of();
         this.purchaseInvoices = List.of();
     }
@@ -75,6 +75,15 @@ public class CompraBean implements Serializable {
         }
         
         return null;
+    }
+    
+    public String registrarCompra() {
+        // Determine which operation to perform based on the tab
+        if (newProduct != null && (newProduct.getName() != null && !newProduct.getName().isEmpty())) {
+            return processNewProductPurchase();
+        } else {
+            return processRestockPurchase();
+        }
     }
     
     public String processNewProductPurchase() {
@@ -220,7 +229,7 @@ public class CompraBean implements Serializable {
     }
     
     public void setProductoId(int productId) {
-        Product product = inventoryService.findProductById(productId).orElse(null);
+        Product product = inventoryFacade.findProductById(productId).orElse(null);
         setSelectedProductForRestock(product);
     }
     
@@ -279,7 +288,7 @@ public class CompraBean implements Serializable {
     }
     
     public void setProveedorId(int supplierId) {
-        Supplier supplier = inventoryService.findSupplierById(supplierId).orElse(null);
+        Supplier supplier = inventoryFacade.findSupplierById(supplierId).orElse(null);
         setSelectedSupplier(supplier);
     }
     
@@ -310,7 +319,7 @@ public class CompraBean implements Serializable {
     }
     
     public List<Product> getAvailableProducts() {
-        return inventoryService.getAllProducts();
+        return inventoryFacade.getAllProducts();
     }
     
     public List<Product> getProductosDisponibles() {
@@ -322,7 +331,7 @@ public class CompraBean implements Serializable {
     }
     
     public List<Supplier> getAvailableSuppliers() {
-        return inventoryService.getAllSuppliers();
+        return inventoryFacade.getAllSuppliers();
     }
     
     public List<Supplier> getProveedores() {

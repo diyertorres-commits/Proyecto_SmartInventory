@@ -1,6 +1,6 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
@@ -10,9 +10,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
-@ApplicationScoped
+@Stateless
 public class SalesService {
+    
+    private static final Logger LOGGER = Logger.getLogger(SalesService.class.getName());
     
     @Inject
     private InventoryService inventoryService;

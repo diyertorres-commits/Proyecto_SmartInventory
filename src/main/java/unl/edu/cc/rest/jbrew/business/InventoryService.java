@@ -1,6 +1,6 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ejb.Stateless;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
@@ -9,9 +9,12 @@ import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
-@ApplicationScoped
+@Stateless
 public class InventoryService {
+    
+    private static final Logger LOGGER = Logger.getLogger(InventoryService.class.getName());
     
     private List<Product> products;
     private List<Category> categories;
@@ -51,16 +54,19 @@ public class InventoryService {
     
     // Product operations
     public List<Product> getAllProducts() {
+        LOGGER.info("Obteniendo todos los productos");
         return new ArrayList<>(products);
     }
     
     public Optional<Product> findProductById(int id) {
+        LOGGER.info("Buscando producto por ID: " + id);
         return products.stream()
                 .filter(p -> p.getIdProduct() == id)
                 .findFirst();
     }
     
     public Optional<Product> findProductByName(String name) {
+        LOGGER.info("Buscando producto por nombre: " + name);
         return products.stream()
                 .filter(p -> p.getName().equals(name))
                 .findFirst();

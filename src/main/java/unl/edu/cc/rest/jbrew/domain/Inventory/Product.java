@@ -1,5 +1,7 @@
 package unl.edu.cc.rest.jbrew.domain.Inventory;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductNameException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductStockException;
@@ -8,8 +10,11 @@ import unl.edu.cc.rest.jbrew.domain.Kardex.Kardex;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
 public class Product {
 
+    @Id
+    private Long id;
     private int idProduct;
     private String codigo; // SKU/Código del producto
     private String name;
@@ -96,6 +101,15 @@ public class Product {
                 throw new InvalidProductPriceException("El precio está fuera del rango establecido");
             }
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     // Getters y Setters
     public int getIdProduct() {
         return idProduct;

@@ -1,11 +1,15 @@
 package unl.edu.cc.rest.jbrew.domain.Inventory;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidCategoryNameException;
 import java.util.ArrayList;
 import java.util.List;
-
+@Entity
 public class Category {
 
+    @Id
+    private Long id;
     private int idCategory;
     private String name;
     private List<Product> productList; // Composición con Product
@@ -14,6 +18,10 @@ public class Category {
         this.idCategory = idCategory;
         setName(name);
         this.productList = new ArrayList<>();
+    }
+
+    public Category() {
+
     }
 
     private void validateName(String name) throws InvalidCategoryNameException {
@@ -38,6 +46,14 @@ public class Category {
 
     public void setProductList(List<Product> productList) {
         this.productList = productList;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     // Getters y Setters

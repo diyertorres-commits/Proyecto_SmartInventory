@@ -1,6 +1,6 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductNameException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
@@ -13,9 +13,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
-@ApplicationScoped
+@Stateless
 public class PurchaseService {
+    
+    private static final Logger LOGGER = Logger.getLogger(PurchaseService.class.getName());
     
     @Inject
     private InventoryService inventoryService;
