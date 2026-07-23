@@ -22,6 +22,8 @@
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
         <war-plugin.version>3.5.1</war-plugin.version>
         <liberty-plugin.version>3.12.0</liberty-plugin.version>
+        <!-- Persistencia y BD -->
+        <postgresql.version>42.7.9</postgresql.version>
     </properties>
 
     <dependencies>
@@ -52,6 +54,12 @@
             <artifactId>primefaces-themes</artifactId>
             <version>15.0.0</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
+        </dependency>
 
         
     </dependencies>
@@ -75,6 +83,38 @@
                 <groupId>io.openliberty.tools</groupId>
                 <artifactId>liberty-maven-plugin</artifactId>
                 <version>${liberty-plugin.version}</version>
+            </plugin>
+
+            <!--
+                Copia el driver PostgreSQL al directorio de recursos compartidos de Liberty
+                (${shared.resource.dir}/postgres/) para que el server.xml pueda referenciarlo
+                en la definición del <library id="postgresLib">.
+                Se ejecuta antes del package para que liberty:dev también lo encuentre.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-postgres-driver</id>
+                        <phase>prepare-package</phase>
+                        <goals><goal>copy</goal></goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.postgresql</groupId>
+                                    <artifactId>postgresql</artifactId>
+                                    <version>${postgresql.version}</version>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>
+                                        ${project.build.directory}/liberty/wlp/usr/shared/resources/postgres
+                                    </outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

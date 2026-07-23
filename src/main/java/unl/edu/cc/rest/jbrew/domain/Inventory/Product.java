@@ -1,5 +1,6 @@
 package unl.edu.cc.rest.jbrew.domain.Inventory;
 
+import jakarta.persistence.*;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductNameException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductStockException;
@@ -8,19 +9,49 @@ import unl.edu.cc.rest.jbrew.domain.Kardex.Kardex;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "products")
 public class Product {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "id_product")
     private int idProduct;
+    
+    @Column(name = "codigo", unique = true, nullable = false)
     private String codigo; // SKU/Código del producto
+    
+    @Column(name = "name", nullable = false)
     private String name;
+    
+    @Column(name = "description")
     private String description;
+    
+    @Column(name = "categoria")
     private String categoria; // Categoría del producto
+    
+    @Column(name = "imagen")
     private String imagen; // Nombre del archivo de imagen
+    
+    @Column(name = "sale_price", nullable = false)
     private double salePrice;
+    
+    @Column(name = "purchase_price", nullable = false)
     private double purchasePrice;
+    
+    @Column(name = "stock", nullable = false)
     private int stock;
+    
+    @Column(name = "min_stock", nullable = false)
     private int minStock;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
     private ProductStatus estado; // Estado del producto
+    
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Kardex> kardexList; // Relación 1 → 0..* con Kardex
 
     public Product() {
@@ -96,6 +127,15 @@ public class Product {
                 throw new InvalidProductPriceException("El precio está fuera del rango establecido");
             }
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     // Getters y Setters
     public int getIdProduct() {
         return idProduct;

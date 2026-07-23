@@ -2,6 +2,8 @@
     <featureManager>
         <feature>webProfile-10.0</feature>
         <feature>cdi-4.0</feature>
+        <feature>jndi-1.0</feature>
+        <feature>jdbc-4.2</feature>
     </featureManager>
     
     <cdi12 enableImplicitBeanArchives="true" />
@@ -12,6 +14,32 @@
     <keyStore id="defaultKeyStore" password="password" />
     <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="9080" httpsPort="9443" />
     <webApplication location="jbrew-web.war" contextRoot="/"/>
+
+    <!-- Variables sobreescritas por env vars de Docker: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD -->
+    <variable name="db.host"     defaultValue="localhost"      envVarName="DB_HOST"/>
+    <variable name="db.port"     defaultValue="5434"           envVarName="DB_PORT"/>
+    <variable name="db.name"     defaultValue="smartinventory" envVarName="DB_NAME"/>
+    <variable name="db.user"     defaultValue="smartuser"      envVarName="DB_USER"/>
+    <variable name="db.password" defaultValue="smartUser2626"  envVarName="DB_PASSWORD"/>
+
+    <library id="postgresLib">
+        <fileset dir="${shared.resource.dir}/postgres/" include="postgresql-*.jar"/>
+    </library>
+
+    <dataSource id="smartDS"
+                jndiName="jdbc/smartDS"
+                type="javax.sql.ConnectionPoolDataSource">
+        <jdbcDriver libraryRef="postgresLib"/>
+        <properties.postgresql
+                url="jdbc:postgresql://${db.host}:${db.port}/${db.name}?stringtype=unspecified"
+                user="${db.user}"
+                password="${db.password}"/>
+        <connectionManager
+                minPoolSize="2"
+                maxPoolSize="20"
+                connectionTimeout="30s"
+                maxIdleTime="10m"/>
+    </dataSource>
 
     <!-- Configuración de salidas de log del server -->
     <!-- Configuración de logging -->

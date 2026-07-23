@@ -1,14 +1,30 @@
 package unl.edu.cc.rest.jbrew.domain.People;
 
+import jakarta.persistence.*;
+
+@MappedSuperclass
 public abstract class Person {
-    private int id;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "identification_number", unique = true, nullable = false)
     private String identificationNumber; // DNI/RUC
+    
+    @Column(name = "name", nullable = false)
     private String name;
+    
+    @Column(name = "phone")
     private String phone;
+    
+    @Column(name = "email")
     private String email;
+    
+    @Column(name = "address")
     private String address;
 
-    public Person(int id, String identificationNumber, String name, String phone, String email, String address) {
+    public Person(Long id, String identificationNumber, String name, String phone, String email, String address) {
         this.id = id;
         this.identificationNumber = identificationNumber;
         this.name = name;
@@ -18,11 +34,11 @@ public abstract class Person {
     }
 
     // Getters y Setters
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

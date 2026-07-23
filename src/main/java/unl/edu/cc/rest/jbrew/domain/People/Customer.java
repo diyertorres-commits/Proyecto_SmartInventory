@@ -1,18 +1,28 @@
 package unl.edu.cc.rest.jbrew.domain.People;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "customers")
 public class Customer extends Person {
+    
+    @Column(name = "apellido")
     private String apellido;
+    
+    @Column(name = "empresa")
     private String empresa;
+    
+    @Column(name = "limite_credito")
     private double limiteCredito;
 
     public Customer() {
-        super(0, "", "", "", "", "");
+        super(0L, "", "", "", "", "");
         this.apellido = "";
         this.empresa = "";
         this.limiteCredito = 0;
     }
 
-    public Customer(int idCustomer, String identificationNumber, String name, String apellido, String phone, String email, String address, String empresa, double limiteCredito) {
+    public Customer(Long idCustomer, String identificationNumber, String name, String apellido, String phone, String email, String address, String empresa, double limiteCredito) {
         super(idCustomer, identificationNumber, name, phone, email, address);
         this.apellido = apellido;
         this.empresa = empresa;
@@ -20,11 +30,11 @@ public class Customer extends Person {
     }
 
     // Getters específicos si se necesita mantener compatibilidad
-    public int getIdCustomer() {
+    public Long getIdCustomer() {
         return getId();
     }
 
-    public void setIdCustomer(int idCustomer) {
+    public void setIdCustomer(Long idCustomer) {
         setId(idCustomer);
     }
 

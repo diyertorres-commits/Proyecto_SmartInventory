@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryFacade;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.business.SalesService;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
@@ -21,7 +21,7 @@ import java.util.List;
 public class ReporteBean implements Serializable {
     
     @Inject
-    private InventoryFacade inventoryFacade;
+    private InventoryService inventoryService;
     
     @Inject
     private SalesService salesService;
@@ -104,7 +104,7 @@ public class ReporteBean implements Serializable {
     }
     
     private void generarReporteRotacion() {
-        for (Product producto : inventoryFacade.getAllProducts()) {
+        for (Product producto : inventoryService.getAllProducts()) {
             DatoReporte dato = new DatoReporte();
             dato.setId(producto.getIdProduct());
             dato.setTipo(producto.getName());
@@ -114,7 +114,7 @@ public class ReporteBean implements Serializable {
             datosReporte.add(dato);
         }
         
-        totalTransacciones = inventoryFacade.getAllProducts().size();
+        totalTransacciones = inventoryService.getAllProducts().size();
     }
     
     public void exportarPDF() {

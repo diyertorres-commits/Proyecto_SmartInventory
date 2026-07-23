@@ -217,7 +217,7 @@ public class CompraBean implements Serializable {
     }
     
     public int getProveedorId() {
-        return selectedSupplier != null ? selectedSupplier.getIdSupplier() : 0;
+        return selectedSupplier != null ? selectedSupplier.getIdSupplier().intValue() : 0;
     }
     
     public void setSelectedSupplier(Supplier selectedSupplier) {
@@ -288,7 +288,7 @@ public class CompraBean implements Serializable {
     }
     
     public void setProveedorId(int supplierId) {
-        Supplier supplier = inventoryFacade.findSupplierById(supplierId).orElse(null);
+        Supplier supplier = inventoryFacade.findSupplierById(Long.valueOf(supplierId)).orElse(null);
         setSelectedSupplier(supplier);
     }
     

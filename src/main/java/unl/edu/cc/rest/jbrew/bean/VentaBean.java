@@ -171,11 +171,11 @@ public class VentaBean implements Serializable {
     }
     
     public int getClienteId() {
-        return selectedCustomer != null ? selectedCustomer.getIdCustomer() : 0;
+        return selectedCustomer != null ? selectedCustomer.getIdCustomer().intValue() : 0;
     }
     
     public void setClienteId(int customerId) {
-        Customer customer = inventoryFacade.findCustomerById(customerId).orElse(null);
+        Customer customer = inventoryFacade.findCustomerById(Long.valueOf(customerId)).orElse(null);
         setSelectedCustomer(customer);
     }
     

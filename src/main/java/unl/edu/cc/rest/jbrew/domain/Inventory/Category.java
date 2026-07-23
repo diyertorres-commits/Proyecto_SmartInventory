@@ -1,19 +1,35 @@
 package unl.edu.cc.rest.jbrew.domain.Inventory;
 
+import jakarta.persistence.*;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidCategoryNameException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "categories")
 public class Category {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "id_category")
     private int idCategory;
+    
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
+    
+    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> productList; // Composición con Product
 
     public Category(int idCategory, String name) throws InvalidCategoryNameException {
         this.idCategory = idCategory;
         setName(name);
         this.productList = new ArrayList<>();
+    }
+
+    public Category() {
+
     }
 
     private void validateName(String name) throws InvalidCategoryNameException {
@@ -38,6 +54,14 @@ public class Category {
 
     public void setProductList(List<Product> productList) {
         this.productList = productList;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     // Getters y Setters

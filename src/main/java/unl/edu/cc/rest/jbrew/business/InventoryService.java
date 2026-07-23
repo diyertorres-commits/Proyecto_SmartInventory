@@ -44,12 +44,12 @@ public class InventoryService {
         products.add(new Product(5, "DES-001", "Cheesecake", "Cheesecake de frutos rojos", "Postres", "cheesecake.jpg", 4.50, 2.00, 15, 5));
         
         customers = new ArrayList<>();
-        customers.add(new Customer(1, "0912345678", "Juan", "Pérez", "0991234567", "juan.perez@email.com", "Av. Principal 123", "Empresa ABC", 1000.00));
-        customers.add(new Customer(2, "0923456789", "María", "García", "0992345678", "maria.garcia@email.com", "Calle Secundaria 456", "Comercial XYZ", 500.00));
+        customers.add(new Customer(1L, "0912345678", "Juan", "Pérez", "0991234567", "juan.perez@email.com", "Av. Principal 123", "Empresa ABC", 1000.00));
+        customers.add(new Customer(2L, "0923456789", "María", "García", "0992345678", "maria.garcia@email.com", "Calle Secundaria 456", "Comercial XYZ", 500.00));
         
         suppliers = new ArrayList<>();
-        suppliers.add(new Supplier(1, "1712345678001", "Distribuidora Central", "Distribuidora Central S.A.", "Carlos Rodríguez", "022345678", "central@distribuidora.com", "Av. Industrial 789"));
-        suppliers.add(new Supplier(2, "1723456789001", "Proveedores del Sur", "Proveedores del Sur Ltda.", "Ana Martínez", "022345679", "sur@proveedores.com", "Calle Comercial 321"));
+        suppliers.add(new Supplier(1L, "1712345678001", "Distribuidora Central", "Distribuidora Central S.A.", "Carlos Rodríguez", "022345678", "central@distribuidora.com", "Av. Industrial 789"));
+        suppliers.add(new Supplier(2L, "1723456789001", "Proveedores del Sur", "Proveedores del Sur Ltda.", "Ana Martínez", "022345679", "sur@proveedores.com", "Calle Comercial 321"));
     }
     
     // Product operations
@@ -124,15 +124,15 @@ public class InventoryService {
         return new ArrayList<>(customers);
     }
     
-    public Optional<Customer> findCustomerById(int id) {
+    public Optional<Customer> findCustomerById(Long id) {
         return customers.stream()
                 .filter(c -> c.getIdCustomer() == id)
                 .findFirst();
     }
     
     public void saveCustomer(Customer customer) {
-        if (customer.getIdCustomer() == 0) {
-            customer.setIdCustomer(customers.size() + 1);
+        if (customer.getIdCustomer() == 0L) {
+            customer.setIdCustomer((long) customers.size() + 1);
             customers.add(customer);
         } else {
             for (int i = 0; i < customers.size(); i++) {
@@ -153,15 +153,15 @@ public class InventoryService {
         return new ArrayList<>(suppliers);
     }
     
-    public Optional<Supplier> findSupplierById(int id) {
+    public Optional<Supplier> findSupplierById(Long id) {
         return suppliers.stream()
                 .filter(s -> s.getIdSupplier() == id)
                 .findFirst();
     }
     
     public void saveSupplier(Supplier supplier) {
-        if (supplier.getIdSupplier() == 0) {
-            supplier.setIdSupplier(suppliers.size() + 1);
+        if (supplier.getIdSupplier() == 0L) {
+            supplier.setIdSupplier((long) suppliers.size() + 1);
             suppliers.add(supplier);
         } else {
             for (int i = 0; i < suppliers.size(); i++) {

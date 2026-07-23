@@ -28,12 +28,12 @@ public class InventoryFacade {
         return inventoryService.findProductById(id);
     }
     
-    public Optional<Customer> findCustomerById(int id) {
+    public Optional<Customer> findCustomerById(Long id) {
         LOGGER.info("Buscando cliente por ID a través de facade: " + id);
         return inventoryService.findCustomerById(id);
     }
     
-    public Optional<Supplier> findSupplierById(int id) {
+    public Optional<Supplier> findSupplierById(Long id) {
         LOGGER.info("Buscando proveedor por ID a través de facade: " + id);
         return inventoryService.findSupplierById(id);
     }

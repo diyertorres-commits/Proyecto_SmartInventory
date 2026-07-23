@@ -16,7 +16,7 @@ services:
       #- ./init_db/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       smart-pg-network:
-        ipv4_address: 172.31.0.251
+        ipv4_address: 192.168.250.251
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 10s
@@ -35,7 +35,7 @@ services:
       - smart-pg-db
     networks:
       smart-pg-network:
-        ipv4_address: 172.31.0.254
+        ipv4_address: 192.168.250.253
 
   smart-view-pgadmin4:
     container_name: smart-pgadmin4-container
@@ -50,7 +50,7 @@ services:
       - smart-pg-db
     networks:
       smart-pg-network:
-        ipv4_address: 172.31.0.254
+        ipv4_address: 192.168.250.252
 
 networks:
   smart-pg-network:
@@ -60,7 +60,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.31.0.0/24
+        - subnet: 192.168.250.0/24
 volumes:
   smart-pg-data:
     name: smart-pg-data-local
