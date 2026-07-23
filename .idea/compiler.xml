@@ -10,5 +10,8 @@
         <module name="jbrew-web" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="jbrew-web" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>
