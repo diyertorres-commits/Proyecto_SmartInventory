@@ -69,6 +69,10 @@ public class ReporteBean implements Serializable {
             new FacesMessage(FacesMessage.SEVERITY_INFO, "Reporte Generado", "El reporte se ha generado correctamente"));
     }
     
+    public void generar() {
+        generarReporte();
+    }
+    
     private void generarReporteVentas() {
         for (SaleInvoice factura : salesService.getSaleInvoices()) {
             DatoReporte dato = new DatoReporte();

@@ -77,6 +77,15 @@ public class CompraBean implements Serializable {
         return null;
     }
     
+    public String registrarCompra() {
+        // Determine which operation to perform based on the tab
+        if (newProduct != null && (newProduct.getName() != null && !newProduct.getName().isEmpty())) {
+            return processNewProductPurchase();
+        } else {
+            return processRestockPurchase();
+        }
+    }
+    
     public String processNewProductPurchase() {
         if (selectedSupplier == null) {
             FacesContext.getCurrentInstance().addMessage(null, 

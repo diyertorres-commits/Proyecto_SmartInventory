@@ -23,14 +23,12 @@ public class VentaBean implements Serializable {
     @Inject
     private SalesService salesService;
     
-    // Objects for sale operations
     private Product selectedProduct;
     private int selectedQuantity;
     private Customer selectedCustomer;
     private String paymentMethod;
     private double discount;
     
-    // Cart and invoices
     private List<SalesService.CartItem> cartItems;
     private List<SaleInvoice> saleInvoices;
     
@@ -64,6 +62,10 @@ public class VentaBean implements Serializable {
         }
     }
     
+    public void agregarAlCarrito() {
+        addToCart();
+    }
+    
     public void removeFromCart(SalesService.CartItem item) {
         SalesService.CartOperationResult result = salesService.removeFromCart(item);
         
@@ -77,16 +79,8 @@ public class VentaBean implements Serializable {
         }
     }
     
-    public double getSubtotal() {
-        return salesService.getSubtotal();
-    }
-    
-    public double getTax() {
-        return salesService.getTax();
-    }
-    
-    public double getTotalWithDiscount() {
-        return salesService.getTotalWithDiscount(discount);
+    public void eliminarDelCarrito(SalesService.CartItem item) {
+        removeFromCart(item);
     }
     
     public void completeSale() {
@@ -110,6 +104,15 @@ public class VentaBean implements Serializable {
             new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Carrito limpiado"));
     }
     
+    public void limpiarCarrito() {
+        clearCart();
+    }
+    
+    public void calcularTotal() {
+        // This method is called by AJAX but doesn't need to do anything
+        // The total is calculated dynamically in getTotal()
+    }
+    
     private void refreshCartData() {
         this.cartItems = salesService.getCartItems();
         this.saleInvoices = salesService.getSaleInvoices();
@@ -130,20 +133,12 @@ public class VentaBean implements Serializable {
         return selectedProduct;
     }
     
-    public Product getProductoSeleccionado() {
-        return getSelectedProduct();
-    }
-    
-    public int getProductoId() {
-        return selectedProduct != null ? selectedProduct.getIdProduct() : 0;
-    }
-    
     public void setSelectedProduct(Product selectedProduct) {
         this.selectedProduct = selectedProduct;
     }
     
-    public void setProductoSeleccionado(Product selectedProduct) {
-        setSelectedProduct(selectedProduct);
+    public int getProductoId() {
+        return selectedProduct != null ? selectedProduct.getIdProduct() : 0;
     }
     
     public void setProductoId(int productId) {
@@ -155,23 +150,15 @@ public class VentaBean implements Serializable {
         return selectedQuantity;
     }
     
-    public int getCantidad() {
-        return selectedQuantity;
-    }
-    
-    public int getCantidadSeleccionada() {
-        return getSelectedQuantity();
-    }
-    
     public void setSelectedQuantity(int selectedQuantity) {
         this.selectedQuantity = selectedQuantity;
     }
     
-    public void setCantidad(int selectedQuantity) {
-        setSelectedQuantity(selectedQuantity);
+    public int getCantidad() {
+        return selectedQuantity;
     }
     
-    public void setCantidadSeleccionada(int selectedQuantity) {
+    public void setCantidad(int selectedQuantity) {
         setSelectedQuantity(selectedQuantity);
     }
     
@@ -179,24 +166,12 @@ public class VentaBean implements Serializable {
         return selectedCustomer;
     }
     
-    public Customer getClienteSeleccionado() {
-        return getSelectedCustomer();
-    }
-    
-    public Customer getCliente() {
-        return getSelectedCustomer();
-    }
-    
-    public int getClienteId() {
-        return selectedCustomer != null ? selectedCustomer.getIdCustomer() : 0;
-    }
-    
     public void setSelectedCustomer(Customer selectedCustomer) {
         this.selectedCustomer = selectedCustomer;
     }
     
-    public void setClienteSeleccionado(Customer selectedCustomer) {
-        setSelectedCustomer(selectedCustomer);
+    public int getClienteId() {
+        return selectedCustomer != null ? selectedCustomer.getIdCustomer() : 0;
     }
     
     public void setClienteId(int customerId) {
@@ -208,12 +183,12 @@ public class VentaBean implements Serializable {
         return paymentMethod;
     }
     
-    public String getMetodoPago() {
-        return getPaymentMethod();
-    }
-    
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+    
+    public String getMetodoPago() {
+        return paymentMethod;
     }
     
     public void setMetodoPago(String paymentMethod) {
@@ -224,20 +199,12 @@ public class VentaBean implements Serializable {
         return discount;
     }
     
-    public double getDescuento() {
-        return getDiscount();
-    }
-    
-    public double getIva() {
-        return salesService.getTax();
-    }
-    
-    public double getTotal() {
-        return salesService.getTotalWithDiscount(discount);
-    }
-    
     public void setDiscount(double discount) {
         this.discount = discount;
+    }
+    
+    public double getDescuento() {
+        return discount;
     }
     
     public void setDescuento(double discount) {
@@ -255,10 +222,6 @@ public class VentaBean implements Serializable {
         return getCartItems();
     }
     
-    public List<SalesService.CartItem> getCarrito() {
-        return getCartItems();
-    }
-    
     public List<SaleInvoice> getSaleInvoices() {
         if (saleInvoices.isEmpty()) {
             refreshCartData();
@@ -266,12 +229,32 @@ public class VentaBean implements Serializable {
         return saleInvoices;
     }
     
-    public List<Product> getAvailableProducts() {
-        return inventoryService.getAllProducts();
+    public List<SaleInvoice> getFacturas() {
+        return getSaleInvoices();
     }
     
-    public List<Product> getProductosDisponibles() {
-        return getAvailableProducts();
+    public double getSubtotal() {
+        return salesService.getSubtotal();
+    }
+    
+    public double getTax() {
+        return salesService.getTax();
+    }
+    
+    public double getIva() {
+        return getTax();
+    }
+    
+    public double getTotal() {
+        return salesService.getTotalWithDiscount(discount);
+    }
+    
+    public double getTotalWithDiscount() {
+        return getTotal();
+    }
+    
+    public List<Product> getAvailableProducts() {
+        return inventoryService.getAllProducts();
     }
     
     public List<Product> getProductos() {
@@ -284,14 +267,5 @@ public class VentaBean implements Serializable {
     
     public List<Customer> getClientes() {
         return getAvailableCustomers();
-    }
-    
-    public List<Customer> getClientesDisponibles() {
-        return getAvailableCustomers();
-    }
-    
-    // Compatibility method for ReporteBean
-    public List<SaleInvoice> getFacturas() {
-        return getSaleInvoices();
     }
 }

@@ -90,6 +90,10 @@ public class FacturaBean implements Serializable {
         setInvoiceType(invoiceType);
     }
     
+    public void filtrar() {
+        filterInvoices();
+    }
+    
     public List<InvoiceInfo> getFilteredInvoices() {
         if (filteredInvoices.isEmpty()) {
             filterInvoices();
