@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.io.Serializable;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.List;
 public class ProveedorBean implements Serializable {
     
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     private Supplier selectedSupplier;
     private List<Supplier> filteredSuppliers;
@@ -35,9 +35,13 @@ public class ProveedorBean implements Serializable {
         this.selectedSupplier = supplier;
     }
     
+    public void editar(Supplier supplier) {
+        editSupplier(supplier);
+    }
+    
     public String saveSupplier() {
         try {
-            inventoryService.saveSupplier(selectedSupplier);
+            inventoryFacade.saveSupplier(selectedSupplier);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
                     selectedSupplier.getIdSupplier() == 0 ? "Proveedor creado correctamente" : "Proveedor actualizado correctamente"));
@@ -50,9 +54,13 @@ public class ProveedorBean implements Serializable {
         }
     }
     
+    public String guardar() {
+        return saveSupplier();
+    }
+    
     public void deleteSupplier(Supplier supplier) {
         try {
-            inventoryService.deleteSupplier(supplier);
+            inventoryFacade.deleteSupplier(supplier);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Proveedor eliminado correctamente"));
         } catch (Exception e) {
@@ -61,8 +69,12 @@ public class ProveedorBean implements Serializable {
         }
     }
     
+    public void eliminar(Supplier supplier) {
+        deleteSupplier(supplier);
+    }
+    
     public void searchSuppliers() {
-        filteredSuppliers = inventoryService.getAllSuppliers().stream()
+        filteredSuppliers = inventoryFacade.getAllSuppliers().stream()
                 .filter(s -> searchTerm == null || searchTerm.isEmpty() || 
                     s.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
                     s.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
@@ -70,9 +82,13 @@ public class ProveedorBean implements Serializable {
                 .toList();
     }
     
+    public void search() {
+        searchSuppliers();
+    }
+    
     public void clearSearch() {
         searchTerm = "";
-        filteredSuppliers = inventoryService.getAllSuppliers();
+        filteredSuppliers = inventoryFacade.getAllSuppliers();
     }
     
     // Getters and Setters
@@ -80,34 +96,21 @@ public class ProveedorBean implements Serializable {
         return selectedSupplier;
     }
     
-    public Supplier getProveedorSeleccionado() {
-        return getSelectedSupplier();
-    }
-    
     public Supplier getProveedor() {
         return getSelectedSupplier();
-    }
-    
-    public int getProveedorId() {
-        return selectedSupplier != null ? selectedSupplier.getIdSupplier() : 0;
     }
     
     public void setSelectedSupplier(Supplier selectedSupplier) {
         this.selectedSupplier = selectedSupplier;
     }
     
-    public void setProveedorId(int supplierId) {
-        Supplier supplier = inventoryService.findSupplierById(supplierId).orElse(null);
-        setSelectedSupplier(supplier);
-    }
-    
-    public void setProveedorSeleccionado(Supplier selectedSupplier) {
+    public void setProveedor(Supplier selectedSupplier) {
         setSelectedSupplier(selectedSupplier);
     }
     
     public List<Supplier> getFilteredSuppliers() {
         if (filteredSuppliers.isEmpty()) {
-            filteredSuppliers = inventoryService.getAllSuppliers();
+            filteredSuppliers = inventoryFacade.getAllSuppliers();
         }
         return filteredSuppliers;
     }
@@ -132,15 +135,7 @@ public class ProveedorBean implements Serializable {
         return searchTerm;
     }
     
-    public String getTerminoBusqueda() {
-        return getSearchTerm();
-    }
-    
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
-    }
-    
-    public void setTerminoBusqueda(String searchTerm) {
-        setSearchTerm(searchTerm);
     }
 }

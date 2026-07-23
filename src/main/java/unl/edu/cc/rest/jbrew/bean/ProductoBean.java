@@ -64,6 +64,10 @@ public class ProductoBean implements Serializable {
         );
     }
     
+    public void editar(Product product) {
+        editProduct(product);
+    }
+    
     public String saveProduct() {
         try {
             inventoryFacade.saveProduct(selectedProduct);
@@ -80,6 +84,10 @@ public class ProductoBean implements Serializable {
         }
     }
     
+    public String guardar() {
+        return saveProduct();
+    }
+    
     public void deleteProduct(Product product) {
         try {
             inventoryFacade.deleteProduct(product);
@@ -92,6 +100,10 @@ public class ProductoBean implements Serializable {
         }
     }
     
+    public void eliminar(Product product) {
+        deleteProduct(product);
+    }
+    
     public void searchProducts() {
         List<Product> allProducts = inventoryFacade.getAllProducts();
         filteredProducts = allProducts.stream()
@@ -102,8 +114,16 @@ public class ProductoBean implements Serializable {
         applyFilters();
     }
     
+    public void search() {
+        searchProducts();
+    }
+    
     public void filterProducts() {
         searchProducts();
+    }
+    
+    public void filter() {
+        filterProducts();
     }
     
     public void clearFilters() {
@@ -147,7 +167,6 @@ public class ProductoBean implements Serializable {
                 .count();
     }
     
-    // Getters and Setters
     public Product getSelectedProduct() {
         return selectedProduct;
     }

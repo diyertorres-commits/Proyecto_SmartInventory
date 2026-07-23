@@ -3,7 +3,7 @@ package unl.edu.cc.rest.jbrew.bean;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
@@ -15,55 +15,65 @@ import java.util.List;
 public class InventarioBean implements java.io.Serializable {
     
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     public InventarioBean() {
         // Constructor vacío, la inicialización se maneja en InventoryService
     }
     
-    // Getters delegados a InventoryService
+    // Getters delegados a InventoryFacade
     public List<Product> getProductos() {
-        return inventoryService.getAllProducts();
+        return inventoryFacade.getAllProducts();
     }
     
     public List<Category> getCategorias() {
-        return inventoryService.getAllCategories();
+        return inventoryFacade.getAllCategories();
     }
     
     public List<Customer> getClientes() {
-        return inventoryService.getAllCustomers();
+        return inventoryFacade.getAllCustomers();
     }
     
     public List<Supplier> getProveedores() {
-        return inventoryService.getAllSuppliers();
+        return inventoryFacade.getAllSuppliers();
     }
     
-    // Métodos auxiliares delegados a InventoryService
+    // Métodos auxiliares delegados a InventoryFacade
     public List<Product> getProductosPorCategoria(Category categoria) {
-        return inventoryService.findProductsByCategory(categoria);
+        return inventoryFacade.getAllProducts().stream()
+                .filter(p -> categoria.getName().equals(p.getCategoria()))
+                .toList();
     }
     
     public List<Product> getProductosPorCategoria(String nombreCategoria) {
-        return inventoryService.findProductsByCategory(nombreCategoria);
+        return inventoryFacade.findProductsByCategory(nombreCategoria);
     }
     
     public List<Product> getProductosStockCritico() {
-        return inventoryService.findProductsWithCriticalStock();
+        return inventoryFacade.getAllProducts().stream()
+                .filter(p -> p.getStock() <= p.getMinStock())
+                .toList();
     }
     
     public Product buscarProductoPorId(int id) {
-        return inventoryService.findProductById(id).orElse(null);
+        return inventoryFacade.findProductById(id).orElse(null);
     }
 
     public Product buscarProductoPorNombre(String nombre) {
-        return inventoryService.findProductByName(nombre).orElse(null);
+        return inventoryFacade.findProductByName(nombre).orElse(null);
     }
 
     public Customer buscarClientePorId(int id) {
-        return inventoryService.findCustomerById(id).orElse(null);
+        return inventoryFacade.getAllCustomers().stream()
+                .filter(c -> c.getIdCustomer() == id)
+                .findFirst()
+                .orElse(null);
     }
     
     public Supplier buscarProveedorPorId(int id) {
-        return inventoryService.findSupplierById(id).orElse(null);
+        return inventoryFacade.getAllSuppliers().stream()
+                .filter(s -> s.getIdSupplier() == id)
+                .findFirst()
+                .orElse(null);
     }
 }

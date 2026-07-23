@@ -5,7 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import java.io.Serializable;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.List;
 public class ClienteBean implements Serializable {
     
     @Inject
-    private InventoryService inventoryService;
+    private InventoryFacade inventoryFacade;
     
     private Customer selectedCustomer;
     private List<Customer> filteredCustomers;
@@ -35,9 +35,13 @@ public class ClienteBean implements Serializable {
         this.selectedCustomer = customer;
     }
     
+    public void editar(Customer customer) {
+        editCustomer(customer);
+    }
+    
     public String saveCustomer() {
         try {
-            inventoryService.saveCustomer(selectedCustomer);
+            inventoryFacade.saveCustomer(selectedCustomer);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
                     selectedCustomer.getIdCustomer() == 0 ? "Cliente creado correctamente" : "Cliente actualizado correctamente"));
@@ -50,9 +54,13 @@ public class ClienteBean implements Serializable {
         }
     }
     
+    public String guardar() {
+        return saveCustomer();
+    }
+    
     public void deleteCustomer(Customer customer) {
         try {
-            inventoryService.deleteCustomer(customer);
+            inventoryFacade.deleteCustomer(customer);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Cliente eliminado correctamente"));
         } catch (Exception e) {
@@ -61,8 +69,12 @@ public class ClienteBean implements Serializable {
         }
     }
     
+    public void eliminar(Customer customer) {
+        deleteCustomer(customer);
+    }
+    
     public void searchCustomers() {
-        filteredCustomers = inventoryService.getAllCustomers().stream()
+        filteredCustomers = inventoryFacade.getAllCustomers().stream()
                 .filter(c -> searchTerm == null || searchTerm.isEmpty() || 
                     c.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
                     c.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
@@ -70,9 +82,13 @@ public class ClienteBean implements Serializable {
                 .toList();
     }
     
+    public void search() {
+        searchCustomers();
+    }
+    
     public void clearSearch() {
         searchTerm = "";
-        filteredCustomers = inventoryService.getAllCustomers();
+        filteredCustomers = inventoryFacade.getAllCustomers();
     }
     
     // Getters and Setters
@@ -80,34 +96,21 @@ public class ClienteBean implements Serializable {
         return selectedCustomer;
     }
     
-    public Customer getClienteSeleccionado() {
-        return getSelectedCustomer();
-    }
-    
     public Customer getCliente() {
         return getSelectedCustomer();
-    }
-    
-    public int getClienteId() {
-        return selectedCustomer != null ? selectedCustomer.getIdCustomer() : 0;
     }
     
     public void setSelectedCustomer(Customer selectedCustomer) {
         this.selectedCustomer = selectedCustomer;
     }
     
-    public void setClienteId(int customerId) {
-        Customer customer = inventoryService.findCustomerById(customerId).orElse(null);
-        setSelectedCustomer(customer);
-    }
-    
-    public void setClienteSeleccionado(Customer selectedCustomer) {
+    public void setCliente(Customer selectedCustomer) {
         setSelectedCustomer(selectedCustomer);
     }
     
     public List<Customer> getFilteredCustomers() {
         if (filteredCustomers.isEmpty()) {
-            filteredCustomers = inventoryService.getAllCustomers();
+            filteredCustomers = inventoryFacade.getAllCustomers();
         }
         return filteredCustomers;
     }
@@ -132,15 +135,7 @@ public class ClienteBean implements Serializable {
         return searchTerm;
     }
     
-    public String getTerminoBusqueda() {
-        return getSearchTerm();
-    }
-    
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
-    }
-    
-    public void setTerminoBusqueda(String searchTerm) {
-        setSearchTerm(searchTerm);
     }
 }

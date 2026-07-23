@@ -48,6 +48,11 @@ public class InventoryFacade {
         return inventoryService.getAllSuppliers();
     }
     
+    public List<Product> findProductsByCategory(String categoryName) {
+        LOGGER.info("Buscando productos por categoría a través de facade: " + categoryName);
+        return inventoryService.findProductsByCategory(categoryName);
+    }
+    
     public void saveProduct(Product product) {
         LOGGER.info("Guardando producto a través de facade: " + product.getName());
         inventoryService.saveProduct(product);
