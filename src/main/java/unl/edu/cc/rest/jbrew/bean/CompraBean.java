@@ -8,6 +8,7 @@ import jakarta.inject.Named;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
+import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.io.Serializable;
@@ -30,6 +31,7 @@ public class CompraBean implements Serializable {
     
     // Object for ACQUIRE NEW PRODUCT operation
     private Product newProduct;
+    private Category category;
     
     // Common fields
     private Supplier selectedSupplier;
@@ -254,6 +256,29 @@ public class CompraBean implements Serializable {
     public void setCategoria(String categoria) {
         // No se puede establecer categoría por nombre, se requiere objeto Category
         // Esta función se mantiene para compatibilidad pero no hace nada
+    }
+    
+    public Category getCategory() {
+        return category;
+    }
+    
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+    
+    public String getCategoryName() {
+        return category != null ? category.getName() : null;
+    }
+    
+    public void setCategoryName(String categoryName) {
+        if (categoryName != null) {
+            this.category = inventoryFacade.getAllCategories().stream()
+                    .filter(c -> c.getName().equals(categoryName))
+                    .findFirst()
+                    .orElse(null);
+        } else {
+            this.category = null;
+        }
     }
     
     public void setPrecioVenta(double precio) {

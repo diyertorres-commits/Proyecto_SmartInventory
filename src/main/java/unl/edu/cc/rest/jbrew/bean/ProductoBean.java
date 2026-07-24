@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
+import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.ProductStatus;
 import java.io.Serializable;
 import java.util.List;
@@ -295,5 +296,19 @@ public class ProductoBean implements Serializable {
     
     public double getValorTotalInventario() {
         return getTotalInventoryValue();
+    }
+    
+    public String getCategoryName() {
+        if (selectedProduct != null && selectedProduct.getCategory() != null) {
+            return selectedProduct.getCategory().getName();
+        }
+        return null;
+    }
+    
+    public void setCategoryName(String categoryName) {
+        if (selectedProduct != null && categoryName != null) {
+            Category category = inventoryFacade.findCategoryByName(categoryName).orElse(null);
+            selectedProduct.setCategory(category);
+        }
     }
 }

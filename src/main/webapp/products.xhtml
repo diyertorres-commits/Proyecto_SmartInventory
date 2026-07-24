@@ -107,8 +107,8 @@
                         </div>
                     </p:column>
                     
-                    <p:column headerText="Categoría" width="12%" filterBy="#{p.categoria}" filterMatchMode="contains">
-                        <span style="background:var(--si-bg);padding:0.4rem 0.8rem;border-radius:6px;font-size:0.85rem;font-weight:500;color:var(--si-text-secondary);">#{p.categoria}</span>
+                    <p:column headerText="Categoría" width="12%" filterBy="#{p.category.name}" filterMatchMode="contains">
+                        <span style="background:var(--si-bg);padding:0.4rem 0.8rem;border-radius:6px;font-size:0.85rem;font-weight:500;color:var(--si-text-secondary);">#{p.category.name}</span>
                     </p:column>
                     
                     <p:column headerText="Stock" width="12%" sortBy="#{p.stock}">
@@ -165,7 +165,7 @@
                         <p:inputText id="nombre" value="#{productoBean.producto.name}" placeholder="Nombre del producto" required="true" style="width:100%" />
                         
                         <p:outputLabel for="categoria" value="Categoría:" />
-                        <p:selectOneMenu id="categoria" value="#{productoBean.producto.categoria}" required="true" style="width:100%">
+                        <p:selectOneMenu id="categoria" value="#{productoBean.categoryName}" required="true" style="width:100%">
                             <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
                             <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
                         </p:selectOneMenu>

@@ -580,21 +580,6 @@ html, body {
     .si-hero { padding: 2rem 1.4rem; }
 }
 
-/* -------- Dashboard -------- */
-.si-dash-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.25rem;
-    margin-top: 1rem;
-}
-
-.si-chart-card h5 {
-    margin: 0 0 0.75rem;
-    color: var(--si-text-primary);
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
 /* -------- Footer -------- */
 .si-footer {
     text-align: center;

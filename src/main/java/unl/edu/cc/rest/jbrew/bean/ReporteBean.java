@@ -9,6 +9,7 @@ import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.business.SalesService;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
+import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
 import java.io.Serializable;
@@ -32,7 +33,7 @@ public class ReporteBean implements Serializable {
     private String tipoReporte;
     private Date fechaInicio;
     private Date fechaFin;
-    private String categoria;
+    private Category category;
     
     private double totalVentas;
     private double ganancia;
@@ -152,12 +153,27 @@ public class ReporteBean implements Serializable {
         this.fechaFin = fechaFin;
     }
     
-    public String getCategoria() {
-        return categoria;
+    public Category getCategory() {
+        return category;
     }
     
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+    
+    public String getCategoryName() {
+        return category != null ? category.getName() : null;
+    }
+    
+    public void setCategoryName(String categoryName) {
+        if (categoryName != null) {
+            this.category = inventoryService.getAllCategories().stream()
+                    .filter(c -> c.getName().equals(categoryName))
+                    .findFirst()
+                    .orElse(null);
+        } else {
+            this.category = null;
+        }
     }
     
     public double getTotalVentas() {

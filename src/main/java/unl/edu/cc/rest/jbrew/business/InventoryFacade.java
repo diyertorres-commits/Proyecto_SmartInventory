@@ -48,6 +48,13 @@ public class InventoryFacade {
         return inventoryService.getAllCategories();
     }
     
+    public Optional<Category> findCategoryByName(String name) {
+        LOGGER.info("Buscando categoría por nombre a través de facade: " + name);
+        return inventoryService.getAllCategories().stream()
+                .filter(c -> c.getName().equals(name))
+                .findFirst();
+    }
+    
     public List<Customer> getAllCustomers() {
         LOGGER.info("Obteniendo todos los clientes a través de facade");
         return inventoryService.getAllCustomers();
