@@ -55,7 +55,7 @@ public class ProductoBean implements Serializable {
             product.getCodigo(),
             product.getName(),
             product.getDescription(),
-            product.getCategoria(),
+            product.getCategory(),
             product.getImagen(),
             product.getSalePrice(),
             product.getPurchasePrice(),
@@ -136,7 +136,7 @@ public class ProductoBean implements Serializable {
     private void applyFilters() {
         if (categoryFilter != null && !categoryFilter.isEmpty()) {
             filteredProducts = filteredProducts.stream()
-                    .filter(p -> categoryFilter.equals(p.getCategoria()))
+                    .filter(p -> categoryFilter.equals(p.getCategory() != null ? p.getCategory().getName() : ""))
                     .toList();
         }
         

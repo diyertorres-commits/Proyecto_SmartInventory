@@ -19,7 +19,7 @@ public class Category {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
     
-    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> productList; // Composición con Product
 
     public Category(int idCategory, String name) throws InvalidCategoryNameException {

@@ -37,11 +37,16 @@ public class InventoryService {
         }
         
         products = new ArrayList<>();
-        products.add(new Product(1, "CAF-001", "Café Americano", "Café americano tradicional", "Bebidas", "cafe_americano.jpg", 2.50, 1.20, 50, 10));
-        products.add(new Product(2, "CAF-002", "Cappuccino", "Cappuccino italiano", "Bebidas", "cappuccino.jpg", 3.50, 1.80, 30, 8));
-        products.add(new Product(3, "POS-001", "Sandwich de Pollo", "Sandwich de pollo con vegetales", "Alimentos", "sandwich_pollo.jpg", 5.00, 2.50, 25, 5));
-        products.add(new Product(4, "POS-002", "Croissant", "Croissant de mantequilla", "Snacks", "croissant.jpg", 2.00, 0.80, 40, 15));
-        products.add(new Product(5, "DES-001", "Cheesecake", "Cheesecake de frutos rojos", "Postres", "cheesecake.jpg", 4.50, 2.00, 15, 5));
+        Category bebidas = new Category(1, "Bebidas");
+        Category alimentos = new Category(2, "Alimentos");
+        Category snacks = new Category(3, "Snacks");
+        Category postres = new Category(4, "Postres");
+        
+        products.add(new Product(1, "CAF-001", "Café Americano", "Café americano tradicional", bebidas, "cafe_americano.jpg", 2.50, 1.20, 50, 10));
+        products.add(new Product(2, "CAF-002", "Cappuccino", "Cappuccino italiano", bebidas, "cappuccino.jpg", 3.50, 1.80, 30, 8));
+        products.add(new Product(3, "POS-001", "Sandwich de Pollo", "Sandwich de pollo con vegetales", alimentos, "sandwich_pollo.jpg", 5.00, 2.50, 25, 5));
+        products.add(new Product(4, "POS-002", "Croissant", "Croissant de mantequilla", snacks, "croissant.jpg", 2.00, 0.80, 40, 15));
+        products.add(new Product(5, "DES-001", "Cheesecake", "Cheesecake de frutos rojos", postres, "cheesecake.jpg", 4.50, 2.00, 15, 5));
         
         customers = new ArrayList<>();
         customers.add(new Customer(1L, "0912345678", "Juan", "Pérez", "0991234567", "juan.perez@email.com", "Av. Principal 123", "Empresa ABC", 1000.00));
@@ -77,7 +82,7 @@ public class InventoryService {
             return new ArrayList<>(products);
         }
         return products.stream()
-                .filter(p -> category.getName().equals(p.getCategoria()))
+                .filter(p -> category.getName().equals(p.getCategory().getName()))
                 .toList();
     }
     
@@ -86,7 +91,7 @@ public class InventoryService {
             return new ArrayList<>(products);
         }
         return products.stream()
-                .filter(p -> categoryName.equals(p.getCategoria()))
+                .filter(p -> categoryName.equals(p.getCategory().getName()))
                 .toList();
     }
     

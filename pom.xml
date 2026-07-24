@@ -89,7 +89,7 @@
                 Copia el driver PostgreSQL al directorio de recursos compartidos de Liberty
                 (${shared.resource.dir}/postgres/) para que el server.xml pueda referenciarlo
                 en la definición del <library id="postgresLib">.
-                Se ejecuta antes del package para que liberty:dev también lo encuentre.
+                Se ejecuta en la fase process-resources para que esté disponible antes de compilar
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -98,7 +98,7 @@
                 <executions>
                     <execution>
                         <id>copy-postgres-driver</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-resources</phase>
                         <goals><goal>copy</goal></goals>
                         <configuration>
                             <artifactItems>

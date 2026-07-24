@@ -11,16 +11,16 @@
         <properties>
             <!-- 1. Configuración de generación / actualización de tablas (esquema de BD) -->
             <!-- Configuración de Jakarta persistence puede ser: none, create, drop-and-create, drop -->
-            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
 
             <!-- Configuración de EclipseLink values: none, drop-and-create-tables, create-tables, create-or-extend-tables -->
-            <!--property name="eclipselink.ddl-generation" value="create-or-extend-tables"/-->
+            <property name="eclipselink.ddl-generation" value="create-tables"/>
 
             <!-- database = ejecuta los comandos DDL directamente en la base de datos -->
             <property name="eclipselink.ddl-generation.output-mode" value="database"/>
 
-            <!-- 2. Cargar script de inicialización de la BD -->
-            <property name="jakarta.persistence.sql-load-script-source"  value="db/initial-data.sql"/>
+            <!-- 2. Cargar script de inicialización de la BD (comentado porque no existe) -->
+            <!-- <property name="jakarta.persistence.sql-load-script-source"  value="db/initial-data.sql"/> -->
 
             <!-- EclipseLink — proveedor JPA nativo de Open Liberty -->
             <property name="eclipselink.logging.level"      value="FINE"/>

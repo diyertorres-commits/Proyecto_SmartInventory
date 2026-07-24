@@ -11,16 +11,17 @@
     <basicRegistry id="defaultBasicRegistry" realm="BasicRealm">
         <user name="username" password="password" />
     </basicRegistry>
+    
     <keyStore id="defaultKeyStore" password="password" />
     <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="9080" httpsPort="9443" />
     <webApplication location="jbrew-web.war" contextRoot="/"/>
 
     <!-- Variables sobreescritas por env vars de Docker: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD -->
     <variable name="db.host"     defaultValue="localhost"      envVarName="DB_HOST"/>
-    <variable name="db.port"     defaultValue="5434"           envVarName="DB_PORT"/>
-    <variable name="db.name"     defaultValue="smartinventory" envVarName="DB_NAME"/>
+    <variable name="db.port"     defaultValue="5432"           envVarName="DB_PORT"/>
+    <variable name="db.name"     defaultValue="smart"          envVarName="DB_NAME"/>
     <variable name="db.user"     defaultValue="smartuser"      envVarName="DB_USER"/>
-    <variable name="db.password" defaultValue="smartUser2626"  envVarName="DB_PASSWORD"/>
+    <variable name="db.password" defaultValue="smartUser2425"  envVarName="DB_PASSWORD"/>
 
     <library id="postgresLib">
         <fileset dir="${shared.resource.dir}/postgres/" include="postgresql-*.jar"/>

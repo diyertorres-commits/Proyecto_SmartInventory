@@ -67,7 +67,7 @@ public class PurchaseService {
         
         if (newProduct.getCodigo() == null || newProduct.getCodigo().isEmpty() ||
             newProduct.getName() == null || newProduct.getName().isEmpty() ||
-            newProduct.getCategoria() == null || newProduct.getCategoria().isEmpty()) {
+            newProduct.getCategory() == null) {
             return new PurchaseResult(false, "Complete los campos obligatorios", null, null);
         }
         

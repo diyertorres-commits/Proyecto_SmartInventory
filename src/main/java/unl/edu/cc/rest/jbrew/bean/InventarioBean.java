@@ -41,7 +41,7 @@ public class InventarioBean implements java.io.Serializable {
     // Métodos auxiliares delegados a InventoryFacade
     public List<Product> getProductosPorCategoria(Category categoria) {
         return inventoryFacade.getAllProducts().stream()
-                .filter(p -> categoria.getName().equals(p.getCategoria()))
+                .filter(p -> categoria.getName().equals(p.getCategory().getName()))
                 .toList();
     }
     

@@ -108,7 +108,7 @@ public class ReporteBean implements Serializable {
             DatoReporte dato = new DatoReporte();
             dato.setId(producto.getIdProduct());
             dato.setTipo(producto.getName());
-            dato.setCliente(producto.getCategoria());
+            dato.setCliente(producto.getCategory() != null ? producto.getCategory().getName() : "");
             dato.setMetodo(String.valueOf(producto.getStock()));
             dato.setTotal(producto.getSalePrice());
             datosReporte.add(dato);

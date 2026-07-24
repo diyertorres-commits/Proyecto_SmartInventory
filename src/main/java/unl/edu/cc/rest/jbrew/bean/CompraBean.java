@@ -193,7 +193,7 @@ public class CompraBean implements Serializable {
     }
     
     public String getCategoria() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getCategoria() : "";
+        return selectedProductForRestock != null && selectedProductForRestock.getCategory() != null ? selectedProductForRestock.getCategory().getName() : "";
     }
     
     public double getPrecioVenta() {
@@ -252,9 +252,8 @@ public class CompraBean implements Serializable {
     }
     
     public void setCategoria(String categoria) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setCategoria(categoria);
-        }
+        // No se puede establecer categoría por nombre, se requiere objeto Category
+        // Esta función se mantiene para compatibilidad pero no hace nada
     }
     
     public void setPrecioVenta(double precio) {

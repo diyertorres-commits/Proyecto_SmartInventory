@@ -29,8 +29,9 @@ public class Product {
     @Column(name = "description")
     private String description;
     
-    @Column(name = "categoria")
-    private String categoria; // Categoría del producto
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
     
     @Column(name = "imagen")
     private String imagen; // Nombre del archivo de imagen
@@ -61,14 +62,14 @@ public class Product {
         this.kardexList = new ArrayList<>();
     }
 
-    public Product(int idProduct, String codigo, String name, String description, String categoria, String imagen, 
+    public Product(int idProduct, String codigo, String name, String description, Category category, String imagen, 
                    double salePrice, double purchasePrice, int stock, int minStock) 
             throws InvalidProductNameException, InvalidProductPriceException, InvalidProductStockException {
         this.idProduct = idProduct;
         this.codigo = codigo;
         setName(name);
         this.description = description;
-        this.categoria = categoria;
+        this.category = category;
         this.imagen = imagen;
         setSalePrice(salePrice);
         this.purchasePrice = purchasePrice;
@@ -170,12 +171,12 @@ public class Product {
         this.description = description;
     }
 
-    public String getCategoria() {
-        return categoria;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public String getImagen() {
