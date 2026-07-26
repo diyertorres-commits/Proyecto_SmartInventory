@@ -16,42 +16,42 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "id_product")
     private int idProduct;
-    
+
     @Column(name = "codigo", unique = true, nullable = false)
     private String codigo; // SKU/Código del producto
-    
+
     @Column(name = "name", nullable = false)
     private String name;
-    
+
     @Column(name = "description")
     private String description;
-    
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
-    
+
     @Column(name = "imagen")
     private String imagen; // Nombre del archivo de imagen
-    
+
     @Column(name = "sale_price", nullable = false)
     private double salePrice;
-    
+
     @Column(name = "purchase_price", nullable = false)
     private double purchasePrice;
-    
+
     @Column(name = "stock", nullable = false)
     private int stock;
-    
+
     @Column(name = "min_stock", nullable = false)
     private int minStock;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private ProductStatus estado; // Estado del producto
-    
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Kardex> kardexList; // Relación 1 → 0..* con Kardex
 
@@ -62,8 +62,8 @@ public class Product {
         this.kardexList = new ArrayList<>();
     }
 
-    public Product(int idProduct, String codigo, String name, String description, Category category, String imagen, 
-                   double salePrice, double purchasePrice, int stock, int minStock) 
+    public Product(int idProduct, String codigo, String name, String description, Category category, String imagen,
+                   double salePrice, double purchasePrice, int stock, int minStock)
             throws InvalidProductNameException, InvalidProductPriceException, InvalidProductStockException {
         this.idProduct = idProduct;
         this.codigo = codigo;
@@ -78,6 +78,7 @@ public class Product {
         this.estado = calculateEstado();
         this.kardexList = new ArrayList<>();
     }
+
     public void updateProduct(String name, Double salePrice) throws InvalidProductNameException, InvalidProductPriceException {
         setName(name);
         setSalePrice(salePrice);
@@ -109,24 +110,34 @@ public class Product {
         return null;
     }
 
-    private void validateName(String name) throws InvalidProductNameException{
-            if(name == null || name.trim().isEmpty()){
-                throw new InvalidProductNameException("El nombre del producto es inválido");
-            }
-        if(!name.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+")){
+    private void validateName(String name) throws InvalidProductNameException {
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidProductNameException("El nombre del producto es inválido");
+        }
+        if (!name.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+")) {
             throw new InvalidProductNameException("El nombre del producto solo puede contener letras y espacios");
         }
+    }
 
+    // FIX: setStock(0) lanzaba excepción, pero modifyStock() SÍ permite
+    // llegar a stock == 0 (de hecho calculateEstado() tiene un caso
+    // específico para stock == 0 -> AGOTADO). Un producto agotado es un
+    // estado válido del negocio, no un error. Ahora solo se rechaza el
+    // stock negativo.
+    private void validateStock(int stock) throws InvalidProductStockException {
+        if (stock < 0) {
+            throw new InvalidProductStockException("El stock no puede ser negativo");
+        }
     }
-    private void validateStock(int stock) throws InvalidProductStockException{
-            if(stock == 0 || stock < 0){
-                throw new InvalidProductStockException("El stock no puede ser negativo ni cero");
-            }
-    }
-    private void validatePrice(double salePrice) throws InvalidProductPriceException{
-            if(salePrice <= 0 || salePrice >=100){
-                throw new InvalidProductPriceException("El precio está fuera del rango establecido");
-            }
+
+    // FIX: el límite superior "salePrice >= 100" rechazaba cualquier
+    // producto de $100 o más, un tope arbitrario que no tiene respaldo
+    // de negocio conocido. Se deja solo la validación real: el precio
+    // debe ser mayor que cero.
+    private void validatePrice(double salePrice) throws InvalidProductPriceException {
+        if (salePrice <= 0) {
+            throw new InvalidProductPriceException("El precio debe ser mayor que cero");
+        }
     }
 
     public Long getId() {
@@ -158,7 +169,7 @@ public class Product {
         return name;
     }
 
-    public void setName(String name) throws InvalidProductNameException{
+    public void setName(String name) throws InvalidProductNameException {
         validateName(name);
         this.name = name;
     }
@@ -199,7 +210,7 @@ public class Product {
         return salePrice;
     }
 
-    public void setSalePrice(double salePrice) throws InvalidProductPriceException{
+    public void setSalePrice(double salePrice) throws InvalidProductPriceException {
         validatePrice(salePrice);
         this.salePrice = salePrice;
     }
@@ -219,14 +230,14 @@ public class Product {
         return stock;
     }
 
-    public void setStock(int stock) throws InvalidProductStockException{
+    public void setStock(int stock) throws InvalidProductStockException {
         validateStock(stock);
         this.stock = stock;
     }
+
     public int getMinStock() {
         return minStock;
     }
-
 
     public void setMinStock(int minStock) {
         if (minStock < 0) {
@@ -246,5 +257,4 @@ public class Product {
     public void addKardex(Kardex kardex) {
         kardexList.add(kardex);
     }
-
 }
