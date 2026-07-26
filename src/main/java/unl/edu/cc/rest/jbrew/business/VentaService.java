@@ -22,16 +22,7 @@ import java.util.Optional;
  * a partir del carrito, lo procesa (descuenta stock real y registra
  * Kardex vía Movement.processMovement()), arma la factura y mantiene el
  * historial de facturas.
- *
- * @Singleton: esta es la capa de SERVICIO, no un controlador. El
- * historial de facturas y el contador de números de factura SÍ son
- * estado compartido legítimo de toda la aplicación (a diferencia del
- * carrito, que es por-usuario y vive en el Carrito de cada VentaBean).
- * Se usa @Lock para que las lecturas no se bloqueen entre sí y solo
- * registrarVenta() tome el lock exclusivo.
- *
- * NOTA PENDIENTE: el historial sigue en memoria (sin persistencia real a
- * base de datos). Debería reemplazarse por un EntityManager/DAO.
+ * @Singleton: esta es la capa de SERVICIO, no un controlador.
  */
 @Singleton
 public class VentaService {
@@ -86,7 +77,7 @@ public class VentaService {
     private Movement construirMovimientoDeSalida(Carrito carrito, String metodoPago) {
         Movement movimiento = new Movement(
                 facturas.size() + 1, // TODO: reemplazar por secuencia real de base de datos
-                MovementType.EXIT, // TODO: ajustar al nombre real de tu enum (ver mensaje anterior)
+                MovementType.EXIT,
                 new Date(),
                 "Venta - " + metodoPago
         );
