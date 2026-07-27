@@ -23,7 +23,7 @@
                         <f:selectItem itemLabel="Facturas de Venta" itemValue="venta" />
                         <f:selectItem itemLabel="Facturas de Compra" itemValue="compra" />
                     </p:selectOneRadio>
-                    
+
                     <p:commandButton value="Filtrar" icon="pi pi-filter" action="#{facturaBean.filtrar()}" update="tablaFacturas" styleClass="p-button-rounded" />
                 </div>
             </div>
@@ -34,39 +34,43 @@
                              emptyMessage="No hay facturas registradas."
                              rows="15" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
-                    
+
                     <p:column headerText="N° Factura" width="15%">
                         <h:outputText value="#{factura.numero}" style="font-weight:600;color:var(--si-primary);" />
                     </p:column>
-                    
+
                     <p:column headerText="Fecha" width="15%">
                         <h:outputText value="#{factura.fechaTexto}" />
                     </p:column>
-                    
+
                     <p:column headerText="Tipo" width="12%">
                         <span class="product-badge #{factura.tipo eq 'VENTA' ? 'badge-success' : 'badge-info'}">#{factura.tipo}</span>
                     </p:column>
-                    
+
                     <p:column headerText="Cliente/Proveedor" width="20%">
                         <h:outputText value="#{factura.tercero}" />
                     </p:column>
-                    
+
                     <p:column headerText="Método/Orden" width="15%">
                         <h:outputText value="#{factura.metodo}" style="font-size:0.85rem;" />
                     </p:column>
-                    
+
                     <p:column headerText="Total" width="13%" style="text-align:right;">
                         <h:outputText value="#{factura.total}" style="font-weight:600;color:var(--si-success);">
                             <f:convertNumber type="currency" currencySymbol="$" />
                         </h:outputText>
                     </p:column>
-                    
+
                     <p:column headerText="Acciones" width="10%" style="text-align:center;">
                         <div style="display:flex;gap:0.5rem;justify-content:center;">
+                            <!-- FIX: update="dialogFactura" buscaba un componente
+                                 por id, pero el p:dialog de abajo solo tenía
+                                 widgetVar (no id) -> ComponentNotFoundException.
+                                 Se agregó id="dialogFactura" al p:dialog. -->
                             <p:commandButton icon="pi pi-eye" title="Ver Detalle" styleClass="rounded-button ui-button-info"
-                                            action="#{facturaBean.verDetalle(factura)}" update="dialogFactura" oncomplete="PF('dialogFactura').show()" />
+                                             action="#{facturaBean.verDetalle(factura)}" update="dialogFactura" oncomplete="PF('dialogFactura').show()" />
                             <p:commandButton icon="pi pi-print" title="Imprimir" styleClass="rounded-button ui-button-secondary"
-                                            action="#{facturaBean.imprimir(factura)}" />
+                                             action="#{facturaBean.imprimir(factura)}" />
                         </div>
                     </p:column>
                 </p:dataTable>
@@ -74,9 +78,12 @@
         </h:form>
 
         <!-- ===== Diálogo para ver detalle de factura ===== -->
-        <p:dialog widgetVar="dialogFactura" header="Detalle de Factura" 
+        <!-- FIX: se agregó id="dialogFactura" (antes solo tenía widgetVar,
+             que sirve para PF('dialogFactura').show()/hide() en JS, pero no
+             es lo mismo que el id que usa JSF para resolver update="..."). -->
+        <p:dialog id="dialogFactura" widgetVar="dialogFactura" header="Detalle de Factura"
                   modal="true" closable="true" resizable="false" width="700" showEffect="fade" hideEffect="fade">
-            
+
             <h:form id="facturaForm">
                 <div class="si-form-card">
                     <div style="display:flex;justify-content:space-between;margin-bottom:1.5rem;">
@@ -88,33 +95,33 @@
                             <span class="product-badge #{facturaBean.facturaSeleccionada.tipo eq 'VENTA' ? 'badge-success' : 'badge-info'}">#{facturaBean.facturaSeleccionada.tipo}</span>
                         </div>
                     </div>
-                    
+
                     <p:divider />
-                    
+
                     <div style="margin-bottom:1rem;">
                         <strong>#{facturaBean.facturaSeleccionada.tipo eq 'VENTA' ? 'Cliente:' : 'Proveedor:'}</strong>
                         <h:outputText value="#{facturaBean.facturaSeleccionada.tercero}" />
                     </div>
-                    
+
                     <div style="margin-bottom:1rem;">
                         <strong>#{facturaBean.facturaSeleccionada.tipo eq 'VENTA' ? 'Método de Pago:' : 'Orden de Compra:'}</strong>
                         <h:outputText value="#{facturaBean.facturaSeleccionada.metodo}" />
                     </div>
-                    
+
                     <p:divider />
-                    
+
                     <div style="text-align:right;font-size:1.3rem;font-weight:700;color:var(--si-primary);margin-top:1rem;">
-                        Total: 
+                        Total:
                         <h:outputText value="#{facturaBean.facturaSeleccionada.total}">
                             <f:convertNumber type="currency" currencySymbol="$" />
                         </h:outputText>
                     </div>
-                    
+
                     <div style="margin-top:1.5rem;text-align:right;">
-                        <p:commandButton value="Imprimir" icon="pi pi-print" action="#{facturaBean.imprimir(facturaBean.facturaSeleccionada)}" 
-                                        styleClass="p-button-rounded p-button-primary" />
-                        <p:commandButton value="Cerrar" icon="pi pi-times" onclick="PF('dialogFactura').hide()" 
-                                        styleClass="p-button-outlined p-button-secondary" style="margin-left:0.5rem;" />
+                        <p:commandButton value="Imprimir" icon="pi pi-print" action="#{facturaBean.imprimir(facturaBean.facturaSeleccionada)}"
+                                         styleClass="p-button-rounded p-button-primary" />
+                        <p:commandButton value="Cerrar" icon="pi pi-times" onclick="PF('dialogFactura').hide()"
+                                         styleClass="p-button-outlined p-button-secondary" style="margin-left:0.5rem;" />
                     </div>
                 </div>
             </h:form>

@@ -1,26 +1,29 @@
 package unl.edu.cc.rest.jbrew.domain.People;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 
 @MappedSuperclass
-public abstract class Person {
-    
+public abstract class Person implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "identification_number", unique = true, nullable = false)
     private String identificationNumber; // DNI/RUC
-    
+
     @Column(name = "name", nullable = false)
     private String name;
-    
+
     @Column(name = "phone")
     private String phone;
-    
+
     @Column(name = "email")
     private String email;
-    
+
     @Column(name = "address")
     private String address;
 

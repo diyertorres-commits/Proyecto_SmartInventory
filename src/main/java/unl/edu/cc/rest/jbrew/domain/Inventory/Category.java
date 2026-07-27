@@ -2,23 +2,26 @@ package unl.edu.cc.rest.jbrew.domain.Inventory;
 
 import jakarta.persistence.*;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidCategoryNameException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "categories")
-public class Category {
+public class Category implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "id_category")
     private int idCategory;
-    
+
     @Column(name = "name", unique = true, nullable = false)
     private String name;
-    
+
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> productList; // Composición con Product
 
@@ -29,17 +32,17 @@ public class Category {
     }
 
     public Category() {
-
     }
 
     private void validateName(String name) throws InvalidCategoryNameException {
-        if(name == null || name.trim().isEmpty()){
+        if (name == null || name.trim().isEmpty()) {
             throw new InvalidCategoryNameException("El nombre de la categoría no puede estar vacío");
         }
-        if(name.matches(".*\\d.*")){
+        if (name.matches(".*\\d.*")) {
             throw new InvalidCategoryNameException("El nombre de la categoría no puede contener números");
         }
     }
+
     public void addProduct(Product product) { // Asociación con Product
         productList.add(product);
     }

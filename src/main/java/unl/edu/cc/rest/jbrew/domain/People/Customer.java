@@ -1,17 +1,20 @@
 package unl.edu.cc.rest.jbrew.domain.People;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "customers")
-public class Customer extends Person {
-    
+public class Customer extends Person implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Column(name = "apellido")
     private String apellido;
-    
+
     @Column(name = "empresa")
     private String empresa;
-    
+
     @Column(name = "limite_credito")
     private double limiteCredito;
 

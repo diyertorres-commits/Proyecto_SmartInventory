@@ -6,12 +6,15 @@ import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductStockException;
 import unl.edu.cc.rest.jbrew.domain.Reports.StockAlert;
 import unl.edu.cc.rest.jbrew.domain.Kardex.Kardex;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "products")
-public class Product {
+public class Product implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

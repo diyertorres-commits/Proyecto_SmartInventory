@@ -1,14 +1,17 @@
 package unl.edu.cc.rest.jbrew.domain.People;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "suppliers")
-public class Supplier extends Person {
-    
+public class Supplier extends Person implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Column(name = "razon_social")
     private String razonSocial;
-    
+
     @Column(name = "contacto")
     private String contacto;
 
