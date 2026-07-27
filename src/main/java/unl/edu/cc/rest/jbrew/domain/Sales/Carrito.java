@@ -10,10 +10,14 @@ public class Carrito implements Serializable {
 
     private static final double TASA_IVA = 0.12;
 
-    private final List<ItemCarrito> items = new ArrayList<>();
+    private List<ItemCarrito> items = new ArrayList<>();
 
     public List<ItemCarrito> getItems() {
         return items;
+    }
+
+    public void setItems(List<ItemCarrito> items) {
+        this.items = items;
     }
 
     public boolean estaVacio() {
