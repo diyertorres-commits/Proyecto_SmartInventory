@@ -45,8 +45,8 @@
                          visualmente después de agregar al carrito (el bean ya
                          limpia selectedProduct/selectedQuantity internamente,
                          pero antes no se refrescaban en pantalla). -->
-                    <p:commandButton value="Agregar al Carrito" icon="pi pi-plus" action="#{ventaBean.agregarAlCarrito()}"
-                                     update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel ventaForm:producto ventaForm:cantidad" styleClass="p-button-rounded" style="margin-top:.5rem" />
+                    <p:commandButton value="Agregar al Carrito" icon="pi pi-plus" action="#{ventaBean.agregarProductoAlCarrito()}"
+                                     update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel" styleClass="p-button-rounded" style="margin-top:.5rem" />
 
                     <p:divider />
 
@@ -72,7 +72,7 @@
                         </p:column>
                         <p:column headerText="" style="width:50px;">
                             <p:commandButton icon="pi pi-times" styleClass="rounded-button ui-button-danger"
-                                             action="#{ventaBean.eliminarDelCarrito(item)}" update="ventaForm:carritoTable ventaForm:resumenPanel" />
+                                             action="#{ventaBean.eliminarProductoDelCarrito(item)}" update="ventaForm:carritoTable ventaForm:resumenPanel" />
                         </p:column>
                     </p:dataTable>
                 </div>
@@ -123,7 +123,7 @@
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
                         <span>Descuento:</span>
                         <p:inputNumber value="#{ventaBean.descuento}" symbol="$" decimalPlaces="2" size="8" style="text-align:right;">
-                            <p:ajax listener="#{ventaBean.calcularTotal()}" update="ventaForm:resumenPanel" />
+                            <p:ajax listener="#{ventaBean.recalcularTotal()}" update="ventaForm:resumenPanel" />
                         </p:inputNumber>
                     </div>
 
@@ -136,14 +136,11 @@
                         </span>
                     </div>
 
-                    <!-- FIX: action apuntaba a #{ventaBean.completarVenta()}, método
-                         que no existía en VentaBean -> PropertyNotFoundException
-                         al presionar el botón. Ya se agregó ese método en el bean. -->
-                    <p:commandButton value="Completar Venta" icon="pi pi-check" action="#{ventaBean.completarVenta()}"
+                    <p:commandButton value="Completar Venta" icon="pi pi-check" action="#{ventaBean.procesarVenta()}"
                                      update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel tablaVentas :navForm"
                                      styleClass="p-button-rounded p-button-success" style="width:100%;margin-top:1rem;" />
 
-                    <p:commandButton value="Cancelar" icon="pi pi-times" action="#{ventaBean.limpiarCarrito()}"
+                    <p:commandButton value="Cancelar" icon="pi pi-times" action="#{ventaBean.vaciarCarrito()}"
                                      update="ventaForm:carritoTable ventaForm:resumenPanel"
                                      styleClass="p-button-outlined p-button-secondary" style="width:100%;margin-top:0.5rem;" />
                 </h:panelGroup>
@@ -156,6 +153,11 @@
             </div>
 
             <div class="si-glass-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <h6 style="margin:0;color:var(--si-text-primary);">Historial de Ventas</h6>
+                    <p:commandButton icon="pi pi-sort-amount-down" title="Cambiar orden" action="#{ventaBean.cambiarOrdenFacturas()}"
+                                     update="tablaVentas" styleClass="p-button-rounded p-button-outlined" />
+                </div>
                 <p:dataTable id="tablaVentas" value="#{ventaBean.facturas}" var="m" emptyMessage="Todavía no se han registrado ventas."
                              rows="10" paginator="true" paginatorPosition="bottom">
                     <p:column headerText="N° Factura">
@@ -184,6 +186,64 @@
             </div>
 
         </h:form>
+
+        <!-- RemoteCommand para restaurar carrito desde localStorage -->
+        <p:remoteCommand name="restaurarCarrito" action="#{ventaBean.restaurarCarritoDesdeJson(param.carritoData)}" 
+                         update="ventaForm:carritoTable ventaForm:resumenPanel" />
+
+        <script type="text/javascript">
+        //<![CDATA[
+            // Guardar carrito en localStorage antes de navegar
+            window.addEventListener('beforeunload', function(e) {
+                try {
+                    const carritoData = {
+                        items: [],
+                        descuento: 0
+                    };
+                    
+                    // Extraer items del dataTable
+                    const rows = document.querySelectorAll('#ventaForm\\:carritoTable tbody tr');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length >= 4) {
+                            carritoData.items.push({
+                                productoNombre: cells[0].textContent.trim(),
+                                cantidad: parseInt(cells[1].textContent.trim()),
+                                precio: parseFloat(cells[2].textContent.replace(/[^0-9.-]+/g, ''))
+                            });
+                        }
+                    });
+                    
+                    // Extraer descuento
+                    const descuentoInput = document.querySelector('[id$="descuento"] input');
+                    if (descuentoInput) {
+                        carritoData.descuento = parseFloat(descuentoInput.value) || 0;
+                    }
+                    
+                    localStorage.setItem('carritoVenta', JSON.stringify(carritoData));
+                } catch (error) {
+                    console.log('Error guardando carrito:', error);
+                }
+            });
+
+            // Recuperar carrito al cargar la página
+            window.addEventListener('load', function() {
+                try {
+                    const carritoGuardado = localStorage.getItem('carritoVenta');
+                    if (carritoGuardado) {
+                        const carritoData = JSON.parse(carritoGuardado);
+                        console.log('Carrito recuperado:', carritoData);
+                        // Enviar datos al servidor para restaurar el carrito
+                        if (carritoData.items && carritoData.items.length > 0) {
+                            restaurarCarrito([{name: 'carritoData', value: JSON.stringify(carritoData)}]);
+                        }
+                    }
+                } catch (error) {
+                    console.log('Error recuperando carrito:', error);
+                }
+            });
+        //]]>
+        </script>
 
     </ui:define>
 </ui:composition>

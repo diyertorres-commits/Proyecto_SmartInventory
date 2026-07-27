@@ -3,10 +3,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
 
-    <!-- Forzar a Faces a guardar el estado en el cliente, eliminando la necesidad de cookies de sesión para la vista -->
+    <!-- Estado guardado del lado del cliente: sobrevive a redeploys en desarrollo
+         y evita ViewExpiredException por pérdida de memoria de sesión en el servidor -->
     <context-param>
         <param-name>jakarta.faces.STATE_SAVING_METHOD</param-name>
         <param-value>client</param-value>
+    </context-param>
+
+    <!-- Solo aplica si en algún punto vuelves a STATE_SAVING_METHOD=server:
+         evita que las vistas más viejas se descarten demasiado rápido -->
+    <context-param>
+        <param-name>org.apache.myfaces.NUMBER_OF_VIEWS_IN_SESSION</param-name>
+        <param-value>50</param-value>
     </context-param>
 
     <context-param>
@@ -42,7 +50,3 @@
         <welcome-file>login.xhtml</welcome-file>
     </welcome-file-list>
 </web-app>
-
-
-
-

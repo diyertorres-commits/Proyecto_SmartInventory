@@ -1,6 +1,9 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.ejb.Stateless;
+import jakarta.ejb.Singleton;
+import jakarta.ejb.Lock;
+import jakarta.ejb.LockType;
+import jakarta.annotation.PostConstruct;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
@@ -11,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-@Stateless
+@Singleton
 public class InventoryService {
     
     private static final Logger LOGGER = Logger.getLogger(InventoryService.class.getName());
@@ -22,10 +25,12 @@ public class InventoryService {
     private List<Supplier> suppliers;
     
     public InventoryService() {
-        initializeData();
+        // Constructor vacío
     }
     
+    @PostConstruct
     private void initializeData() {
+        LOGGER.info("Inicializando InventoryService...");
         categories = new ArrayList<>();
         try {
             categories.add(new Category(1, "Bebidas"));
@@ -55,14 +60,18 @@ public class InventoryService {
         suppliers = new ArrayList<>();
         suppliers.add(new Supplier(1L, "1712345678001", "Distribuidora Central", "Distribuidora Central S.A.", "Carlos Rodríguez", "022345678", "central@distribuidora.com", "Av. Industrial 789"));
         suppliers.add(new Supplier(2L, "1723456789001", "Proveedores del Sur", "Proveedores del Sur Ltda.", "Ana Martínez", "022345679", "sur@proveedores.com", "Calle Comercial 321"));
+        
+        LOGGER.info("InventoryService inicializado con " + products.size() + " productos, " + categories.size() + " categorías, " + customers.size() + " clientes, " + suppliers.size() + " proveedores");
     }
     
     // Product operations
+    @Lock(LockType.READ)
     public List<Product> getAllProducts() {
         LOGGER.info("Obteniendo todos los productos");
         return new ArrayList<>(products);
     }
     
+    @Lock(LockType.READ)
     public Optional<Product> findProductById(int id) {
         LOGGER.info("Buscando producto por ID: " + id);
         return products.stream()
@@ -70,6 +79,7 @@ public class InventoryService {
                 .findFirst();
     }
     
+    @Lock(LockType.READ)
     public Optional<Product> findProductByName(String name) {
         LOGGER.info("Buscando producto por nombre: " + name);
         return products.stream()
@@ -77,6 +87,7 @@ public class InventoryService {
                 .findFirst();
     }
     
+    @Lock(LockType.READ)
     public List<Product> findProductsByCategory(Category category) {
         if (category == null) {
             return new ArrayList<>(products);
@@ -86,6 +97,7 @@ public class InventoryService {
                 .toList();
     }
     
+    @Lock(LockType.READ)
     public List<Product> findProductsByCategory(String categoryName) {
         if (categoryName == null || categoryName.isEmpty()) {
             return new ArrayList<>(products);
@@ -95,12 +107,14 @@ public class InventoryService {
                 .toList();
     }
     
+    @Lock(LockType.READ)
     public List<Product> findProductsWithCriticalStock() {
         return products.stream()
                 .filter(p -> p.getStock() <= p.getMinStock())
                 .toList();
     }
     
+    @Lock(LockType.WRITE)
     public void saveProduct(Product product) {
         if (product.getIdProduct() == 0) {
             product.setIdProduct(products.size() + 1);
@@ -115,26 +129,31 @@ public class InventoryService {
         }
     }
     
+    @Lock(LockType.WRITE)
     public void deleteProduct(Product product) {
         products.remove(product);
     }
     
     // Category operations
+    @Lock(LockType.READ)
     public List<Category> getAllCategories() {
         return new ArrayList<>(categories);
     }
     
     // Customer operations
+    @Lock(LockType.READ)
     public List<Customer> getAllCustomers() {
         return new ArrayList<>(customers);
     }
     
+    @Lock(LockType.READ)
     public Optional<Customer> findCustomerById(Long id) {
         return customers.stream()
                 .filter(c -> c.getIdCustomer() == id)
                 .findFirst();
     }
     
+    @Lock(LockType.WRITE)
     public void saveCustomer(Customer customer) {
         if (customer.getIdCustomer() == 0L) {
             customer.setIdCustomer((long) customers.size() + 1);
@@ -149,21 +168,25 @@ public class InventoryService {
         }
     }
     
+    @Lock(LockType.WRITE)
     public void deleteCustomer(Customer customer) {
         customers.remove(customer);
     }
     
     // Supplier operations
+    @Lock(LockType.READ)
     public List<Supplier> getAllSuppliers() {
         return new ArrayList<>(suppliers);
     }
     
+    @Lock(LockType.READ)
     public Optional<Supplier> findSupplierById(Long id) {
         return suppliers.stream()
                 .filter(s -> s.getIdSupplier() == id)
                 .findFirst();
     }
     
+    @Lock(LockType.WRITE)
     public void saveSupplier(Supplier supplier) {
         if (supplier.getIdSupplier() == 0L) {
             supplier.setIdSupplier((long) suppliers.size() + 1);
@@ -178,6 +201,7 @@ public class InventoryService {
         }
     }
     
+    @Lock(LockType.WRITE)
     public void deleteSupplier(Supplier supplier) {
         suppliers.remove(supplier);
     }

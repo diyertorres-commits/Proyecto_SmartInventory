@@ -13,6 +13,11 @@
 </h:head>
 
 <h:body>
+    <!-- Si una petición AJAX falla (p. ej. ViewExpiredException tras un redeploy
+         o expiración real de sesión), recarga en vez de dejar el botón "muerto"
+         sin ningún feedback visible para el usuario -->
+    <p:ajaxStatus onerror="window.location.reload();" style="display:none;" />
+
     <!-- Fondo difuminado (blobs) detrás de toda la aplicación -->
     <div class="si-background">
         <div class="si-blob b1" />

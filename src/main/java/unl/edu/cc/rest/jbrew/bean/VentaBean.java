@@ -1,5 +1,6 @@
 package unl.edu.cc.rest.jbrew.bean;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -15,6 +16,7 @@ import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.Sales.Carrito;
 import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
+import unl.edu.cc.rest.jbrew.domain.Sales.VentaDTO;
 
 import java.io.Serializable;
 import java.util.List;
@@ -32,65 +34,118 @@ public class VentaBean implements Serializable {
     @Inject
     private VentaService ventaService;
 
-    private final Carrito carrito = new Carrito();
+    private Carrito carrito;
+    private VentaDTO ventaDTO;
+    private List<SaleInvoice> facturas;
+    private String ordenFacturas = "recientes";
 
-    private Product productoSeleccionado;
-    private int cantidadSeleccionada = 1;
-    private Customer clienteSeleccionado;
-    private String metodoPago = "efectivo";
-    private double descuento = 0;
-
-    private List<SaleInvoice> facturas = List.of();
+    @PostConstruct
+    public void inicializar() {
+        this.carrito = new Carrito();
+        this.ventaDTO = new VentaDTO();
+        this.facturas = ventaService.obtenerFacturas(ordenFacturas);
+    }
 
     // ===== Acciones de la vista =====
 
-    public void agregarAlCarrito() {
-        if (productoSeleccionado == null) {
+    public void agregarProductoAlCarrito() {
+        if (ventaDTO.getProductoSeleccionado() == null) {
             mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un producto");
             return;
         }
 
-        ResultadoCarrito resultado = carritoService.agregarProducto(carrito, productoSeleccionado, cantidadSeleccionada);
+        ResultadoCarrito resultado = carritoService.agregarProducto(
+            carrito, 
+            ventaDTO.getProductoSeleccionado(), 
+            ventaDTO.getCantidadSeleccionada()
+        );
         mostrarResultadoCarrito(resultado);
         if (resultado.isExitoso()) {
-            limpiarSeleccionDeProducto();
+            ventaDTO.limpiarSeleccionProducto();
         }
     }
 
-    public void eliminarDelCarrito(ItemCarrito item) {
+    public void eliminarProductoDelCarrito(ItemCarrito item) {
         ResultadoCarrito resultado = carritoService.eliminarProducto(carrito, item);
         mostrarResultadoCarrito(resultado);
     }
 
-    public void completarVenta() {
-        ResultadoVenta resultado = ventaService.registrarVenta(carrito, clienteSeleccionado, metodoPago, descuento);
+    public void procesarVenta() {
+        ResultadoVenta resultado = ventaService.registrarVenta(
+            carrito, 
+            ventaDTO.getClienteSeleccionado(), 
+            ventaDTO.getMetodoPago(), 
+            ventaDTO.getDescuento()
+        );
         mostrarResultadoVenta(resultado);
         if (resultado.isExitoso()) {
-            facturas = ventaService.obtenerFacturas();
-            limpiarDatosDeVenta();
+            this.facturas = ventaService.obtenerFacturas(ordenFacturas);
+            ventaDTO.limpiarDatosVenta();
         }
     }
 
-    public void limpiarCarrito() {
+    // Método alias para compatibilidad con vistas antiguas
+    public void completarVenta() {
+        procesarVenta();
+    }
+
+    public void vaciarCarrito() {
         carrito.vaciar();
         mostrarMensaje(FacesMessage.SEVERITY_INFO, "Info", "Carrito limpiado");
     }
 
-    public void calcularTotal() {
+    public void recalcularTotal() {
         // Disparado por AJAX; el total se recalcula dinámicamente en getTotal()
     }
 
+    public void restaurarCarritoDesdeJson(String carritoJson) {
+        try {
+            if (carritoJson != null && !carritoJson.isEmpty()) {
+                // Parsear JSON simple (sin usar librerías externas)
+                String[] parts = carritoJson.split("\"items\":\\[");
+                if (parts.length > 1) {
+                    String itemsPart = parts[1].split("\\],\"descuento\"")[0];
+                    String[] itemStrings = itemsPart.split("\\},\\{");
+                    
+                    carrito.vaciar();
+                    
+                    for (String itemStr : itemStrings) {
+                        // Extraer datos del item
+                        String nombre = extraerValor(itemStr, "productoNombre");
+                        int cantidad = Integer.parseInt(extraerValor(itemStr, "cantidad"));
+                        double precio = Double.parseDouble(extraerValor(itemStr, "precio"));
+                        
+                        // Buscar producto por nombre
+                        var productoOpt = inventoryFacade.findProductByName(nombre);
+                        if (productoOpt.isPresent()) {
+                            carrito.agregarItem(productoOpt.get(), cantidad);
+                        }
+                    }
+                    
+                    // Restaurar descuento
+                    String descuentoStr = carritoJson.split("\"descuento\":")[1].split("}")[0];
+                    ventaDTO.setDescuento(Double.parseDouble(descuentoStr));
+                    
+                    mostrarMensaje(FacesMessage.SEVERITY_INFO, "Info", "Carrito restaurado con " + carrito.getItems().size() + " productos");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo restaurar el carrito");
+        }
+    }
+    
+    private String extraerValor(String json, String clave) {
+        String pattern = "\"" + clave + "\":\"?([^,}\\\"]+)\"?";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher m = p.matcher(json);
+        if (m.find()) {
+            return m.group(1);
+        }
+        return "";
+    }
+
     // ===== Helpers privados (sin lógica de negocio, solo orquestación de UI) =====
-
-    private void limpiarSeleccionDeProducto() {
-        productoSeleccionado = null;
-        cantidadSeleccionada = 1;
-    }
-
-    private void limpiarDatosDeVenta() {
-        clienteSeleccionado = null;
-        descuento = 0;
-    }
 
     private void mostrarResultadoCarrito(ResultadoCarrito resultado) {
         mostrarMensaje(
@@ -111,51 +166,56 @@ public class VentaBean implements Serializable {
     }
 
     // ===== Propiedades expuestas a la vista =====
-    // Un solo nombre por propiedad (español, consistente con el resto del
-    // dominio y con lo que ya usa venta.xhtml) — sin duplicados en inglés.
+    // Nombres descriptivos en español, consistentes con el dominio
 
     public Integer getProductoId() {
-        return productoSeleccionado != null ? productoSeleccionado.getIdProduct() : null;
+        return ventaDTO.getProductoSeleccionado() != null 
+            ? ventaDTO.getProductoSeleccionado().getIdProduct() 
+            : null;
     }
 
     public void setProductoId(Integer idProducto) {
-        productoSeleccionado = (idProducto == null)
+        Product producto = (idProducto == null)
                 ? null
                 : inventoryFacade.findProductById(idProducto).orElse(null);
+        ventaDTO.setProductoSeleccionado(producto);
     }
 
     public int getCantidad() {
-        return cantidadSeleccionada;
+        return ventaDTO.getCantidadSeleccionada();
     }
 
     public void setCantidad(int cantidad) {
-        this.cantidadSeleccionada = cantidad;
+        ventaDTO.setCantidadSeleccionada(cantidad);
     }
 
     public Long getClienteId() {
-        return clienteSeleccionado != null ? clienteSeleccionado.getIdCustomer() : null;
+        return ventaDTO.getClienteSeleccionado() != null 
+            ? ventaDTO.getClienteSeleccionado().getIdCustomer() 
+            : null;
     }
 
     public void setClienteId(Long idCliente) {
-        clienteSeleccionado = (idCliente == null)
+        Customer cliente = (idCliente == null)
                 ? null
                 : inventoryFacade.findCustomerById(idCliente).orElse(null);
+        ventaDTO.setClienteSeleccionado(cliente);
     }
 
     public String getMetodoPago() {
-        return metodoPago;
+        return ventaDTO.getMetodoPago();
     }
 
     public void setMetodoPago(String metodoPago) {
-        this.metodoPago = metodoPago;
+        ventaDTO.setMetodoPago(metodoPago);
     }
 
     public double getDescuento() {
-        return descuento;
+        return ventaDTO.getDescuento();
     }
 
     public void setDescuento(double descuento) {
-        this.descuento = descuento;
+        ventaDTO.setDescuento(descuento);
     }
 
     public List<ItemCarrito> getItemsCarrito() {
@@ -163,10 +223,25 @@ public class VentaBean implements Serializable {
     }
 
     public List<SaleInvoice> getFacturas() {
-        if (facturas.isEmpty()) {
-            facturas = ventaService.obtenerFacturas();
-        }
         return facturas;
+    }
+
+    public String getOrdenFacturas() {
+        return ordenFacturas;
+    }
+
+    public void setOrdenFacturas(String ordenFacturas) {
+        this.ordenFacturas = ordenFacturas;
+        this.facturas = ventaService.obtenerFacturas(ordenFacturas);
+    }
+
+    public void cambiarOrdenFacturas() {
+        if ("recientes".equals(ordenFacturas)) {
+            ordenFacturas = "antiguos";
+        } else {
+            ordenFacturas = "recientes";
+        }
+        this.facturas = ventaService.obtenerFacturas(ordenFacturas);
     }
 
     public double getSubtotal() {
@@ -178,7 +253,7 @@ public class VentaBean implements Serializable {
     }
 
     public double getTotal() {
-        return carrito.calcularTotal(descuento);
+        return carrito.calcularTotal(ventaDTO.getDescuento());
     }
 
     public List<Product> getProductos() {

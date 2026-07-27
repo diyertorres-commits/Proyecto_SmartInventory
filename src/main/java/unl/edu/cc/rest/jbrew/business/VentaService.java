@@ -13,6 +13,8 @@ import unl.edu.cc.rest.jbrew.domain.Sales.Carrito;
 import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +53,18 @@ public class VentaService {
 
     @Lock(LockType.READ)
     public List<SaleInvoice> obtenerFacturas() {
-        return new ArrayList<>(facturas);
+        return obtenerFacturas("recientes");
+    }
+
+    @Lock(LockType.READ)
+    public List<SaleInvoice> obtenerFacturas(String orden) {
+        List<SaleInvoice> resultado = new ArrayList<>(facturas);
+        if ("antiguos".equals(orden)) {
+            resultado.sort(Comparator.comparing(SaleInvoice::getInvoiceDate));
+        } else {
+            resultado.sort(Comparator.comparing(SaleInvoice::getInvoiceDate).reversed());
+        }
+        return resultado;
     }
 
     private Optional<String> validarStockDisponible(Carrito carrito) {
