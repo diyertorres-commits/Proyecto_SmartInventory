@@ -21,7 +21,7 @@
                         <p:tab title="#{cat.name}">
                             <div class="si-category-grid">
                                 <ui:repeat value="#{inventarioBean.productos}" var="p">
-                                    <h:panelGroup rendered="#{p.categoria eq cat.name}">
+                                    <h:panelGroup rendered="#{p.category != null and p.category.name eq cat.name}">
                                         <div class="product-item">
                                             <div class="product-item-content">
                                                 <p:graphicImage library="images" name="products/#{p.imagen}" styleClass="product-image" />
