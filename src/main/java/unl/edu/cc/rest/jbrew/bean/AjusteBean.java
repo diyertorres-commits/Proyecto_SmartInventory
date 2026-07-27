@@ -21,12 +21,6 @@ public class AjusteBean implements Serializable {
     @Inject
     private InventoryService inventoryService;
 
-    // FIX: el historial de ajustes vivía como campo de este bean
-    // @ViewScoped -> al refrescar la página (F5) se crea una vista/bean
-    // nuevo y la lista quedaba vacía, aunque el ajuste ya se hubiera
-    // aplicado al stock real. Ahora el historial vive en AjusteService
-    // (@Singleton, a nivel de aplicación), igual que VentaService
-    // mantiene las facturas, así que sobrevive a los refrescos.
     @Inject
     private AjusteService ajusteService;
 
