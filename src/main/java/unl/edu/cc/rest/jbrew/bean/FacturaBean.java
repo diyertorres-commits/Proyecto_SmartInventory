@@ -5,10 +5,11 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.SalesService;
+import unl.edu.cc.rest.jbrew.business.VentaService;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -18,215 +19,126 @@ import java.util.List;
 @Named
 @ViewScoped
 public class FacturaBean implements Serializable {
-    
+
     @Inject
-    private SalesService salesService;
-    
+    private VentaService ventaService;
+
     @Inject
     private PurchaseService purchaseService;
-    
-    private String invoiceType;
-    private List<InvoiceInfo> filteredInvoices;
-    private InvoiceInfo selectedInvoice;
-    
-    public FacturaBean() {
-        this.invoiceType = "venta";
-        this.filteredInvoices = new ArrayList<>();
-        this.selectedInvoice = new InvoiceInfo();
-    }
-    
-    public void filterInvoices() {
-        filteredInvoices = new ArrayList<>();
-        
-        if ("venta".equals(invoiceType)) {
-            for (SaleInvoice invoice : salesService.getSaleInvoices()) {
-                InvoiceInfo info = new InvoiceInfo();
-                info.setNumber(invoice.getInvoiceNumber());
-                info.setDate(invoice.getInvoiceDate());
-                info.setType("VENTA");
-                info.setThirdParty(invoice.getCustomer() != null ? 
-                    invoice.getCustomer().getName() + " " + invoice.getCustomer().getApellido() : "Cliente Mostrador");
-                info.setMethod(invoice.getPaymentMethod());
-                info.setTotal(0);
-                filteredInvoices.add(info);
-            }
-        } else {
-            for (PurchaseInvoice invoice : purchaseService.getPurchaseInvoices()) {
-                InvoiceInfo info = new InvoiceInfo();
-                info.setNumber(invoice.getInvoiceNumber());
-                info.setDate(invoice.getInvoiceDate());
-                info.setType("COMPRA");
-                info.setThirdParty(invoice.getSupplier() != null ? invoice.getSupplier().getName() : "N/A");
-                info.setMethod(invoice.getPurchaseOrderNumber());
-                info.setTotal(0);
-                filteredInvoices.add(info);
-            }
-        }
-    }
-    
-    public void viewDetail(InvoiceInfo invoice) {
-        this.selectedInvoice = invoice;
-    }
-    
-    public void printInvoice(InvoiceInfo invoice) {
-        FacesContext.getCurrentInstance().addMessage(null, 
-            new FacesMessage(FacesMessage.SEVERITY_INFO, "Impresión", "Factura #" + invoice.getNumber() + " enviada a impresión"));
-    }
-    
-    // Getters and Setters
-    public String getInvoiceType() {
-        return invoiceType;
-    }
-    
-    public String getTipoFactura() {
-        return getInvoiceType();
-    }
-    
-    public void setInvoiceType(String invoiceType) {
-        this.invoiceType = invoiceType;
-    }
-    
-    public void setTipoFactura(String invoiceType) {
-        setInvoiceType(invoiceType);
-    }
-    
+
+    private String tipoFactura = "venta";
+    private List<InvoiceInfo> facturasFiltradas = new ArrayList<>();
+    private InvoiceInfo facturaSeleccionada = new InvoiceInfo();
+
     public void filtrar() {
-        filterInvoices();
+        facturasFiltradas = "venta".equals(tipoFactura)
+                ? mapearVentas(ventaService.obtenerFacturas())
+                : mapearCompras(purchaseService.getPurchaseInvoices());
     }
-    
-    public List<InvoiceInfo> getFilteredInvoices() {
-        if (filteredInvoices.isEmpty()) {
-            filterInvoices();
+
+    public void verDetalle(InvoiceInfo factura) {
+        this.facturaSeleccionada = factura;
+    }
+
+    public void imprimir(InvoiceInfo factura) {
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Impresión",
+                        "Factura #" + factura.getNumero() + " enviada a impresión"));
+    }
+
+    private List<InvoiceInfo> mapearVentas(List<SaleInvoice> facturas) {
+        List<InvoiceInfo> resultado = new ArrayList<>();
+        for (SaleInvoice factura : facturas) {
+            resultado.add(InvoiceInfo.desdeVenta(factura));
         }
-        return filteredInvoices;
+        return resultado;
     }
-    
+
+    private List<InvoiceInfo> mapearCompras(List<PurchaseInvoice> facturas) {
+        List<InvoiceInfo> resultado = new ArrayList<>();
+        for (PurchaseInvoice factura : facturas) {
+            resultado.add(InvoiceInfo.desdeCompra(factura));
+        }
+        return resultado;
+    }
+
+    // ===== Propiedades usadas por facturas.xhtml =====
+
+    public String getTipoFactura() {
+        return tipoFactura;
+    }
+
+    public void setTipoFactura(String tipoFactura) {
+        this.tipoFactura = tipoFactura;
+    }
+
     public List<InvoiceInfo> getFacturasFiltradas() {
-        return getFilteredInvoices();
+        if (facturasFiltradas.isEmpty()) {
+            filtrar();
+        }
+        return facturasFiltradas;
     }
-    
-    public List<InvoiceInfo> getFacturas() {
-        return getFilteredInvoices();
-    }
-    
-    public void setFilteredInvoices(List<InvoiceInfo> filteredInvoices) {
-        this.filteredInvoices = filteredInvoices;
-    }
-    
-    public InvoiceInfo getSelectedInvoice() {
-        return selectedInvoice;
-    }
-    
+
     public InvoiceInfo getFacturaSeleccionada() {
-        return getSelectedInvoice();
+        return facturaSeleccionada;
     }
-    
-    public void setSelectedInvoice(InvoiceInfo selectedInvoice) {
-        this.selectedInvoice = selectedInvoice;
-    }
-    
-    public void setFacturaSeleccionada(InvoiceInfo selectedInvoice) {
-        setSelectedInvoice(selectedInvoice);
-    }
-    
-    // Inner class for invoice information
+
     public static class InvoiceInfo implements Serializable {
-        private String number;
-        private Date date;
-        private String type;
-        private String thirdParty;
-        private String method;
+        private String numero;
+        private Date fecha;
+        private String tipo;
+        private String tercero;
+        private String metodo;
         private double total;
-        
-        public String getNumber() {
-            return number;
+
+        public static InvoiceInfo desdeVenta(SaleInvoice factura) {
+            InvoiceInfo info = new InvoiceInfo();
+            info.numero = factura.getInvoiceNumber();
+            info.fecha = factura.getInvoiceDate();
+            info.tipo = "VENTA";
+            info.tercero = factura.getCustomer() != null
+                    ? factura.getCustomer().getName() + " " + factura.getCustomer().getApellido()
+                    : "Cliente Mostrador";
+            info.metodo = factura.getPaymentMethod();
+            // FIX: antes se hardcodeaba en 0; ahora usa el total real de
+            // la factura (ver corrección previa en VentaService).
+            info.total = factura.getTotal();
+            return info;
         }
-        
+
+        public static InvoiceInfo desdeCompra(PurchaseInvoice factura) {
+            InvoiceInfo info = new InvoiceInfo();
+            info.numero = factura.getInvoiceNumber();
+            info.fecha = factura.getInvoiceDate();
+            info.tipo = "COMPRA";
+            info.tercero = factura.getSupplier() != null ? factura.getSupplier().getName() : "N/A";
+            info.metodo = factura.getPurchaseOrderNumber();
+            info.total = factura.getTotal();
+            return info;
+        }
+
         public String getNumero() {
-            return getNumber();
+            return numero;
         }
-        
-        public void setNumber(String number) {
-            this.number = number;
-        }
-        
-        public void setNumero(String number) {
-            setNumber(number);
-        }
-        
-        public Date getDate() {
-            return date;
-        }
-        
-        public void setDate(Date date) {
-            this.date = date;
-        }
-        
-        public String getType() {
-            return type;
-        }
-        
+
         public String getTipo() {
-            return getType();
+            return tipo;
         }
-        
-        public void setType(String type) {
-            this.type = type;
-        }
-        
-        public String getThirdParty() {
-            return thirdParty;
-        }
-        
+
         public String getTercero() {
-            return getThirdParty();
+            return tercero;
         }
-        
-        public void setThirdParty(String thirdParty) {
-            this.thirdParty = thirdParty;
-        }
-        
-        public String getMethod() {
-            return method;
-        }
-        
+
         public String getMetodo() {
-            return getMethod();
+            return metodo;
         }
-        
-        public void setMethod(String method) {
-            this.method = method;
-        }
-        
-        public void setMetodo(String method) {
-            setMethod(method);
-        }
-        
+
         public double getTotal() {
             return total;
         }
-        
-        public double getMonto() {
-            return getTotal();
-        }
-        
-        public void setTotal(double total) {
-            this.total = total;
-        }
-        
-        public void setMonto(double total) {
-            setTotal(total);
-        }
-        
-        public String getFormattedDate() {
-            if (date != null) {
-                return new SimpleDateFormat("dd/MM/yyyy HH:mm").format(date);
-            }
-            return "";
-        }
-        
+
         public String getFechaTexto() {
-            return getFormattedDate();
+            return fecha != null ? new SimpleDateFormat("dd/MM/yyyy HH:mm").format(fecha) : "";
         }
     }
 }

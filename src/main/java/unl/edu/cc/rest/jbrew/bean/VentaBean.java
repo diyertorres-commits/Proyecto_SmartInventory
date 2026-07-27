@@ -5,267 +5,187 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import unl.edu.cc.rest.jbrew.business.CarritoService;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
-import unl.edu.cc.rest.jbrew.business.SalesService;
+import unl.edu.cc.rest.jbrew.business.ResultadoCarrito;
+import unl.edu.cc.rest.jbrew.business.ResultadoVenta;
+import unl.edu.cc.rest.jbrew.business.VentaService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
+import unl.edu.cc.rest.jbrew.domain.Sales.Carrito;
+import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
+
 import java.io.Serializable;
 import java.util.List;
 
 @Named
 @ViewScoped
 public class VentaBean implements Serializable {
-    
+
     @Inject
     private InventoryFacade inventoryFacade;
-    
+
     @Inject
-    private SalesService salesService;
-    
-    private Product selectedProduct;
-    private int selectedQuantity;
-    private Customer selectedCustomer;
-    private String paymentMethod;
-    private double discount;
-    
-    private List<SalesService.CartItem> cartItems;
-    private List<SaleInvoice> saleInvoices;
-    
-    public VentaBean() {
-        this.selectedProduct = new Product();
-        this.selectedQuantity = 1;
-        this.selectedCustomer = new Customer();
-        this.paymentMethod = "efectivo";
-        this.discount = 0;
-        this.cartItems = List.of();
-        this.saleInvoices = List.of();
-    }
-    
-    public void addToCart() {
-        if (selectedProduct == null) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un producto"));
+    private CarritoService carritoService;
+
+    @Inject
+    private VentaService ventaService;
+
+    private final Carrito carrito = new Carrito();
+
+    private Product productoSeleccionado;
+    private int cantidadSeleccionada = 1;
+    private Customer clienteSeleccionado;
+    private String metodoPago = "efectivo";
+    private double descuento = 0;
+
+    private List<SaleInvoice> facturas = List.of();
+
+    // ===== Acciones de la vista =====
+
+    public void agregarAlCarrito() {
+        if (productoSeleccionado == null) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un producto");
             return;
         }
-        
-        SalesService.CartOperationResult result = salesService.addToCart(selectedProduct, selectedQuantity);
-        
-        if (result.isSuccess()) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
-            refreshCartData();
-            clearSelection();
-        } else {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
+
+        ResultadoCarrito resultado = carritoService.agregarProducto(carrito, productoSeleccionado, cantidadSeleccionada);
+        mostrarResultadoCarrito(resultado);
+        if (resultado.isExitoso()) {
+            limpiarSeleccionDeProducto();
         }
     }
-    
-    public void agregarAlCarrito() {
-        addToCart();
+
+    public void eliminarDelCarrito(ItemCarrito item) {
+        ResultadoCarrito resultado = carritoService.eliminarProducto(carrito, item);
+        mostrarResultadoCarrito(resultado);
     }
-    
-    public void removeFromCart(SalesService.CartItem item) {
-        SalesService.CartOperationResult result = salesService.removeFromCart(item);
-        
-        if (result.isSuccess()) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
-            refreshCartData();
-        } else {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
+
+    public void completarVenta() {
+        ResultadoVenta resultado = ventaService.registrarVenta(carrito, clienteSeleccionado, metodoPago, descuento);
+        mostrarResultadoVenta(resultado);
+        if (resultado.isExitoso()) {
+            facturas = ventaService.obtenerFacturas();
+            limpiarDatosDeVenta();
         }
     }
-    
-    public void eliminarDelCarrito(SalesService.CartItem item) {
-        removeFromCart(item);
-    }
-    
-    public void completeSale() {
-        SalesService.SaleResult result = salesService.completeSale(selectedCustomer, paymentMethod, discount);
-        
-        if (result.isSuccess()) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
-            refreshCartData();
-            clearSaleFields();
-        } else {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
-        }
-    }
-    
-    public void clearCart() {
-        salesService.clearCart();
-        refreshCartData();
-        FacesContext.getCurrentInstance().addMessage(null, 
-            new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Carrito limpiado"));
-    }
-    
+
     public void limpiarCarrito() {
-        clearCart();
+        carrito.vaciar();
+        mostrarMensaje(FacesMessage.SEVERITY_INFO, "Info", "Carrito limpiado");
     }
-    
+
     public void calcularTotal() {
-        // This method is called by AJAX but doesn't need to do anything
-        // The total is calculated dynamically in getTotal()
+        // Disparado por AJAX; el total se recalcula dinámicamente en getTotal()
     }
-    
-    private void refreshCartData() {
-        this.cartItems = salesService.getCartItems();
-        this.saleInvoices = salesService.getSaleInvoices();
+
+    // ===== Helpers privados (sin lógica de negocio, solo orquestación de UI) =====
+
+    private void limpiarSeleccionDeProducto() {
+        productoSeleccionado = null;
+        cantidadSeleccionada = 1;
     }
-    
-    private void clearSelection() {
-        this.selectedProduct = null;
-        this.selectedQuantity = 1;
+
+    private void limpiarDatosDeVenta() {
+        clienteSeleccionado = null;
+        descuento = 0;
     }
-    
-    private void clearSaleFields() {
-        this.selectedCustomer = null;
-        this.discount = 0;
+
+    private void mostrarResultadoCarrito(ResultadoCarrito resultado) {
+        mostrarMensaje(
+                resultado.isExitoso() ? FacesMessage.SEVERITY_INFO : FacesMessage.SEVERITY_ERROR,
+                resultado.isExitoso() ? "Éxito" : "Error",
+                resultado.getMensaje());
     }
-    
-    // Getters and Setters
-    public Product getSelectedProduct() {
-        return selectedProduct;
+
+    private void mostrarResultadoVenta(ResultadoVenta resultado) {
+        mostrarMensaje(
+                resultado.isExitoso() ? FacesMessage.SEVERITY_INFO : FacesMessage.SEVERITY_ERROR,
+                resultado.isExitoso() ? "Éxito" : "Error",
+                resultado.getMensaje());
     }
-    
-    public void setSelectedProduct(Product selectedProduct) {
-        this.selectedProduct = selectedProduct;
+
+    private void mostrarMensaje(FacesMessage.Severity severidad, String resumen, String detalle) {
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severidad, resumen, detalle));
     }
-    
-    public int getProductoId() {
-        return selectedProduct != null ? selectedProduct.getIdProduct() : 0;
+
+    // ===== Propiedades expuestas a la vista =====
+    // Un solo nombre por propiedad (español, consistente con el resto del
+    // dominio y con lo que ya usa venta.xhtml) — sin duplicados en inglés.
+
+    public Integer getProductoId() {
+        return productoSeleccionado != null ? productoSeleccionado.getIdProduct() : null;
     }
-    
-    public void setProductoId(int productId) {
-        Product product = inventoryFacade.findProductById(productId).orElse(null);
-        setSelectedProduct(product);
+
+    public void setProductoId(Integer idProducto) {
+        productoSeleccionado = (idProducto == null)
+                ? null
+                : inventoryFacade.findProductById(idProducto).orElse(null);
     }
-    
-    public int getSelectedQuantity() {
-        return selectedQuantity;
-    }
-    
-    public void setSelectedQuantity(int selectedQuantity) {
-        this.selectedQuantity = selectedQuantity;
-    }
-    
+
     public int getCantidad() {
-        return selectedQuantity;
+        return cantidadSeleccionada;
     }
-    
-    public void setCantidad(int selectedQuantity) {
-        setSelectedQuantity(selectedQuantity);
+
+    public void setCantidad(int cantidad) {
+        this.cantidadSeleccionada = cantidad;
     }
-    
-    public Customer getSelectedCustomer() {
-        return selectedCustomer;
+
+    public Long getClienteId() {
+        return clienteSeleccionado != null ? clienteSeleccionado.getIdCustomer() : null;
     }
-    
-    public void setSelectedCustomer(Customer selectedCustomer) {
-        this.selectedCustomer = selectedCustomer;
+
+    public void setClienteId(Long idCliente) {
+        clienteSeleccionado = (idCliente == null)
+                ? null
+                : inventoryFacade.findCustomerById(idCliente).orElse(null);
     }
-    
-    public int getClienteId() {
-        return selectedCustomer != null ? selectedCustomer.getIdCustomer() : 0;
-    }
-    
-    public void setClienteId(int customerId) {
-        Customer customer = inventoryFacade.findCustomerById(customerId).orElse(null);
-        setSelectedCustomer(customer);
-    }
-    
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-    
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-    
+
     public String getMetodoPago() {
-        return paymentMethod;
+        return metodoPago;
     }
-    
-    public void setMetodoPago(String paymentMethod) {
-        setPaymentMethod(paymentMethod);
+
+    public void setMetodoPago(String metodoPago) {
+        this.metodoPago = metodoPago;
     }
-    
-    public double getDiscount() {
-        return discount;
-    }
-    
-    public void setDiscount(double discount) {
-        this.discount = discount;
-    }
-    
+
     public double getDescuento() {
-        return discount;
+        return descuento;
     }
-    
-    public void setDescuento(double discount) {
-        setDiscount(discount);
+
+    public void setDescuento(double descuento) {
+        this.descuento = descuento;
     }
-    
-    public List<SalesService.CartItem> getCartItems() {
-        if (cartItems.isEmpty()) {
-            refreshCartData();
-        }
-        return cartItems;
+
+    public List<ItemCarrito> getItemsCarrito() {
+        return carrito.getItems();
     }
-    
-    public List<SalesService.CartItem> getItemsCarrito() {
-        return getCartItems();
-    }
-    
-    public List<SaleInvoice> getSaleInvoices() {
-        if (saleInvoices.isEmpty()) {
-            refreshCartData();
-        }
-        return saleInvoices;
-    }
-    
+
     public List<SaleInvoice> getFacturas() {
-        return getSaleInvoices();
+        if (facturas.isEmpty()) {
+            facturas = ventaService.obtenerFacturas();
+        }
+        return facturas;
     }
-    
+
     public double getSubtotal() {
-        return salesService.getSubtotal();
+        return carrito.calcularSubtotal();
     }
-    
-    public double getTax() {
-        return salesService.getTax();
-    }
-    
+
     public double getIva() {
-        return getTax();
+        return carrito.calcularIva();
     }
-    
+
     public double getTotal() {
-        return salesService.getTotalWithDiscount(discount);
+        return carrito.calcularTotal(descuento);
     }
-    
-    public double getTotalWithDiscount() {
-        return getTotal();
-    }
-    
-    public List<Product> getAvailableProducts() {
+
+    public List<Product> getProductos() {
         return inventoryFacade.getAllProducts();
     }
-    
-    public List<Product> getProductos() {
-        return getAvailableProducts();
-    }
-    
-    public List<Customer> getAvailableCustomers() {
-        return inventoryFacade.getAllCustomers();
-    }
-    
+
     public List<Customer> getClientes() {
-        return getAvailableCustomers();
+        return inventoryFacade.getAllCustomers();
     }
 }

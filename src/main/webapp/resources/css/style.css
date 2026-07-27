@@ -46,7 +46,7 @@ html, body {
 
 .si-sidebar {
     width: 280px;
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     position: fixed;
     top: 0;
     left: 0;
@@ -100,7 +100,7 @@ html, body {
 .si-sidebar-menu.ui-menu .ui-menuitem-link {
     border-radius: 8px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.95);
     padding: 0.85rem 1rem;
     transition: all 0.25s ease;
     display: flex;
@@ -167,7 +167,7 @@ html, body {
     font-size: 0.85rem !important;
     margin-left: 0.5rem !important;
     border-radius: 6px !important;
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: #ffffff !important;
 }
 
 .si-sidebar-menu .ui-submenu .ui-menuitem-link:hover {
@@ -578,21 +578,6 @@ html, body {
 @media (max-width: 960px) {
     .si-form-grid { grid-template-columns: 1fr; }
     .si-hero { padding: 2rem 1.4rem; }
-}
-
-/* -------- Dashboard -------- */
-.si-dash-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.25rem;
-    margin-top: 1rem;
-}
-
-.si-chart-card h5 {
-    margin: 0 0 0.75rem;
-    color: var(--si-text-primary);
-    font-weight: 600;
-    font-size: 0.95rem;
 }
 
 /* -------- Footer -------- */

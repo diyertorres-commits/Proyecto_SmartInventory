@@ -5,10 +5,9 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
+import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.ProductStatus;
 import java.io.Serializable;
 import java.util.List;
@@ -26,9 +25,9 @@ public class ProductoBean implements Serializable {
     private Product selectedProduct;
     private List<Product> filteredProducts;
     
-    @NotNull(message = "El término de búsqueda es requerido")
-    @Size(min = 3, message = "El término de búsqueda debe tener al menos 3 caracteres")
     private String searchTerm;
+    
+    private String searchCodigo;
     
     private String categoryFilter;
     private String statusFilter;
@@ -36,11 +35,13 @@ public class ProductoBean implements Serializable {
     private int totalStock;
     private int lowStockCount;
     private int availableStockCount;
+    private boolean initialized = false;
     
     public ProductoBean() {
         this.selectedProduct = new Product();
         this.filteredProducts = List.of();
         this.searchTerm = "";
+        this.searchCodigo = "";
         this.categoryFilter = null;
         this.statusFilter = null;
     }
@@ -55,7 +56,7 @@ public class ProductoBean implements Serializable {
             product.getCodigo(),
             product.getName(),
             product.getDescription(),
-            product.getCategoria(),
+            product.getCategory(),
             product.getImagen(),
             product.getSalePrice(),
             product.getPurchasePrice(),
@@ -106,10 +107,23 @@ public class ProductoBean implements Serializable {
     
     public void searchProducts() {
         List<Product> allProducts = inventoryFacade.getAllProducts();
+        
+        boolean hasNameFilter = searchTerm != null && !searchTerm.isEmpty();
+        boolean hasCodeFilter = searchCodigo != null && !searchCodigo.isEmpty();
+        
         filteredProducts = allProducts.stream()
-                .filter(p -> searchTerm == null || searchTerm.isEmpty() || 
-                    p.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                    p.getCodigo().toLowerCase().contains(searchTerm.toLowerCase()))
+                .filter(p -> {
+                    if (!hasNameFilter && !hasCodeFilter) {
+                        return true; // Sin filtros, mostrar todos
+                    }
+                    
+                    boolean matchesName = !hasNameFilter || 
+                        p.getName().toLowerCase().contains(searchTerm.toLowerCase());
+                    boolean matchesCode = !hasCodeFilter || 
+                        p.getCodigo().toLowerCase().contains(searchCodigo.toLowerCase());
+                    
+                    return matchesName && matchesCode;
+                })
                 .toList();
         applyFilters();
     }
@@ -128,15 +142,18 @@ public class ProductoBean implements Serializable {
     
     public void clearFilters() {
         searchTerm = "";
+        searchCodigo = "";
         categoryFilter = null;
         statusFilter = null;
         filteredProducts = inventoryFacade.getAllProducts();
+        updateStatistics();
+        initialized = true;
     }
     
     private void applyFilters() {
         if (categoryFilter != null && !categoryFilter.isEmpty()) {
             filteredProducts = filteredProducts.stream()
-                    .filter(p -> categoryFilter.equals(p.getCategoria()))
+                    .filter(p -> categoryFilter.equals(p.getCategory() != null ? p.getCategory().getName() : ""))
                     .toList();
         }
         
@@ -182,11 +199,12 @@ public class ProductoBean implements Serializable {
     public void setProducto(Product selectedProduct) {
         setSelectedProduct(selectedProduct);
     }
-    
+
     public List<Product> getFilteredProducts() {
-        if (filteredProducts.isEmpty()) {
+        if (!initialized) {
             filteredProducts = inventoryFacade.getAllProducts();
             updateStatistics();
+            initialized = true;
         }
         return filteredProducts;
     }
@@ -219,6 +237,14 @@ public class ProductoBean implements Serializable {
         setSearchTerm(searchTerm);
     }
     
+    public String getSearchCodigo() {
+        return searchCodigo;
+    }
+    
+    public void setSearchCodigo(String searchCodigo) {
+        this.searchCodigo = searchCodigo;
+    }
+    
     public String getCategoryFilter() {
         return categoryFilter;
     }
@@ -226,11 +252,15 @@ public class ProductoBean implements Serializable {
     public String getFiltroCategoria() {
         return getCategoryFilter();
     }
-    
+
+    public void setFiltroCategoria(String categoryFilter) {
+        setCategoryFilter(categoryFilter);
+    }
+
     public void setCategoryFilter(String categoryFilter) {
         this.categoryFilter = categoryFilter;
     }
-    
+
     public String getStatusFilter() {
         return statusFilter;
     }
@@ -295,5 +325,19 @@ public class ProductoBean implements Serializable {
     
     public double getValorTotalInventario() {
         return getTotalInventoryValue();
+    }
+    
+    public String getCategoryName() {
+        if (selectedProduct != null && selectedProduct.getCategory() != null) {
+            return selectedProduct.getCategory().getName();
+        }
+        return null;
+    }
+    
+    public void setCategoryName(String categoryName) {
+        if (selectedProduct != null && categoryName != null) {
+            Category category = inventoryFacade.findCategoryByName(categoryName).orElse(null);
+            selectedProduct.setCategory(category);
+        }
     }
 }

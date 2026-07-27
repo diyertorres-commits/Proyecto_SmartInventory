@@ -19,69 +19,69 @@
             <div class="si-form-grid">
                 <!-- ===== Formulario ===== -->
                 <div class="si-glass-card si-form-card">
-                    <!-- Contenedor actualizable para los campos dinámicos -->
-                    <p:tabView id="panelCampos" style="border:none;">
+                    <p:tabView id="panelCampos" activeIndex="#{compraBean.indicePestanaActiva}" style="border:none;">
                         <p:tab title="🔄 Reabastecer Producto Existente">
                             <!-- Campos para REABASTECER -->
-                        <div class="p-field">
-                            <label for="producto">Producto</label>
-                            <p:selectOneMenu id="producto" value="#{compraBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
-                                <f:selectItem itemLabel="🔍 Buscar por nombre o código..." itemValue="#{null}" noSelectionOption="true" />
-                                <f:selectItems value="#{inventarioBean.productos}" var="p"
-                                               itemLabel="#{p.name} (#{p.codigo}) - Stock: #{p.stock}" itemValue="#{p.idProduct}" />
-                            </p:selectOneMenu>
-                        </div>
+                            <div class="p-field">
+                                <label for="producto">Producto</label>
+                                <p:selectOneMenu id="producto" value="#{compraBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="🔍 Buscar por nombre o código..." itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItems value="#{inventarioBean.productos}" var="p"
+                                                   itemLabel="#{p.name} (#{p.codigo}) - Stock: #{p.stock}" itemValue="#{p.idProduct}" />
+                                </p:selectOneMenu>
+                            </div>
 
-                        <div class="p-field">
-                            <label for="cantidad">Cantidad a agregar</label>
-                            <p:spinner id="cantidad" value="#{compraBean.cantidad}" min="1" max="1000" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="cantidad">Cantidad a agregar</label>
+                                <p:inputNumber id="cantidad" value="#{compraBean.cantidad}" decimalPlaces="0" minValue="1" maxValue="1000" style="width:100%" />
+                            </div>
                         </p:tab>
-                        
+
                         <p:tab title="🆕 Adquirir Nuevo Producto">
-                            <!-- Campos para ADQUIRIR NUEVO PRODUCTO -->
-                        <div class="p-field">
-                            <label for="codigo">Código/SKU</label>
-                            <p:inputText id="codigo" value="#{compraBean.codigo}" placeholder="Ej. CAF-001" style="width:100%" />
-                        </div>
 
-                        <div class="p-field">
-                            <label for="nombre">Nombre del Producto</label>
-                            <p:inputText id="nombre" value="#{compraBean.nombre}" placeholder="Nombre del producto" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="nombre">Nombre del Producto</label>
+                                <p:inputText id="nombre" value="#{compraBean.productoNuevo.name}" placeholder="Nombre del producto" style="width:100%" />
+                            </div>
 
-                        <div class="p-field">
-                            <label for="categoria">Categoría</label>
-                            <p:selectOneMenu id="categoria" value="#{compraBean.categoria}" style="width:100%">
-                                <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
-                                <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
-                            </p:selectOneMenu>
-                        </div>
+                            <div class="p-field">
+                                <label for="categoria">Categoría</label>
+                                <p:selectOneMenu id="categoria" value="#{compraBean.categoryName}" style="width:100%">
+                                    <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
+                                    <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
+                                    <p:ajax update="codigo" />
+                                </p:selectOneMenu>
+                            </div>
 
-                        <div class="p-field">
-                            <label for="descripcion">Descripción</label>
-                            <p:inputTextarea id="descripcion" value="#{compraBean.descripcion}" rows="3" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="codigo">Código/SKU</label>
+                                <p:inputText id="codigo" value="#{compraBean.productoNuevo.codigo}" placeholder="Se genera al elegir la categoría" style="width:100%" disabled="true" />
+                            </div>
 
-                        <div class="p-field">
-                            <label for="precioVenta">Precio Venta</label>
-                            <p:inputNumber id="precioVenta" value="#{compraBean.precioVenta}" symbol="$" decimalPlaces="2" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="descripcion">Descripción</label>
+                                <p:inputTextarea id="descripcion" value="#{compraBean.productoNuevo.description}" rows="3" style="width:100%" />
+                            </div>
 
-                        <div class="p-field">
-                            <label for="stockInicial">Stock Inicial</label>
-                            <p:spinner id="stockInicial" value="#{compraBean.stock}" min="1" max="1000" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="precioVenta">Precio Venta</label>
+                                <p:inputNumber id="precioVenta" value="#{compraBean.productoNuevo.salePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
+                            </div>
 
-                        <div class="p-field">
-                            <label for="stockMinimo">Stock Mínimo</label>
-                            <p:spinner id="stockMinimo" value="#{compraBean.stockMinimo}" min="0" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="stockInicial">Stock Inicial</label>
+                                <p:inputNumber id="stockInicial" value="#{compraBean.productoNuevo.stock}" decimalPlaces="0" minValue="0" maxValue="1000" style="width:100%" />
+                            </div>
 
-                        <div class="p-field">
-                            <label for="imagen">Imagen</label>
-                            <p:inputText id="imagen" value="#{compraBean.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
-                        </div>
+                            <div class="p-field">
+                                <label for="stockMinimo">Stock Mínimo</label>
+                                <p:inputNumber id="stockMinimo" value="#{compraBean.productoNuevo.minStock}" decimalPlaces="0" minValue="0" style="width:100%" />
+                            </div>
+
+                            <div class="p-field">
+                                <label for="imagen">Imagen</label>
+                                <p:inputText id="imagen" value="#{compraBean.productoNuevo.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
+                            </div>
                         </p:tab>
                     </p:tabView>
 
@@ -95,14 +95,13 @@
                         </p:selectOneMenu>
                     </div>
 
-                    <!-- Campo común: Precio compra unitario -->
                     <div class="p-field">
                         <label for="precioCompra">💰 Precio Compra Unitario</label>
                         <p:inputNumber id="precioCompra" value="#{compraBean.precioCompra}" symbol="$" decimalPlaces="2" style="width:100%" />
                     </div>
 
                     <p:commandButton value="Registrar Compra" icon="pi pi-check" action="#{compraBean.registrarCompra()}"
-                                      update="msgCompra tablaCompras compraForm:producto" styleClass="p-button-rounded p-button-primary" style="margin-top:.5rem" />
+                                     update="msgCompra tablaCompras compraForm:panelCampos compraForm:proveedor compraForm:precioCompra" styleClass="p-button-rounded p-button-primary" style="margin-top:.5rem" />
                 </div>
 
                 <!-- ===== Panel lateral con resumen ===== -->

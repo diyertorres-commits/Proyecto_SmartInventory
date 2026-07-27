@@ -1,17 +1,43 @@
 package unl.edu.cc.rest.jbrew.domain.Kardex;
 
+import jakarta.persistence.*;
 import java.util.Date;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Movements.MovementType;
 
+@Entity
+@Table(name = "kardex")
 public class Kardex {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "id_kardex")
     private int idKardex;
+    
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product; // Composición con Product
+    
+    @Column(name = "date", nullable = false)
     private Date date;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "movement_type", nullable = false)
     private MovementType movementType; // Asociación con MovementType (enum)
+    
+    @Column(name = "quantity", nullable = false)
     private int quantity;
+    
+    @Column(name = "balance", nullable = false)
     private int balance;
+    
+    @Column(name = "description")
     private String description;
+
+    public Kardex() {
+        // Constructor sin argumentos requerido por JPA
+    }
 
     public Kardex(int idKardex, Product product, Date date, MovementType movementType, int quantity, int balance, String description) { // Asociación con Product y MovementType
         this.idKardex = idKardex;
@@ -43,6 +69,14 @@ public class Kardex {
     }
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getIdKardex() {
         return idKardex;
     }

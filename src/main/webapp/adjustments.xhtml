@@ -16,6 +16,18 @@
         <h:form id="ajustesForm">
             <p:growl id="msgAjustes" showDetail="true" life="4000" />
 
+            <!-- ===== Ventana de advertencia de stock bajo ===== -->
+            <p:dialog id="dlgStockBajo" widgetVar="dlgStockBajo" header="Advertencia" modal="true" closable="true"
+                      resizable="false" width="420">
+                <div style="display:flex;align-items:flex-start;gap:.75rem;">
+                    <i class="pi pi-exclamation-triangle" style="font-size:1.8rem;color:#f59e0b;" />
+                    <h:outputText value="#{ajusteBean.mensajeStockBajo}" />
+                </div>
+                <div style="margin-top:1.25rem;text-align:right;">
+                    <p:commandButton value="Entendido" onclick="PF('dlgStockBajo').hide()" type="button" />
+                </div>
+            </p:dialog>
+
             <!-- ===== Formulario de ajuste ===== -->
             <div class="si-glass-card" style="margin-bottom:1.5rem;">
                 <h5 style="margin-top:0;color:var(--si-text-primary);">Registrar Ajuste de Inventario</h5>
@@ -69,7 +81,7 @@
                 
                 <div style="margin-top:1rem;">
                     <p:commandButton value="Registrar Ajuste" icon="pi pi-check" action="#{ajusteBean.registrarAjuste()}"
-                                    update="msgAjustes tablaAjustes" styleClass="p-button-rounded p-button-warning" />
+                                    update="msgAjustes tablaAjustes dlgStockBajo" styleClass="p-button-rounded p-button-warning" />
                 </div>
             </div>
 
@@ -136,7 +148,7 @@
 
             <div class="si-dash-grid">
                 <div class="si-glass-card">
-                    <h5 style="margin-top:0;color:var(--si-text-primary);">Estadísticas de Ajustes</h5>
+                    <h5 style="margin-top:0;color:var(--si-text-primary); ">Estadísticas de Ajustes</h5>
                     <div class="si-kpi-grid" style="margin-top:1rem;">
                         <div class="si-kpi-card">
                             <span class="si-kpi-icon orange"><i class="pi pi-minus" /></span>

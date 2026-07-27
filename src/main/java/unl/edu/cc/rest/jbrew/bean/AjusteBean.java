@@ -5,13 +5,13 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import unl.edu.cc.rest.jbrew.business.InventoryFacade;
+import org.primefaces.PrimeFaces;
+import unl.edu.cc.rest.jbrew.business.AjusteService;
+import unl.edu.cc.rest.jbrew.business.AjusteService.Ajuste;
+import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Named
@@ -19,7 +19,10 @@ import java.util.List;
 public class AjusteBean implements Serializable {
 
     @Inject
-    private InventoryFacade inventoryFacade;
+    private InventoryService inventoryService;
+
+    @Inject
+    private AjusteService ajusteService;
 
     private Product selectedProduct;
     private String tipoAjuste;
@@ -28,13 +31,10 @@ public class AjusteBean implements Serializable {
     private String motivo;
     private String responsable;
 
-    private List<Ajuste> ajustes;
-    private int contadorAjustes;
+    private String mensajeStockBajo;
 
     public AjusteBean() {
         this.selectedProduct = new Product();
-        this.ajustes = new ArrayList<>();
-        this.contadorAjustes = 1;
     }
 
     public String registrarAjuste() {
@@ -59,11 +59,9 @@ public class AjusteBean implements Serializable {
         }
 
         selectedProduct.setStock(stockNuevo);
-        inventoryFacade.saveProduct(selectedProduct);
+        inventoryService.saveProduct(selectedProduct);
 
-        Ajuste ajuste = new Ajuste(
-            contadorAjustes++,
-            new Date(),
+        ajusteService.registrarAjuste(
             selectedProduct.getName(),
             tipoAjuste,
             operacion,
@@ -74,21 +72,29 @@ public class AjusteBean implements Serializable {
             responsable != null ? responsable : "No especificado"
         );
 
-        ajustes.add(ajuste);
-
         FacesContext.getCurrentInstance().addMessage(null,
             new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste registrado correctamente"));
+
+        if (selectedProduct.verifyStockMinimo()) {
+            mensajeStockBajo = "Advertencia: poco stock del producto \"" + selectedProduct.getName()
+                + "\" (quedan " + stockNuevo + " unidades, mínimo recomendado: " + selectedProduct.getMinStock() + ")";
+            PrimeFaces.current().executeScript("PF('dlgStockBajo').show()");
+        }
 
         limpiarCampos();
         return null;
     }
 
+    public String getMensajeStockBajo() {
+        return mensajeStockBajo;
+    }
+
     public void revertir(Ajuste ajuste) {
-        Product producto = inventoryFacade.findProductByName(ajuste.getProductoNombre()).orElse(null);
+        Product producto = inventoryService.findProductByName(ajuste.getProductoNombre()).orElse(null);
         if (producto != null) {
             producto.setStock(ajuste.getStockAnterior());
-            inventoryFacade.saveProduct(producto);
-            ajustes.remove(ajuste);
+            inventoryService.saveProduct(producto);
+            ajusteService.eliminarAjuste(ajuste);
             FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
         } else {
@@ -107,21 +113,21 @@ public class AjusteBean implements Serializable {
     }
 
     public int getTotalRestado() {
-        return ajustes.stream()
+        return ajusteService.obtenerAjustes().stream()
             .filter(a -> "restar".equals(a.getOperacion()))
             .mapToInt(Ajuste::getCantidad)
             .sum();
     }
 
     public int getTotalSumado() {
-        return ajustes.stream()
+        return ajusteService.obtenerAjustes().stream()
             .filter(a -> "sumar".equals(a.getOperacion()))
             .mapToInt(Ajuste::getCantidad)
             .sum();
     }
 
     public int getTotalAjustes() {
-        return ajustes.size();
+        return ajusteService.obtenerAjustes().size();
     }
 
     // Getters and Setters
@@ -146,12 +152,12 @@ public class AjusteBean implements Serializable {
     }
     
     public void setProductoId(int productId) {
-        Product product = inventoryFacade.findProductById(productId).orElse(null);
+        Product product = inventoryService.findProductById(productId).orElse(null);
         setSelectedProduct(product);
     }
 
     public List<Product> getAvailableProducts() {
-        return inventoryFacade.getAllProducts();
+        return inventoryService.getAllProducts();
     }
     
     public List<Product> getProductos() {
@@ -199,70 +205,6 @@ public class AjusteBean implements Serializable {
     }
 
     public List<Ajuste> getAjustes() {
-        return ajustes;
-    }
-
-    public void setAjustes(List<Ajuste> ajustes) {
-        this.ajustes = ajustes;
-    }
-
-    public static class Ajuste implements Serializable {
-        private int id;
-        private Date fecha;
-        private String productoNombre;
-        private String tipoAjuste;
-        private String operacion;
-        private int cantidad;
-        private int stockAnterior;
-        private int stockNuevo;
-        private String motivo;
-        private String responsable;
-
-        private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-
-        public Ajuste(int id, Date fecha, String productoNombre, String tipoAjuste, String operacion,
-                     int cantidad, int stockAnterior, int stockNuevo, String motivo, String responsable) {
-            this.id = id;
-            this.fecha = fecha;
-            this.productoNombre = productoNombre;
-            this.tipoAjuste = tipoAjuste;
-            this.operacion = operacion;
-            this.cantidad = cantidad;
-            this.stockAnterior = stockAnterior;
-            this.stockNuevo = stockNuevo;
-            this.motivo = motivo;
-            this.responsable = responsable;
-        }
-
-        public String getFechaTexto() {
-            return sdf.format(fecha);
-        }
-
-        public String getTipoCss() {
-            switch (tipoAjuste) {
-                case "merma":
-                case "robo":
-                case "dano":
-                case "vencimiento":
-                    return "status-agotado";
-                case "error":
-                case "manual":
-                    return "status-bajo";
-                default:
-                    return "status-disponible";
-            }
-        }
-
-        // Getters
-        public int getId() { return id; }
-        public Date getFecha() { return fecha; }
-        public String getProductoNombre() { return productoNombre; }
-        public String getTipoAjuste() { return tipoAjuste; }
-        public String getOperacion() { return operacion; }
-        public int getCantidad() { return cantidad; }
-        public int getStockAnterior() { return stockAnterior; }
-        public int getStockNuevo() { return stockNuevo; }
-        public String getMotivo() { return motivo; }
-        public String getResponsable() { return responsable; }
+        return ajusteService.obtenerAjustes();
     }
 }

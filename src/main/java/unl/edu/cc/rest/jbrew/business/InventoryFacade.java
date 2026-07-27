@@ -28,12 +28,12 @@ public class InventoryFacade {
         return inventoryService.findProductById(id);
     }
     
-    public Optional<Customer> findCustomerById(int id) {
+    public Optional<Customer> findCustomerById(Long id) {
         LOGGER.info("Buscando cliente por ID a través de facade: " + id);
         return inventoryService.findCustomerById(id);
     }
     
-    public Optional<Supplier> findSupplierById(int id) {
+    public Optional<Supplier> findSupplierById(Long id) {
         LOGGER.info("Buscando proveedor por ID a través de facade: " + id);
         return inventoryService.findSupplierById(id);
     }
@@ -46,6 +46,13 @@ public class InventoryFacade {
     public List<Category> getAllCategories() {
         LOGGER.info("Obteniendo todas las categorías a través de facade");
         return inventoryService.getAllCategories();
+    }
+    
+    public Optional<Category> findCategoryByName(String name) {
+        LOGGER.info("Buscando categoría por nombre a través de facade: " + name);
+        return inventoryService.getAllCategories().stream()
+                .filter(c -> c.getName().equals(name))
+                .findFirst();
     }
     
     public List<Customer> getAllCustomers() {

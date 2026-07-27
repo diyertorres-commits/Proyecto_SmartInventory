@@ -20,7 +20,7 @@
                 <!-- ===== Sección de productos ===== -->
                 <div class="si-glass-card si-form-card">
                     <h5 style="margin-top:0;color:var(--si-text-primary);">Agregar Productos</h5>
-                    
+
                     <div class="p-field">
                         <label for="producto">Producto</label>
                         <p:selectOneMenu id="producto" value="#{ventaBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
@@ -32,14 +32,24 @@
 
                     <div class="p-field">
                         <label for="cantidad">Cantidad</label>
-                        <p:spinner id="cantidad" value="#{ventaBean.cantidad}" min="1" max="1000" style="width:100%" />
+                        <!-- FIX: p:spinner está deprecado/removido en versiones
+                             recientes de PrimeFaces; se reemplaza por p:inputNumber,
+                             igual que ya se usa para el descuento más abajo.
+                             Si tu versión de PrimeFaces sí soporta p:spinner,
+                             puedes revertir este cambio sin problema. -->
+                        <p:inputNumber id="cantidad" value="#{ventaBean.cantidad}" decimalPlaces="0" minValue="1" maxValue="1000" style="width:100%" />
                     </div>
 
+                    <!-- FIX: se agregan ventaForm:producto y ventaForm:cantidad al
+                         update para que el combo y la cantidad se limpien
+                         visualmente después de agregar al carrito (el bean ya
+                         limpia selectedProduct/selectedQuantity internamente,
+                         pero antes no se refrescaban en pantalla). -->
                     <p:commandButton value="Agregar al Carrito" icon="pi pi-plus" action="#{ventaBean.agregarAlCarrito()}"
-                                      update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel" styleClass="p-button-rounded" style="margin-top:.5rem" />
-                    
+                                     update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel ventaForm:producto ventaForm:cantidad" styleClass="p-button-rounded" style="margin-top:.5rem" />
+
                     <p:divider />
-                    
+
                     <!-- ===== Carrito de compras ===== -->
                     <h6 style="color:var(--si-text-primary);">Carrito de Compras</h6>
                     <p:dataTable id="carritoTable" value="#{ventaBean.itemsCarrito}" var="item"
@@ -62,7 +72,7 @@
                         </p:column>
                         <p:column headerText="" style="width:50px;">
                             <p:commandButton icon="pi pi-times" styleClass="rounded-button ui-button-danger"
-                                            action="#{ventaBean.eliminarDelCarrito(item)}" update="ventaForm:carritoTable ventaForm:resumenPanel" />
+                                             action="#{ventaBean.eliminarDelCarrito(item)}" update="ventaForm:carritoTable ventaForm:resumenPanel" />
                         </p:column>
                     </p:dataTable>
                 </div>
@@ -70,7 +80,7 @@
                 <!-- ===== Panel lateral con resumen ===== -->
                 <h:panelGroup id="resumenPanel" styleClass="si-glass-card">
                     <h5 style="margin-top:0;color:var(--si-text-primary);">Resumen de Venta</h5>
-                    
+
                     <div class="p-field">
                         <label for="cliente">Cliente</label>
                         <p:selectOneMenu id="cliente" value="#{ventaBean.clienteId}" style="width:100%" filter="true" filterMatchMode="contains">
@@ -79,7 +89,7 @@
                                            itemLabel="#{c.name} #{c.apellido}" itemValue="#{c.idCustomer}" />
                         </p:selectOneMenu>
                     </div>
-                    
+
                     <div class="p-field">
                         <label for="metodoPago">Método de Pago</label>
                         <p:selectOneRadio id="metodoPago" value="#{ventaBean.metodoPago}" layout="responsive" columns="1">
@@ -89,9 +99,9 @@
                             <f:selectItem itemLabel="Crédito" itemValue="credito" />
                         </p:selectOneRadio>
                     </div>
-                    
+
                     <p:divider />
-                    
+
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
                         <span>Subtotal:</span>
                         <span>
@@ -100,7 +110,7 @@
                             </h:outputText>
                         </span>
                     </div>
-                    
+
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
                         <span>IVA (12%):</span>
                         <span>
@@ -109,14 +119,14 @@
                             </h:outputText>
                         </span>
                     </div>
-                    
+
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
                         <span>Descuento:</span>
                         <p:inputNumber value="#{ventaBean.descuento}" symbol="$" decimalPlaces="2" size="8" style="text-align:right;">
                             <p:ajax listener="#{ventaBean.calcularTotal()}" update="ventaForm:resumenPanel" />
                         </p:inputNumber>
                     </div>
-                    
+
                     <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--si-border);">
                         <span>Total:</span>
                         <span style="color:var(--si-primary);">
@@ -125,14 +135,17 @@
                             </h:outputText>
                         </span>
                     </div>
-                    
+
+                    <!-- FIX: action apuntaba a #{ventaBean.completarVenta()}, método
+                         que no existía en VentaBean -> PropertyNotFoundException
+                         al presionar el botón. Ya se agregó ese método en el bean. -->
                     <p:commandButton value="Completar Venta" icon="pi pi-check" action="#{ventaBean.completarVenta()}"
-                                      update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel tablaVentas :navForm" 
-                                      styleClass="p-button-rounded p-button-success" style="width:100%;margin-top:1rem;" />
-                    
+                                     update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel tablaVentas :navForm"
+                                     styleClass="p-button-rounded p-button-success" style="width:100%;margin-top:1rem;" />
+
                     <p:commandButton value="Cancelar" icon="pi pi-times" action="#{ventaBean.limpiarCarrito()}"
-                                      update="ventaForm:carritoTable ventaForm:resumenPanel" 
-                                      styleClass="p-button-outlined p-button-secondary" style="width:100%;margin-top:0.5rem;" />
+                                     update="ventaForm:carritoTable ventaForm:resumenPanel"
+                                     styleClass="p-button-outlined p-button-secondary" style="width:100%;margin-top:0.5rem;" />
                 </h:panelGroup>
             </div>
 
@@ -158,6 +171,11 @@
                     </p:column>
                     <p:column headerText="Método">
                         <h:outputText value="#{m.paymentMethod}" />
+                    </p:column>
+                    <p:column headerText="Total">
+                        <h:outputText value="#{m.total}">
+                            <f:convertNumber type="currency" currencySymbol="$" />
+                        </h:outputText>
                     </p:column>
                     <p:column headerText="Acciones" style="width:80px;">
                         <p:commandButton icon="pi pi-print" title="Imprimir" styleClass="rounded-button" />

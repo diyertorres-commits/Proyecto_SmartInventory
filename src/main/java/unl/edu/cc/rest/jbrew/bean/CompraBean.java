@@ -7,343 +7,213 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
+import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
+import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
-import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
+
 import java.io.Serializable;
 import java.util.List;
 
 @Named
 @ViewScoped
 public class CompraBean implements Serializable {
-    
+
+    public static final int PESTANA_REABASTECER = 0;
+    public static final int PESTANA_NUEVO_PRODUCTO = 1;
+
     @Inject
     private InventoryFacade inventoryFacade;
-    
+
     @Inject
     private PurchaseService purchaseService;
-    
-    // Objects for RESTOCK operation
-    private Product selectedProductForRestock;
-    private int restockQuantity;
-    private double restockPurchasePrice;
-    
-    // Object for ACQUIRE NEW PRODUCT operation
-    private Product newProduct;
-    
-    // Common fields
-    private Supplier selectedSupplier;
-    
-    // Purchase history and invoices
-    private List<PurchaseService.PurchaseRecord> purchaseHistory;
-    private List<PurchaseInvoice> purchaseInvoices;
-    
-    public CompraBean() {
-        this.selectedProductForRestock = new Product();
-        this.restockQuantity = 1;
-        this.restockPurchasePrice = 0;
-        this.newProduct = new Product();
-        this.selectedSupplier = new Supplier();
-        this.purchaseHistory = List.of();
-        this.purchaseInvoices = List.of();
+
+    private int indicePestanaActiva = PESTANA_REABASTECER;
+
+    // Pestaña "Reabastecer producto existente"
+    private Product productoAReabastecer;
+    private int cantidad = 1;
+
+    // Pestaña "Adquirir nuevo producto": el Product completo es el modelo
+    // del formulario, no una colección de campos sueltos.
+    private Product productoNuevo = new Product();
+
+    // Campo común a ambas pestañas. En cada pestaña alimenta un destino
+    // distinto (restockPurchasePrice vs productoNuevo.purchasePrice), así
+    // que se maneja como valor simple y se aplica explícitamente en
+    // registrarCompra(), no atado directamente a un setter de dominio.
+    private double precioCompra;
+
+    private Supplier proveedorSeleccionado;
+
+    private List<PurchaseService.PurchaseRecord> historialCompras = List.of();
+
+    public void registrarCompra() {
+        if (proveedorSeleccionado == null) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un proveedor");
+            return;
+        }
+
+        PurchaseService.PurchaseResult resultado = (indicePestanaActiva == PESTANA_NUEVO_PRODUCTO)
+                ? registrarAdquisicionNuevoProducto()
+                : registrarReabastecimiento();
+
+        if (resultado == null) {
+            return; // el guard clause correspondiente ya mostró su propio mensaje
+        }
+
+        mostrarMensaje(
+                resultado.isSuccess() ? FacesMessage.SEVERITY_INFO : FacesMessage.SEVERITY_ERROR,
+                resultado.isSuccess() ? "Éxito" : "Error",
+                resultado.getMessage());
+
+        if (resultado.isSuccess()) {
+            refrescarHistorial();
+            if (indicePestanaActiva == PESTANA_NUEVO_PRODUCTO) {
+                limpiarProductoNuevo();
+            } else {
+                limpiarReabastecimiento();
+            }
+        }
     }
-    
-    public String processRestockPurchase() {
-        if (selectedSupplier == null) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un proveedor"));
+
+    private PurchaseService.PurchaseResult registrarReabastecimiento() {
+        if (productoAReabastecer == null) {
+            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "Seleccione un producto");
             return null;
         }
-        
-        if (selectedProductForRestock == null) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Seleccione un producto"));
+        return purchaseService.processRestockPurchase(productoAReabastecer, cantidad, precioCompra, proveedorSeleccionado);
+    }
+
+    private PurchaseService.PurchaseResult registrarAdquisicionNuevoProducto() {
+        try {
+            productoNuevo.setPurchasePrice(precioCompra);
+        } catch (InvalidProductPriceException e) {
+            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage());
             return null;
         }
-        
-        PurchaseService.PurchaseResult result = purchaseService.processRestockPurchase(
-            selectedProductForRestock, restockQuantity, restockPurchasePrice, selectedSupplier);
-        
-        if (result.isSuccess()) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
-            refreshPurchaseData();
-            clearRestockFields();
-        } else {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
-        }
-        
-        return null;
+        return purchaseService.processNewProductPurchase(productoNuevo, proveedorSeleccionado);
     }
-    
-    public String registrarCompra() {
-        // Determine which operation to perform based on the tab
-        if (newProduct != null && (newProduct.getName() != null && !newProduct.getName().isEmpty())) {
-            return processNewProductPurchase();
-        } else {
-            return processRestockPurchase();
-        }
+
+    private void refrescarHistorial() {
+        this.historialCompras = purchaseService.getPurchaseHistory();
     }
-    
-    public String processNewProductPurchase() {
-        if (selectedSupplier == null) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione un proveedor"));
-            return null;
-        }
-        
-        PurchaseService.PurchaseResult result = purchaseService.processNewProductPurchase(newProduct, selectedSupplier);
-        
-        if (result.isSuccess()) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", result.getMessage()));
-            refreshPurchaseData();
-            clearNewProductFields();
-        } else {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", result.getMessage()));
-        }
-        
-        return null;
+
+    private void limpiarReabastecimiento() {
+        this.productoAReabastecer = null;
+        this.cantidad = 1;
+        this.precioCompra = 0;
     }
-    
-    private void refreshPurchaseData() {
-        this.purchaseHistory = purchaseService.getPurchaseHistory();
-        this.purchaseInvoices = purchaseService.getPurchaseInvoices();
+
+    private void limpiarProductoNuevo() {
+        this.productoNuevo = new Product();
+        this.precioCompra = 0;
     }
-    
-    private void clearRestockFields() {
-        this.selectedProductForRestock = null;
-        this.restockQuantity = 1;
-        this.restockPurchasePrice = 0;
+
+    private void mostrarMensaje(FacesMessage.Severity severidad, String resumen, String detalle) {
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severidad, resumen, detalle));
     }
-    
-    private void clearNewProductFields() {
-        this.newProduct = new Product();
+
+    // ===== Propiedades usadas por compras.xhtml =====
+
+    public int getIndicePestanaActiva() {
+        return indicePestanaActiva;
     }
-    
-    // Getters and Setters
-    public Product getSelectedProductForRestock() {
-        return selectedProductForRestock;
+
+    public void setIndicePestanaActiva(int indicePestanaActiva) {
+        this.indicePestanaActiva = indicePestanaActiva;
     }
-    
-    public void setSelectedProductForRestock(Product selectedProductForRestock) {
-        this.selectedProductForRestock = selectedProductForRestock;
+
+    public Integer getProductoId() {
+        return productoAReabastecer != null ? productoAReabastecer.getIdProduct() : null;
     }
-    
-    public int getRestockQuantity() {
-        return restockQuantity;
+
+    public void setProductoId(Integer idProducto) {
+        productoAReabastecer = (idProducto == null)
+                ? null
+                : inventoryFacade.findProductById(idProducto).orElse(null);
     }
-    
+
     public int getCantidad() {
-        return getRestockQuantity();
+        return cantidad;
     }
-    
-    public void setRestockQuantity(int restockQuantity) {
-        this.restockQuantity = restockQuantity;
+
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
     }
-    
-    public void setCantidad(int restockQuantity) {
-        setRestockQuantity(restockQuantity);
+
+    public Product getProductoNuevo() {
+        return productoNuevo;
     }
-    
-    public double getRestockPurchasePrice() {
-        return restockPurchasePrice;
+
+    public void setProductoNuevo(Product productoNuevo) {
+        this.productoNuevo = productoNuevo;
     }
-    
-    public void setRestockPurchasePrice(double restockPurchasePrice) {
-        this.restockPurchasePrice = restockPurchasePrice;
+
+    public String getCategoryName() {
+        return productoNuevo.getCategory() != null ? productoNuevo.getCategory().getName() : null;
     }
-    
-    public Product getNewProduct() {
-        return newProduct;
+
+    public void setCategoryName(String categoryName) {
+        Category categoria = (categoryName == null)
+                ? null
+                : inventoryFacade.getAllCategories().stream()
+                .filter(c -> c.getName().equals(categoryName))
+                .findFirst()
+                .orElse(null);
+        productoNuevo.setCategory(categoria);
+        productoNuevo.setCodigo(categoria != null ? generarCodigo(categoria) : null);
     }
-    
-    public void setNewProduct(Product newProduct) {
-        this.newProduct = newProduct;
+
+    private String generarCodigo(Category categoria) {
+        String prefijo = obtenerPrefijo(categoria.getName());
+        long cantidadExistente = inventoryFacade.getAllProducts().stream()
+                .filter(p -> p.getCodigo() != null && p.getCodigo().startsWith(prefijo + "-"))
+                .count();
+        return prefijo + "-" + String.format("%04d", cantidadExistente + 1);
     }
-    
-    public Supplier getSelectedSupplier() {
-        return selectedSupplier;
+
+    private String obtenerPrefijo(String nombreCategoria) {
+        String[] palabras = nombreCategoria.trim().split("\\s+");
+        if (palabras.length > 1) {
+            StringBuilder iniciales = new StringBuilder();
+            for (String palabra : palabras) {
+                if (!palabra.isEmpty()) {
+                    iniciales.append(Character.toUpperCase(palabra.charAt(0)));
+                }
+            }
+            return iniciales.toString();
+        }
+        String palabra = palabras[0].toUpperCase();
+        return palabra.substring(0, Math.min(4, palabra.length()));
     }
-    
-    public Supplier getProveedorSeleccionado() {
-        return getSelectedSupplier();
-    }
-    
-    public Supplier getProveedor() {
-        return getSelectedSupplier();
-    }
-    
-    public int getProductoId() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getIdProduct() : 0;
-    }
-    
-    public String getCodigo() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getCodigo() : "";
-    }
-    
-    public String getNombre() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getName() : "";
-    }
-    
-    public String getDescripcion() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getDescription() : "";
-    }
-    
-    public String getCategoria() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getCategoria() : "";
-    }
-    
-    public double getPrecioVenta() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getSalePrice() : 0;
-    }
-    
+
     public double getPrecioCompra() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getPurchasePrice() : 0;
+        return precioCompra;
     }
-    
-    public int getStock() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getStock() : 0;
+
+    public void setPrecioCompra(double precioCompra) {
+        this.precioCompra = precioCompra;
     }
-    
-    public int getStockMinimo() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getMinStock() : 0;
+
+    public Long getProveedorId() {
+        return proveedorSeleccionado != null ? proveedorSeleccionado.getIdSupplier() : null;
     }
-    
-    public String getImagen() {
-        return selectedProductForRestock != null ? selectedProductForRestock.getImagen() : "";
+
+    public void setProveedorId(Long idProveedor) {
+        proveedorSeleccionado = (idProveedor == null)
+                ? null
+                : inventoryFacade.findSupplierById(idProveedor).orElse(null);
     }
-    
-    public int getProveedorId() {
-        return selectedSupplier != null ? selectedSupplier.getIdSupplier() : 0;
-    }
-    
-    public void setSelectedSupplier(Supplier selectedSupplier) {
-        this.selectedSupplier = selectedSupplier;
-    }
-    
-    public void setProveedorSeleccionado(Supplier selectedSupplier) {
-        setSelectedSupplier(selectedSupplier);
-    }
-    
-    public void setProductoId(int productId) {
-        Product product = inventoryFacade.findProductById(productId).orElse(null);
-        setSelectedProductForRestock(product);
-    }
-    
-    public void setCodigo(String codigo) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setCodigo(codigo);
-        }
-    }
-    
-    public void setNombre(String nombre) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setName(nombre);
-        }
-    }
-    
-    public void setDescripcion(String descripcion) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setDescription(descripcion);
-        }
-    }
-    
-    public void setCategoria(String categoria) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setCategoria(categoria);
-        }
-    }
-    
-    public void setPrecioVenta(double precio) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setSalePrice(precio);
-        }
-    }
-    
-    public void setPrecioCompra(double precio) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setPurchasePrice(precio);
-        }
-    }
-    
-    public void setStock(int stock) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setStock(stock);
-        }
-    }
-    
-    public void setStockMinimo(int stockMinimo) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setMinStock(stockMinimo);
-        }
-    }
-    
-    public void setImagen(String imagen) {
-        if (selectedProductForRestock != null) {
-            selectedProductForRestock.setImagen(imagen);
-        }
-    }
-    
-    public void setProveedorId(int supplierId) {
-        Supplier supplier = inventoryFacade.findSupplierById(supplierId).orElse(null);
-        setSelectedSupplier(supplier);
-    }
-    
-    public List<PurchaseService.PurchaseRecord> getPurchaseHistory() {
-        if (purchaseHistory.isEmpty()) {
-            refreshPurchaseData();
-        }
-        return purchaseHistory;
-    }
-    
+
     public List<PurchaseService.PurchaseRecord> getCompras() {
-        return getPurchaseHistory();
-    }
-    
-    public List<PurchaseInvoice> getPurchaseInvoices() {
-        if (purchaseInvoices.isEmpty()) {
-            refreshPurchaseData();
+        if (historialCompras.isEmpty()) {
+            refrescarHistorial();
         }
-        return purchaseInvoices;
+        return historialCompras;
     }
-    
-    public double getTotalPurchases() {
-        return purchaseService.getTotalPurchases();
-    }
-    
+
     public double getTotalCompras() {
-        return getTotalPurchases();
-    }
-    
-    public List<Product> getAvailableProducts() {
-        return inventoryFacade.getAllProducts();
-    }
-    
-    public List<Product> getProductosDisponibles() {
-        return getAvailableProducts();
-    }
-    
-    public List<Product> getProductos() {
-        return getAvailableProducts();
-    }
-    
-    public List<Supplier> getAvailableSuppliers() {
-        return inventoryFacade.getAllSuppliers();
-    }
-    
-    public List<Supplier> getProveedores() {
-        return getAvailableSuppliers();
-    }
-    
-    public List<Supplier> getProveedoresDisponibles() {
-        return getAvailableSuppliers();
-    }
-    
-    // Compatibility method for ReporteBean
-    public List<PurchaseInvoice> getFacturas() {
-        return getPurchaseInvoices();
+        return purchaseService.getTotalPurchases();
     }
 }
