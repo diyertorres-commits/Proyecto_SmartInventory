@@ -3,6 +3,7 @@ package unl.edu.cc.rest.jbrew.business;
 import jakarta.ejb.Singleton;
 import jakarta.ejb.Lock;
 import jakarta.ejb.LockType;
+import jakarta.annotation.PostConstruct;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
@@ -24,10 +25,12 @@ public class InventoryService {
     private List<Supplier> suppliers;
     
     public InventoryService() {
-        initializeData();
+        // Constructor vacío
     }
     
+    @PostConstruct
     private void initializeData() {
+        LOGGER.info("Inicializando InventoryService...");
         categories = new ArrayList<>();
         try {
             categories.add(new Category(1, "Bebidas"));
@@ -57,6 +60,8 @@ public class InventoryService {
         suppliers = new ArrayList<>();
         suppliers.add(new Supplier(1L, "1712345678001", "Distribuidora Central", "Distribuidora Central S.A.", "Carlos Rodríguez", "022345678", "central@distribuidora.com", "Av. Industrial 789"));
         suppliers.add(new Supplier(2L, "1723456789001", "Proveedores del Sur", "Proveedores del Sur Ltda.", "Ana Martínez", "022345679", "sur@proveedores.com", "Calle Comercial 321"));
+        
+        LOGGER.info("InventoryService inicializado con " + products.size() + " productos, " + categories.size() + " categorías, " + customers.size() + " clientes, " + suppliers.size() + " proveedores");
     }
     
     // Product operations

@@ -34,25 +34,25 @@
                     <p:menuitem value="Facturas" icon="pi pi-file-pdf" outcome="/invoices.xhtml" />
                     <p:menuitem value="Reportes" icon="pi pi-chart-line" outcome="/reports.xhtml" />
                 </p:menu>
-                
+
                 <script type="text/javascript">
                 //<![CDATA[
                     var currentPath = window.location.pathname;
                     var links = document.querySelectorAll('.si-sidebar-menu a');
-                    
+
                     links.forEach(function(link) {
                         var href = link.getAttribute('href');
                         var isActive = href && (currentPath === href || currentPath.includes(href.replace(/^\//, '')));
-                        
+
                         if (isActive) {
                             link.classList.add('ui-state-active');
                         }
-                        
+
                         // Add event listeners to handle hover states
                         link.addEventListener('mouseenter', function() {
                             this.classList.add('ui-state-active');
                         });
-                        
+
                         link.addEventListener('mouseleave', function() {
                             if (!isActive) {
                                 this.classList.remove('ui-state-active');
@@ -69,7 +69,12 @@
                     <i class="pi pi-user" />
                     <span>Administrador</span>
                 </span>
-                <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión" styleClass="p-button-rounded p-button-text p-button-danger" />
+                <h:form id="logoutForm">
+                    <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión"
+                                      styleClass="p-button-rounded p-button-text p-button-danger"
+                                      action="#{loginBean.logout()}"
+                                      ajax="false" />
+                </h:form>
             </div>
         </div>
     </div>
