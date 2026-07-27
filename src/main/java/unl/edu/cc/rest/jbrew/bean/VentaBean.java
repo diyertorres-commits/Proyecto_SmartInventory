@@ -19,20 +19,6 @@ import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
 import java.io.Serializable;
 import java.util.List;
 
-/**
- * Controlador de la vista de Punto de Venta.
- *
- * Ámbito @ViewScoped (NO @SessionScoped ni @ApplicationScoped, según lo
- * indicado): el carrito vive como un objeto de dominio (Carrito) propio
- * de esta instancia del bean, se crea junto con la vista y se descarta
- * con ella.
- *
- * Este controlador no contiene lógica de negocio: solo recoge la
- * interacción del usuario, delega en la capa de servicio
- * (CarritoService / VentaService) y traduce el resultado a mensajes de
- * la UI. Toda la validación de stock, armado de Movement/Kardex y
- * cálculo de totales vive en esa capa de servicio, no aquí.
- */
 @Named
 @ViewScoped
 public class VentaBean implements Serializable {

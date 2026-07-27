@@ -10,19 +10,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Mantiene el historial de ajustes de inventario a nivel de APLICACIÓN
- * (no de vista). AjusteBean es @ViewScoped: si el historial viviera ahí,
- * cada refresh de página (F5) crea una vista nueva -> un AjusteBean
- * nuevo -> lista vacía otra vez, aunque el ajuste ya se haya aplicado
- * al stock real. Este servicio (@Singleton) sobrevive a esos refrescos,
- * igual que VentaService mantiene las facturas.
- *
- * NOTA: esto sigue viviendo solo en memoria de la aplicación (no en la
- * base de datos), así que un reinicio del servidor/contenedor sí lo
- * borra. Para que sobreviva a eso también, habría que persistir Ajuste
- * con JPA contra Postgres.
- */
 @Singleton
 public class AjusteService {
 

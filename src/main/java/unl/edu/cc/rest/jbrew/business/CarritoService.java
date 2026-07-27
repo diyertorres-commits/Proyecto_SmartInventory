@@ -8,17 +8,6 @@ import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
 
 import java.util.Optional;
 
-/**
- * Lógica de negocio del carrito: validar stock disponible y mutar el
- * carrito en consecuencia.
- *
- * Separado de VentaService (responsabilidad de cerrar la venta) siguiendo
- * el principio de responsabilidad única (SRP): esta clase solo sabe de
- * "carrito + inventario", no de facturación ni de Kardex.
- *
- * @Stateless es correcto aquí: no guarda ningún dato propio (ni carrito
- * ni historial), solo opera sobre el Carrito que recibe como parámetro.
- */
 @Stateless
 public class CarritoService {
 

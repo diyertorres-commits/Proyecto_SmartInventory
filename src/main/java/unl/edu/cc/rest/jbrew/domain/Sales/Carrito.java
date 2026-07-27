@@ -6,17 +6,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Carrito de compras como objeto de dominio real: sabe agregar, eliminar
- * y calcular sus propios totales. No conoce nada de inventario, JSF ni
- * persistencia — esas responsabilidades quedan en la capa de servicio
- * (CarritoService / VentaService), que sí puede consultar otras fuentes
- * de datos.
- *
- * No es un bean CDI ni tiene ámbito propio: cada VentaBean (@ViewScoped)
- * crea el suyo. Así se evita usar @SessionScoped/@ApplicationScoped para
- * mantener el carrito.
- */
 public class Carrito implements Serializable {
 
     private static final double TASA_IVA = 0.12;

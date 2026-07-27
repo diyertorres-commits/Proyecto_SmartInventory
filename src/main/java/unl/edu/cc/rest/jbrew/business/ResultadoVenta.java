@@ -2,10 +2,6 @@ package unl.edu.cc.rest.jbrew.business;
 
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 
-/**
- * Resultado de registrar una venta. Incluye la factura generada cuando
- * la operación es exitosa.
- */
 public class ResultadoVenta {
 
     private final boolean exitoso;

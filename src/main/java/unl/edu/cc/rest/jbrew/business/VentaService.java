@@ -17,13 +17,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Responsable únicamente de cerrar una venta: arma el Movement de salida
- * a partir del carrito, lo procesa (descuenta stock real y registra
- * Kardex vía Movement.processMovement()), arma la factura y mantiene el
- * historial de facturas.
- * @Singleton: esta es la capa de SERVICIO, no un controlador.
- */
 @Singleton
 public class VentaService {
 

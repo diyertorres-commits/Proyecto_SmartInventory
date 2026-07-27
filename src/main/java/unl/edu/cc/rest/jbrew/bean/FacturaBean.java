@@ -16,19 +16,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Controlador del historial de facturas (facturas.xhtml).
- *
- * FIX: la vista llama a #{facturaBean.verDetalle(factura)} y
- * #{facturaBean.imprimir(factura)}, pero el bean tenía viewDetail(...) y
- * printInvoice(...) -> esos botones lanzaban PropertyNotFoundException.
- * Se corrigieron los nombres para que coincidan con el XHTML.
- *
- * También se eliminaron los getters/setters duplicados en inglés que la
- * vista no usa (getInvoiceType, getFacturas, getNumber, getDate,
- * getType, getThirdParty, getMethod, getFormattedDate, etc.), dejando un
- * solo nombre por propiedad en español.
- */
 @Named
 @ViewScoped
 public class FacturaBean implements Serializable {
@@ -96,12 +83,6 @@ public class FacturaBean implements Serializable {
         return facturaSeleccionada;
     }
 
-    /**
-     * DTO de presentación para el historial de facturas (mezcla ventas y
-     * compras en una sola tabla). Se arma con factory methods a partir de
-     * la entidad real, en vez de que el controlador copie campo por
-     * campo.
-     */
     public static class InvoiceInfo implements Serializable {
         private String numero;
         private Date fecha;

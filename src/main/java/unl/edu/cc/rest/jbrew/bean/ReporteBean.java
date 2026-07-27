@@ -18,22 +18,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/**
- * PENDIENTE DE REVISAR:
- *
- * - fechaInicio / fechaFin / category se capturan pero NUNCA se usan
- *   para filtrar los reportes. Falta aplicar el filtro en cada método
- *   generarReporte*().
- * - "stockBajo", "ganancias" y "ventasCliente" aparecen como opciones en
- *   el combo de reportes.xhtml pero generarReporte() no los maneja: al
- *   elegirlos, "Generar Reporte" no hace nada.
- * - dato.getGanancia() siempre devuelve 0: calcular la ganancia real
- *   (precio de venta - costo) requiere saber si Product tiene un campo
- *   de precio de costo. Falta confirmar Product.java.
- * - generarReporteCompras() sigue reportando por factura completa (no
- *   por línea de producto) porque no tengo la estructura de
- *   PurchaseInvoice/Movement de compra todavía.
- */
 @Named
 @ViewScoped
 public class ReporteBean implements Serializable {
@@ -93,17 +77,6 @@ public class ReporteBean implements Serializable {
         generarReporte();
     }
 
-    /**
-     * FIX: antes se generaba UNA fila por factura completa, usando
-     * propiedades que DatoReporte ni siquiera tenía (descripcion,
-     * cantidad, precioUnitario, tercero, ganancia -> todas lanzaban
-     * PropertyNotFoundException al renderizar la tabla).
-     *
-     * Ahora se genera una fila POR LÍNEA DE PRODUCTO vendido (a través
-     * de factura.getMovement().getProductMovementList()), que es lo que
-     * las columnas "Producto/Servicio", "Cantidad" y "Precio Unitario"
-     * realmente esperan.
-     */
     private void generarReporteVentas() {
         for (SaleInvoice factura : ventaService.obtenerFacturas()) {
             String tercero = factura.getCustomer() != null ? factura.getCustomer().getName() : "Cliente Mostrador";
@@ -256,12 +229,6 @@ public class ReporteBean implements Serializable {
         return chartMetodosPago;
     }
 
-    /**
-     * FIX: antes tenía (id, fecha, tipo, cliente, metodo, total) — ni
-     * remotamente lo que reportes.xhtml pide. Ahora expone exactamente
-     * las columnas que usa la tabla: fecha, descripcion, cantidad,
-     * precioUnitario, total, tercero, metodo, ganancia.
-     */
     public static class DatoReporte implements Serializable {
         private Date fecha;
         private String descripcion;

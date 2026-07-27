@@ -15,46 +15,6 @@ import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 import java.io.Serializable;
 import java.util.List;
 
-/**
- * Controlador de Compras (compras.xhtml).
- *
- * CAMBIOS respecto a la versión anterior:
- *
- * 1. La pestaña "Adquirir Nuevo Producto" ahora se bindea directamente al
- *    objeto Product completo (compraBean.productoNuevo.codigo,
- *    .name, .salePrice, etc.) en vez de reconstruirlo campo por campo con
- *    ~8 propiedades sueltas en el bean. Esto es justo lo que señaló el
- *    ingeniero: usar el objeto como modelo, no datos sueltos.
- *
- *    Efecto colateral (deseado): esto también arregla el bug de
- *    compilación que tenía la versión anterior. Product.setName(),
- *    setSalePrice() y setStock() declaran excepciones checked
- *    (InvalidProductNameException, etc.). Los antiguos setNombre(),
- *    setPrecioVenta(), setStock() del bean las invocaban sin capturarlas
- *    ni declararlas -> error de compilación. Al bindear la vista
- *    directamente a Product, es JSF (vía reflexión/EL) quien invoca esos
- *    setters, y el compilador ya no exige que este bean las declare.
- *
- * 2. FIX: antes los campos de "Adquirir Nuevo Producto" escribían por
- *    error en selectedProductForRestock (el producto de la OTRA
- *    pestaña), así que newProduct.getName() siempre quedaba null y
- *    registrarCompra() SIEMPRE ejecutaba processRestockPurchase(),
- *    incluso si el usuario estaba en la pestaña de producto nuevo. Ahora
- *    la pestaña activa se seguimiento explícito con
- *    indicePestanaActiva, bindeado al p:tabView.
- *
- * 3. FIX: el precio de compra ingresado en el campo común nunca llegaba
- *    a restockPurchasePrice (la variable que sí se usaba en la llamada
- *    real a purchaseService.processRestockPurchase) ni a
- *    newProduct.purchasePrice -> toda compra se registraba con precio
- *    de compra $0. Ahora precioCompra se aplica explícitamente al
- *    destino correcto según la operación.
- *
- * 4. Se eliminaron los getters/setters no usados por compras.xhtml
- *    (listas de productos/proveedores disponibles, facturas de compra,
- *    accesores duplicados en inglés). Si algún otro XHTML depende de
- *    ellos, avisa y se restauran.
- */
 @Named
 @ViewScoped
 public class CompraBean implements Serializable {
@@ -190,12 +150,6 @@ public class CompraBean implements Serializable {
         this.productoNuevo = productoNuevo;
     }
 
-    /**
-     * Puente entre el combo de categoría (que transmite un nombre, un
-     * String) y el objeto real Category que necesita productoNuevo.
-     * Se aplica directamente sobre productoNuevo, no sobre un campo
-     * suelto que después nadie usaba (bug anterior).
-     */
     public String getCategoryName() {
         return productoNuevo.getCategory() != null ? productoNuevo.getCategory().getName() : null;
     }
@@ -211,19 +165,6 @@ public class CompraBean implements Serializable {
         productoNuevo.setCodigo(categoria != null ? generarCodigo(categoria) : null);
     }
 
-    /**
-     * Genera un código SKU automático a partir de la categoría, ej.
-     * "Postres" -> "POST-0001". Si la categoría tiene varias palabras
-     * (ej. "Bebidas Calientes"), usa las iniciales de cada una ("BC").
-     * El número secuencial se calcula contando cuántos productos
-     * existentes ya usan ese mismo prefijo.
-     *
-     * NOTA: al ser un conteo simple sobre la lista actual de productos,
-     * dos altas simultáneas con la misma categoría podrían, en teoría,
-     * generar el mismo código (condición de carrera). Para una garantía
-     * real de unicidad convendría mover esto a una secuencia de base de
-     * datos en InventoryService.
-     */
     private String generarCodigo(Category categoria) {
         String prefijo = obtenerPrefijo(categoria.getName());
         long cantidadExistente = inventoryFacade.getAllProducts().stream()

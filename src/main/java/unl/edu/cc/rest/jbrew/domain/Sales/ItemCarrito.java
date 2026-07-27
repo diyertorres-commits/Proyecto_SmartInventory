@@ -4,11 +4,6 @@ import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 
 import java.io.Serializable;
 
-/**
- * Línea del carrito de compras. Se construye siempre a partir de un
- * Product real (no de un id suelto), y encapsula su propia lógica de
- * incremento de cantidad y cálculo de subtotal.
- */
 public class ItemCarrito implements Serializable {
 
     private final int productoId;

@@ -1,9 +1,5 @@
 package unl.edu.cc.rest.jbrew.business;
 
-/**
- * Resultado de una operación sobre el carrito (agregar/eliminar producto).
- * Evita devolver un boolean y un String sueltos por separado.
- */
 public class ResultadoCarrito {
 
     private final boolean exitoso;

@@ -19,38 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-/**
- * CAMBIOS respecto a la versión anterior:
- *
- * 1. FIX (no compilaba): processRestockPurchase() llamaba a
- *    existingProduct.setPurchasePrice(purchasePrice), que declara
- *    "throws InvalidProductPriceException" (checked), pero el catch solo
- *    atrapaba InvalidProductStockException -> error de compilación. Se
- *    agregó InvalidProductPriceException al catch.
- *
- * 2. FIX (arquitectura): igual que le pasaba a la antigua SalesService,
- *    esta clase es @Stateless pero guardaba purchaseHistory,
- *    purchaseInvoices e invoiceCounter como campos de instancia propios.
- *    Se cambió a @Singleton con @Lock, igual que VentaService.
- *
- * 3. FIX: invoiceNumber y purchaseOrderNumber usaban el contador en dos
- *    momentos distintos, quedando desincronizados por 1. Ahora ambos
- *    usan el mismo valor.
- *
- * 4. FIX: processRestockPurchase() ahora arma un Movement (tipo ENTRY)
- *    con su ProductMovement y llama a movement.processMovement(), igual
- *    que se hizo con las ventas. Esto significa que reabastecer SÍ
- *    registra Kardex, y que la factura de compra SÍ tiene un total real
- *    (antes de esto, ambas cosas faltaban). Se quitó la llamada manual a
- *    existingProduct.modifyStock(quantity): ahora el stock lo actualiza
- *    el propio Movement, para no sumarlo dos veces.
- *
- *    processNewProductPurchase() NO arma un Movement: el stock inicial
- *    ya se fija directamente sobre el Product al crearlo (a través del
- *    formulario de CompraBean), así que aplicar un Movement de tipo
- *    ENTRY ahí duplicaría el stock. El total de esa factura se calcula
- *    directamente (cantidad * precioCompra) en vez de vía Movement.
- */
 @Singleton
 public class PurchaseService {
 
