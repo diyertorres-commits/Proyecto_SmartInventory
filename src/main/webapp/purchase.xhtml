@@ -13,19 +13,19 @@
             <span>Compras</span>
         </div>
 
-        <h:form id="compraForm">
+        <h:form id="compraForm" prependId="false">
             <p:growl id="msgCompra" showDetail="true" life="4000" />
 
             <div class="si-form-grid">
                 <!-- ===== Formulario ===== -->
                 <div class="si-glass-card si-form-card">
-                    <p:tabView id="panelCampos" activeIndex="#{compraBean.indicePestanaActiva}" dynamic="true" cache="false" style="border:none;">
+                    <p:tabView id="panelCampos" widgetVar="wPanelCampos" activeIndex="#{compraBean.indicePestanaActiva}" dynamic="true" cache="false" style="border:none;">
                         <p:ajax event="tabChange" listener="#{compraBean.alCambiarPestana}" />
                         <p:tab title="🔄 Reabastecer Producto Existente">
                             <!-- Campos para REABASTECER -->
                             <div class="p-field">
                                 <label for="producto">Producto</label>
-                                <p:selectOneMenu id="producto" value="#{compraBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
+                                <p:selectOneMenu id="producto" widgetVar="wProducto" value="#{compraBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
                                     <f:selectItem itemLabel="🔍 Buscar por nombre o código..." itemValue="#{null}" noSelectionOption="true" />
                                     <f:selectItems value="#{inventarioBean.productos}" var="p"
                                                    itemLabel="#{p.name} (#{p.codigo}) - Stock: #{p.stock}" itemValue="#{p.idProduct}" />
@@ -47,7 +47,7 @@
 
                             <div class="p-field">
                                 <label for="categoria">Categoría</label>
-                                <p:selectOneMenu id="categoria" value="#{compraBean.categoryName}" style="width:100%">
+                                <p:selectOneMenu id="categoria" widgetVar="wCategoria" value="#{compraBean.categoryName}" style="width:100%">
                                     <f:selectItem itemLabel="Seleccionar categoría" itemValue="#{null}" />
                                     <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
                                     <p:ajax update="codigo" />
@@ -89,7 +89,7 @@
                     <!-- Campo común: Proveedor/Distribuidor -->
                     <div class="p-field">
                         <label for="proveedor">🚚 Proveedor/Distribuidor</label>
-                        <p:selectOneMenu id="proveedor" value="#{compraBean.proveedorId}" style="width:100%" filter="true" filterMatchMode="contains">
+                        <p:selectOneMenu id="proveedor" widgetVar="wProveedor" value="#{compraBean.proveedorId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Seleccionar proveedor" itemValue="#{null}" noSelectionOption="true" />
                             <f:selectItems value="#{proveedorBean.proveedores}" var="prov"
                                            itemLabel="#{prov.name} (#{prov.identificationNumber})" itemValue="#{prov.idSupplier}" />
@@ -102,7 +102,9 @@
                     </div>
 
                     <p:commandButton value="Registrar Compra" icon="pi pi-check" action="#{compraBean.registrarCompra()}"
-                                     update="msgCompra tablaCompras compraForm:panelCampos compraForm:proveedor compraForm:precioCompra" styleClass="p-button-rounded p-button-primary" style="margin-top:.5rem" />
+                                     update="msgCompra tablaCompras compraForm:panelCampos compraForm:proveedor compraForm:precioCompra"
+                                     oncomplete="manejarResultadoCompra(args)"
+                                     styleClass="p-button-rounded p-button-primary" style="margin-top:.5rem" />
                 </div>
 
                 <!-- ===== Panel lateral con resumen ===== -->
@@ -165,6 +167,141 @@
             </div>
 
         </h:form>
+
+        <script type="text/javascript">
+        //<![CDATA[
+            // ===== Persistencia del formulario de compras en localStorage =====
+            // CompraBean es @ViewScoped por decisión de arquitectura (no se
+            // permite @SessionScoped/@ApplicationScoped), así que se destruye
+            // al navegar a otra página. Esto reconstruye los valores del
+            // formulario en el cliente, sin tocar el ciclo de vida del bean.
+
+            const CLAVE_FORMULARIO_COMPRA = 'formularioCompra';
+
+            function guardarFormularioCompra() {
+                try {
+                    // OJO: p:tabView es un NamingContainer propio. Aunque el
+                    // <h:form> tenga prependId="false", eso solo suprime el
+                    // prefijo del FORMULARIO — el tabView (id="panelCampos")
+                    // sigue anteponiendo su propio id a sus hijos con ":".
+                    // Por eso los campos de las pestañas llevan el prefijo
+                    // "panelCampos:" y los de fuera (proveedor, precioCompra) no.
+                    const datos = {
+                        pestanaActiva: obtenerValor('panelCampos_activeIndex') || '0',
+                        // Reabastecer
+                        productoId: obtenerValor('panelCampos:producto_input'),
+                        cantidad: obtenerValor('panelCampos:cantidad_input'),
+                        // Nuevo producto
+                        nombre: obtenerValor('panelCampos:nombre'),
+                        categoria: obtenerValor('panelCampos:categoria_input'),
+                        descripcion: obtenerValor('panelCampos:descripcion'),
+                        precioVenta: obtenerValor('panelCampos:precioVenta_input'),
+                        stockInicial: obtenerValor('panelCampos:stockInicial_input'),
+                        stockMinimo: obtenerValor('panelCampos:stockMinimo_input'),
+                        imagen: obtenerValor('panelCampos:imagen'),
+                        // Comunes (fuera del tabView, sin prefijo)
+                        proveedor: obtenerValor('proveedor_input'),
+                        precioCompra: obtenerValor('precioCompra_input')
+                    };
+                    localStorage.setItem(CLAVE_FORMULARIO_COMPRA, JSON.stringify(datos));
+                } catch (e) {
+                    console.log('Error al guardar formulario:', e);
+                }
+            }
+
+            function obtenerValor(id) {
+                const el = document.getElementById(id);
+                return el ? el.value : '';
+            }
+
+            function establecerValor(id, valor) {
+                const el = document.getElementById(id);
+                if (el && valor) {
+                    el.value = valor;
+                }
+            }
+
+            function seleccionarValorWidget(widgetVar, valor) {
+                if (!valor || typeof PF !== 'function') {
+                    return;
+                }
+                const widget = PF(widgetVar);
+                if (widget && typeof widget.selectValue === 'function') {
+                    widget.selectValue(valor);
+                }
+            }
+
+            function restaurarFormularioCompra() {
+                try {
+                    const datosStr = localStorage.getItem(CLAVE_FORMULARIO_COMPRA);
+                    if (!datosStr) return;
+
+                    const datos = JSON.parse(datosStr);
+                    if (!datos) return;
+
+                    // Restaurar pestaña activa vía el widget de PrimeFaces
+                    // (el tabView es un componente propio, no un <select>
+                    // nativo: hay que usar la API de PrimeFaces, no el DOM).
+                    if (datos.pestanaActiva && typeof PF === 'function' && PF('wPanelCampos')) {
+                        PF('wPanelCampos').select(parseInt(datos.pestanaActiva, 10));
+                    }
+
+                    // Dar tiempo a que el tabView renderice el contenido de
+                    // la pestaña (dynamic="true") antes de setear valores.
+                    setTimeout(function () {
+                        // Los selectOneMenu de PrimeFaces son un widget con
+                        // etiqueta visual propia, no un <select> nativo: solo
+                        // cambiar el <select> oculto por JS no actualiza esa
+                        // etiqueta. Hay que usar la API pública del widget
+                        // (selectValue), que sí sincroniza ambas cosas.
+                        seleccionarValorWidget('wProducto', datos.productoId);
+                        seleccionarValorWidget('wCategoria', datos.categoria);
+                        seleccionarValorWidget('wProveedor', datos.proveedor);
+
+                        // selectValue() sincroniza la etiqueta visible, pero
+                        // no siempre dispara el ajax de PrimeFaces asociado
+                        // (p:ajax update="codigo"). Sin ese ajax, el servidor
+                        // nunca vuelve a ejecutar setCategoryName() y el
+                        // Código/SKU se queda vacío. Se fuerza el evento
+                        // change nativo para que el ajax sí se dispare.
+                        if (datos.categoria) {
+                            const categoriaEl = document.getElementById('panelCampos:categoria_input');
+                            if (categoriaEl) {
+                                categoriaEl.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }
+
+                        establecerValor('panelCampos:cantidad_input', datos.cantidad);
+                        establecerValor('panelCampos:nombre', datos.nombre);
+                        establecerValor('panelCampos:descripcion', datos.descripcion);
+                        establecerValor('panelCampos:precioVenta_input', datos.precioVenta);
+                        establecerValor('panelCampos:stockInicial_input', datos.stockInicial);
+                        establecerValor('panelCampos:stockMinimo_input', datos.stockMinimo);
+                        establecerValor('panelCampos:imagen', datos.imagen);
+
+                        establecerValor('precioCompra_input', datos.precioCompra);
+                    }, 300);
+                } catch (e) {
+                    console.log('Error al restaurar formulario:', e);
+                }
+            }
+
+            function limpiarFormularioCompra() {
+                localStorage.removeItem(CLAVE_FORMULARIO_COMPRA);
+            }
+
+            function manejarResultadoCompra(args) {
+                if (args && args.success) {
+                    limpiarFormularioCompra();
+                }
+            }
+
+            window.addEventListener('beforeunload', guardarFormularioCompra);
+            window.addEventListener('load', function () {
+                setTimeout(restaurarFormularioCompra, 500);
+            });
+        //]]>
+        </script>
 
     </ui:define>
 </ui:composition>

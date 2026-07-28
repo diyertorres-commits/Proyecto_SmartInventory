@@ -5,6 +5,7 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.primefaces.PrimeFaces;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
@@ -68,6 +69,9 @@ public class CompraBean implements Serializable {
             } else {
                 limpiarReabastecimiento();
             }
+            PrimeFaces.current().ajax().addCallbackParam("success", true);
+        } else {
+            PrimeFaces.current().ajax().addCallbackParam("success", false);
         }
     }
 
