@@ -56,8 +56,8 @@ public class Product implements Serializable {
     private ProductStatus estado; // Estado del producto
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Kardex> kardexList; // Relación 1 → 0..* con Kardex
-
+    private List<Kardex> kardexList; // Relación 1 → 0..* con Kardex validateName
+ 
     public Product() {
         salePrice = 0;
         purchasePrice = 0;
@@ -106,7 +106,7 @@ public class Product implements Serializable {
         return stock <= minStock;
     }
 
-    public StockAlert generateStockAlert(int idAlert) { // Asociación con StockAlert
+    public StockAlert generateStockAlert(int idAlert) { // Asociación con StockAlert validateName
         if (verifyStockMinimo()) {
             return new StockAlert(idAlert, this, stock, minStock, new java.util.Date()); // Composición con StockAlert
         }
@@ -117,26 +117,15 @@ public class Product implements Serializable {
         if (name == null || name.trim().isEmpty()) {
             throw new InvalidProductNameException("El nombre del producto es inválido");
         }
-        if (!name.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+")) {
-            throw new InvalidProductNameException("El nombre del producto solo puede contener letras y espacios");
-        }
     }
 
-    // FIX: setStock(0) lanzaba excepción, pero modifyStock() SÍ permite
-    // llegar a stock == 0 (de hecho calculateEstado() tiene un caso
-    // específico para stock == 0 -> AGOTADO). Un producto agotado es un
-    // estado válido del negocio, no un error. Ahora solo se rechaza el
-    // stock negativo.
+
     private void validateStock(int stock) throws InvalidProductStockException {
         if (stock < 0) {
             throw new InvalidProductStockException("El stock no puede ser negativo");
         }
     }
 
-    // FIX: el límite superior "salePrice >= 100" rechazaba cualquier
-    // producto de $100 o más, un tope arbitrario que no tiene respaldo
-    // de negocio conocido. Se deja solo la validación real: el precio
-    // debe ser mayor que cero.
     private void validatePrice(double salePrice) throws InvalidProductPriceException {
         if (salePrice <= 0) {
             throw new InvalidProductPriceException("El precio debe ser mayor que cero");
