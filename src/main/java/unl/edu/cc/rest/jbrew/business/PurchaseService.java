@@ -82,7 +82,6 @@ public class PurchaseService {
         }
 
         try {
-            newProduct.setIdProduct(inventoryService.getAllProducts().size() + 1);
             inventoryService.saveProduct(newProduct);
 
             PurchaseRecord record = createPurchaseRecord("ADQUIRIR", newProduct, newProduct.getStock(), newProduct.getPurchasePrice(), supplier);

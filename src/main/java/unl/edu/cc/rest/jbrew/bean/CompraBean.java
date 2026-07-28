@@ -34,14 +34,8 @@ public class CompraBean implements Serializable {
     private Product productoAReabastecer;
     private int cantidad = 1;
 
-    // Pestaña "Adquirir nuevo producto": el Product completo es el modelo
-    // del formulario, no una colección de campos sueltos.
     private Product productoNuevo = new Product();
 
-    // Campo común a ambas pestañas. En cada pestaña alimenta un destino
-    // distinto (restockPurchasePrice vs productoNuevo.purchasePrice), así
-    // que se maneja como valor simple y se aplica explícitamente en
-    // registrarCompra(), no atado directamente a un setter de dominio.
     private double precioCompra;
 
     private Supplier proveedorSeleccionado;
@@ -77,15 +71,39 @@ public class CompraBean implements Serializable {
         }
     }
 
+    public void alCambiarPestana(org.primefaces.event.TabChangeEvent event) {
+    }
+
     private PurchaseService.PurchaseResult registrarReabastecimiento() {
         if (productoAReabastecer == null) {
             mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "Seleccione un producto");
+            return null;
+        }
+        if (precioCompra <= 0) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese un precio de compra válido");
             return null;
         }
         return purchaseService.processRestockPurchase(productoAReabastecer, cantidad, precioCompra, proveedorSeleccionado);
     }
 
     private PurchaseService.PurchaseResult registrarAdquisicionNuevoProducto() {
+        if (productoNuevo.getName() == null || productoNuevo.getName().isBlank()) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese el nombre del producto");
+            return null;
+        }
+        if (productoNuevo.getCategory() == null) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione una categoría");
+            return null;
+        }
+        if (productoNuevo.getSalePrice() <= 0) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese un precio de venta válido");
+            return null;
+        }
+        if (precioCompra <= 0) {
+            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese un precio de compra válido");
+            return null;
+        }
+
         try {
             productoNuevo.setPurchasePrice(precioCompra);
         } catch (InvalidProductPriceException e) {

@@ -19,7 +19,8 @@
             <div class="si-form-grid">
                 <!-- ===== Formulario ===== -->
                 <div class="si-glass-card si-form-card">
-                    <p:tabView id="panelCampos" activeIndex="#{compraBean.indicePestanaActiva}" style="border:none;">
+                    <p:tabView id="panelCampos" activeIndex="#{compraBean.indicePestanaActiva}" dynamic="true" cache="false" style="border:none;">
+                        <p:ajax event="tabChange" listener="#{compraBean.alCambiarPestana}" />
                         <p:tab title="🔄 Reabastecer Producto Existente">
                             <!-- Campos para REABASTECER -->
                             <div class="p-field">
