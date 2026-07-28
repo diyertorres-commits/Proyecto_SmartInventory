@@ -1,18 +1,39 @@
 package unl.edu.cc.rest.jbrew.domain.Movements;
 
+import jakarta.persistence.*;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Kardex.Kardex;
 
+@Entity
+@Table(name = "movements")
 public class Movement {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
     private int idMovement;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "movement_type")
     private MovementType movementType; // Asociación con MovementType (enum)
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private MovementStatus status; // Asociación con MovementStatus (enum)
+    
+    @Column(name = "date")
     private Date date;
+    
+    @Column(name = "description")
     private String description;
+    
+    @OneToMany(mappedBy = "movement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductMovement> productMovementList; // Composición con ProductMovement
+    
+    @Column(name = "total")
     private double total;
 
     public Movement() {
@@ -81,6 +102,14 @@ public class Movement {
     }
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getIdMovement() {
         return idMovement;
     }

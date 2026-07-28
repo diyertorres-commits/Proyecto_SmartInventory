@@ -1,12 +1,19 @@
 package unl.edu.cc.rest.jbrew.domain.Invoice;
 
+import jakarta.persistence.*;
 import java.util.Date;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.Movements.Movement;
 
+@Entity
+@Table(name = "sale_invoices")
 public class SaleInvoice extends Invoice { // Herencia de Invoice
 
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
     private Customer customer; // Composición con Customer
+    
+    @Column(name = "payment_method")
     private String paymentMethod;
 
     // NUEVO: antes solo existía "total" (heredado de Invoice), que además
@@ -14,8 +21,13 @@ public class SaleInvoice extends Invoice { // Herencia de Invoice
     // estos campos para que la factura quede trazable: cuánto era el
     // subtotal de productos, cuánto de IVA, y cuánto de descuento se aplicó,
     // sin perder esa información al limpiar el carrito.
+    @Column(name = "subtotal")
     private double subtotal;
+    
+    @Column(name = "tax")
     private double tax;
+    
+    @Column(name = "discount")
     private double discount;
 
     public SaleInvoice() {

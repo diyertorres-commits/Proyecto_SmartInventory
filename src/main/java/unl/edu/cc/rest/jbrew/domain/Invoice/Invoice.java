@@ -1,13 +1,22 @@
 package unl.edu.cc.rest.jbrew.domain.Invoice;
 
+import jakarta.persistence.*;
 import java.util.Date;
 import unl.edu.cc.rest.jbrew.domain.Movements.Movement;
 
+@MappedSuperclass
 public abstract class Invoice {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
     private int idInvoice;
     private Date invoiceDate;
     private double total;
     private String invoiceNumber;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "movement_id")
     private Movement movement; // Composición con Movement
 
     public Invoice() {
@@ -31,6 +40,14 @@ public abstract class Invoice {
     }
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getIdInvoice() {
         return idInvoice;
     }
