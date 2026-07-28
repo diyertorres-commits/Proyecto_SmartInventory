@@ -151,21 +151,37 @@
                     <p:column headerText="Acciones" width="14%" style="text-align:center;">
                         <div style="display:flex;gap:0.5rem;justify-content:center;">
                             <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button ui-button-info"
-                                            action="#{productoBean.editar(p)}" update="productsForm:dialogProducto" oncomplete="PF('dialogProducto').show()" />
+                                            action="#{productoBean.editar(p)}" 
+                                            process="@this"
+                                            update="@form" oncomplete="PF('dialogProducto').show()" />
+                            
                             <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="rounded-button ui-button-danger"
-                                            action="#{productoBean.eliminar(p)}" update="msgProductos tablaProductos" />
+                                            action="#{productoBean.eliminar(p)}"
+                                            process="@this"
+                                            update="msgProductos tablaProductos productsForm">
+                                <p:confirm header="Confirmar eliminación"
+                                           message="¿Está seguro de que desea eliminar el producto &quot;#{p.name}&quot;?"
+                                           icon="pi pi-exclamation-triangle" />
+                            </p:commandButton>
                         </div>
                     </p:column>
                 </p:dataTable>
             </div>
 
+            <!-- ===== Diálogo de confirmación global (eliminar) ===== -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                <p:commandButton value="Sí, eliminar" type="button" styleClass="ui-confirmdialog-yes p-button-danger" icon="pi pi-check" />
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no p-button-outlined p-button-secondary" icon="pi pi-times" />
+            </p:confirmDialog>
+
             <!-- ===== Diálogo para crear/editar producto ===== -->
             <p:dialog id="dialogProducto" widgetVar="dialogProducto" header="#{productoBean.producto.idProduct == null ? 'Nuevo Producto' : 'Editar Producto'}" 
-                      modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade">
+                      modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade"
+                      style="max-height:90vh;">
                 
                 <p:growl id="msgProductoForm" showDetail="true" life="4000" />
                 
-                <div class="si-form-card">
+                <div class="si-form-card" style="max-height:70vh;overflow-y:auto;padding-right:0.5rem;">
                     <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
                         
                         <p:outputLabel for="codigo" value="Código/SKU:" />
@@ -190,7 +206,13 @@
                         <p:inputNumber id="precioCompra" value="#{productoBean.producto.purchasePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
                         
                         <p:outputLabel for="stock" value="Stock Inicial:" />
-                        <p:spinner id="stock" value="#{productoBean.producto.stock}" min="0" style="width:100%" />
+                        <div>
+                            <p:spinner id="stock" value="#{productoBean.producto.stock}" min="0" style="width:100%"
+                                       disabled="#{productoBean.producto.idProduct != 0}" />
+                            <h:panelGroup rendered="#{productoBean.producto.idProduct != 0}">
+                                <small style="color:var(--si-text-secondary);">Para modificar el stock usa la sección de Ajustes.</small>
+                            </h:panelGroup>
+                        </div>
                         
                         <p:outputLabel for="stockMinimo" value="Stock Mínimo:" />
                         <p:spinner id="stockMinimo" value="#{productoBean.producto.minStock}" min="0" style="width:100%" />
@@ -199,13 +221,13 @@
                         <p:inputText id="imagen" value="#{productoBean.producto.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
                         
                     </p:panelGrid>
-                    
-                    <div style="margin-top:1.5rem;text-align:right;">
-                        <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogProducto').hide()" 
-                                        styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
-                        <p:commandButton value="Guardar" icon="pi pi-check" action="#{productoBean.guardar()}"
-                                        update="msgProductoForm productsForm:tablaProductos" oncomplete="PF('dialogProducto').hide()" />
-                    </div>
+                </div>
+                
+                <div style="margin-top:1.5rem;text-align:right;">
+                    <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogProducto').hide()" 
+                                    styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
+                    <p:commandButton value="Guardar" icon="pi pi-check" action="#{productoBean.guardar()}"
+                                    update="msgProductoForm productsForm:tablaProductos" oncomplete="PF('dialogProducto').hide()" />
                 </div>
             </p:dialog>
 

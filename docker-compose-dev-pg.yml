@@ -33,6 +33,8 @@ services:
       - 8181:8080
     depends_on:
       - smart-pg-db
+    environment:
+      ADMINER_DEFAULT_SERVER: smart-pg-db
     networks:
       smart-pg-network:
         ipv4_address: 192.168.100.253

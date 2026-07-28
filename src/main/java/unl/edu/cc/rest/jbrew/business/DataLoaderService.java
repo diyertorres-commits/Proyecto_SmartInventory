@@ -9,9 +9,14 @@ import jakarta.persistence.PersistenceContext;
 import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
+import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
+import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
+import unl.edu.cc.rest.jbrew.domain.Movements.Movement;
+import unl.edu.cc.rest.jbrew.domain.Movements.MovementType;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 
+import java.util.Date;
 import java.util.logging.Logger;
 
 @Singleton
@@ -83,6 +88,80 @@ public class DataLoaderService {
             crudGenericService.create(proveedor2);
 
             LOGGER.info("Proveedores creados: 2");
+
+            // Crear datos de prueba de compras
+            Movement movementCompra1 = new Movement(1, MovementType.ENTRY, new Date(), "Compra de prueba - Café Americano");
+            movementCompra1.addProductMovement(producto1, 20, 1.20);
+            movementCompra1.processMovement();
+            crudGenericService.create(movementCompra1);
+
+            PurchaseInvoice purchaseInvoice1 = new PurchaseInvoice();
+            purchaseInvoice1.setIdInvoice(1);
+            purchaseInvoice1.setInvoiceDate(new Date());
+            purchaseInvoice1.setInvoiceNumber("FAC-COMP-000001");
+            purchaseInvoice1.setPurchaseOrderNumber("PO-000001");
+            purchaseInvoice1.setSupplier(proveedor1);
+            purchaseInvoice1.setMovement(movementCompra1);
+            purchaseInvoice1.generateInvoice();
+            crudGenericService.create(purchaseInvoice1);
+
+            Movement movementCompra2 = new Movement(2, MovementType.ENTRY, new Date(), "Compra de prueba - Cappuccino");
+            movementCompra2.addProductMovement(producto2, 15, 1.80);
+            movementCompra2.processMovement();
+            crudGenericService.create(movementCompra2);
+
+            PurchaseInvoice purchaseInvoice2 = new PurchaseInvoice();
+            purchaseInvoice2.setIdInvoice(2);
+            purchaseInvoice2.setInvoiceDate(new Date());
+            purchaseInvoice2.setInvoiceNumber("FAC-COMP-000002");
+            purchaseInvoice2.setPurchaseOrderNumber("PO-000002");
+            purchaseInvoice2.setSupplier(proveedor2);
+            purchaseInvoice2.setMovement(movementCompra2);
+            purchaseInvoice2.generateInvoice();
+            crudGenericService.create(purchaseInvoice2);
+
+            LOGGER.info("Compras de prueba creadas: 2");
+
+            // Crear datos de prueba de ventas
+            Movement movementVenta1 = new Movement(3, MovementType.EXIT, new Date(), "Venta de prueba - Café Americano");
+            movementVenta1.addProductMovement(producto1, 5, 2.50);
+            movementVenta1.processMovement();
+            crudGenericService.create(movementVenta1);
+
+            SaleInvoice saleInvoice1 = new SaleInvoice();
+            saleInvoice1.setIdInvoice(1);
+            saleInvoice1.setInvoiceDate(new Date());
+            saleInvoice1.setInvoiceNumber("FAC-000001");
+            saleInvoice1.setCustomer(cliente1);
+            saleInvoice1.setPaymentMethod("efectivo");
+            saleInvoice1.setMovement(movementVenta1);
+            saleInvoice1.generateInvoice();
+            saleInvoice1.setSubtotal(saleInvoice1.getTotal());
+            saleInvoice1.setTax(saleInvoice1.getTotal() * 0.12);
+            saleInvoice1.setDiscount(0);
+            saleInvoice1.setTotal(saleInvoice1.getSubtotal() + saleInvoice1.getTax());
+            crudGenericService.create(saleInvoice1);
+
+            Movement movementVenta2 = new Movement(4, MovementType.EXIT, new Date(), "Venta de prueba - Cappuccino");
+            movementVenta2.addProductMovement(producto2, 3, 3.50);
+            movementVenta2.processMovement();
+            crudGenericService.create(movementVenta2);
+
+            SaleInvoice saleInvoice2 = new SaleInvoice();
+            saleInvoice2.setIdInvoice(2);
+            saleInvoice2.setInvoiceDate(new Date());
+            saleInvoice2.setInvoiceNumber("FAC-000002");
+            saleInvoice2.setCustomer(cliente2);
+            saleInvoice2.setPaymentMethod("tarjeta");
+            saleInvoice2.setMovement(movementVenta2);
+            saleInvoice2.generateInvoice();
+            saleInvoice2.setSubtotal(saleInvoice2.getTotal());
+            saleInvoice2.setTax(saleInvoice2.getTotal() * 0.12);
+            saleInvoice2.setDiscount(0);
+            saleInvoice2.setTotal(saleInvoice2.getSubtotal() + saleInvoice2.getTax());
+            crudGenericService.create(saleInvoice2);
+
+            LOGGER.info("Ventas de prueba creadas: 2");
 
             LOGGER.info("Datos iniciales cargados exitosamente en la base de datos.");
 

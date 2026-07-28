@@ -71,11 +71,20 @@ public class ProductoBean implements Serializable {
     
     public String saveProduct() {
         try {
+            if (selectedProduct.getIdProduct() != 0) {
+                // Es edición: recuperar el stock real actual desde el backend
+                // para evitar que se sobrescriba con un valor manipulado en el cliente.
+                // El stock solo debe modificarse desde la sección de Ajustes.
+                inventoryFacade.findProductById(selectedProduct.getIdProduct())
+                        .ifPresent(existente -> selectedProduct.setStock(existente.getStock()));
+            }
+
             inventoryFacade.saveProduct(selectedProduct);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", 
                     selectedProduct.getIdProduct() == 0 ? "Producto creado correctamente" : "Producto actualizado correctamente"));
             prepareNewProduct();
+            searchProducts();
             updateStatistics();
             return null;
         } catch (Exception e) {
@@ -94,6 +103,7 @@ public class ProductoBean implements Serializable {
             inventoryFacade.deleteProduct(product);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto eliminado correctamente"));
+            searchProducts();
             updateStatistics();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
@@ -126,6 +136,7 @@ public class ProductoBean implements Serializable {
                 })
                 .toList();
         applyFilters();
+        initialized = true;
     }
     
     public void search() {
