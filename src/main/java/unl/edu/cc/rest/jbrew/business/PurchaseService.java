@@ -1,9 +1,8 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.ejb.Lock;
-import jakarta.ejb.LockType;
-import jakarta.ejb.Singleton;
+import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductNameException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductStockException;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-@Singleton
+@Stateless
 public class PurchaseService {
 
     private static final Logger LOGGER = Logger.getLogger(PurchaseService.class.getName());
@@ -27,11 +26,9 @@ public class PurchaseService {
     @Inject
     private InventoryService inventoryService;
 
-    private final List<PurchaseRecord> purchaseHistory = new ArrayList<>();
-    private final List<PurchaseInvoice> purchaseInvoices = new ArrayList<>();
-    private int invoiceCounter = 1;
+    @Inject
+    private CrudGenericService crudGenericService;
 
-    @Lock(LockType.WRITE)
     public PurchaseResult processRestockPurchase(Product product, int quantity, double purchasePrice, Supplier supplier) {
         if (supplier == null) {
             return new PurchaseResult(false, "Proveedor no seleccionado", null, null);
@@ -47,7 +44,7 @@ public class PurchaseService {
             existingProduct.setPurchasePrice(purchasePrice);
 
             Movement movimiento = new Movement(
-                    nextMovementId(),
+                    getNextMovementId(),
                     MovementType.ENTRY,
                     new Date(),
                     "Compra - reabastecimiento (" + supplier.getName() + ")"
@@ -55,21 +52,26 @@ public class PurchaseService {
             movimiento.addProductMovement(existingProduct, quantity, purchasePrice);
             movimiento.processMovement(); // aumenta stock real y registra Kardex
 
-            PurchaseRecord record = createPurchaseRecord("REABASTECER", existingProduct, quantity, purchasePrice, supplier);
-            purchaseHistory.add(record);
+            // Guardar movement en base de datos
+            crudGenericService.create(movimiento);
+
+            // Actualizar producto en base de datos
+            inventoryService.saveProduct(existingProduct);
 
             PurchaseInvoice invoice = createPurchaseInvoice(supplier);
             invoice.setMovement(movimiento);
             invoice.generateInvoice(); // total = movimiento.calculateTotal()
-            purchaseInvoices.add(invoice);
+            
+            // Guardar factura en base de datos
+            crudGenericService.create(invoice);
 
+            PurchaseRecord record = createPurchaseRecord("REABASTECER", existingProduct, quantity, purchasePrice, supplier);
             return new PurchaseResult(true, "Stock reabastecido correctamente. Factura #" + invoice.getInvoiceNumber() + " generada", record, invoice);
         } catch (InvalidProductStockException | InvalidProductPriceException e) {
             return new PurchaseResult(false, "Error de validación: " + e.getMessage(), null, null);
         }
     }
 
-    @Lock(LockType.WRITE)
     public PurchaseResult processNewProductPurchase(Product newProduct, Supplier supplier) {
         if (supplier == null) {
             return new PurchaseResult(false, "Proveedor no seleccionado", null, null);
@@ -84,30 +86,42 @@ public class PurchaseService {
         try {
             inventoryService.saveProduct(newProduct);
 
-            PurchaseRecord record = createPurchaseRecord("ADQUIRIR", newProduct, newProduct.getStock(), newProduct.getPurchasePrice(), supplier);
-            purchaseHistory.add(record);
-
             PurchaseInvoice invoice = createPurchaseInvoice(supplier);
             // Sin Movement aquí: el stock inicial ya se fijó al crear el
             // producto, así que el total se calcula directamente.
             invoice.setTotal(newProduct.getStock() * newProduct.getPurchasePrice());
-            purchaseInvoices.add(invoice);
+            
+            // Guardar factura en base de datos
+            crudGenericService.create(invoice);
 
+            PurchaseRecord record = createPurchaseRecord("ADQUIRIR", newProduct, newProduct.getStock(), newProduct.getPurchasePrice(), supplier);
             return new PurchaseResult(true, "Nuevo producto adquirido correctamente. Factura #" + invoice.getInvoiceNumber() + " generada", record, invoice);
         } catch (InvalidProductNameException | InvalidProductPriceException | InvalidProductStockException e) {
             return new PurchaseResult(false, "Error de validación: " + e.getMessage(), null, null);
         }
     }
 
-    private int nextMovementId() {
-        // Simplificación: en producción debería venir de una secuencia
-        // real de base de datos, igual que se señaló en VentaService.
-        return purchaseInvoices.size() + 1;
+    private int getNextMovementId() {
+        // Obtener el último ID de movement de la base de datos
+        List<Movement> movements = crudGenericService.findWithQuery("SELECT m FROM Movement m ORDER BY m.id DESC");
+        if (movements.isEmpty()) {
+            return 1;
+        }
+        return movements.get(0).getIdMovement() + 1;
+    }
+
+    private int getNextInvoiceId() {
+        // Obtener el último ID de factura de compra de la base de datos
+        List<PurchaseInvoice> invoices = crudGenericService.findWithQuery("SELECT i FROM PurchaseInvoice i ORDER BY i.id DESC");
+        if (invoices.isEmpty()) {
+            return 1;
+        }
+        return invoices.get(0).getIdInvoice() + 1;
     }
 
     private PurchaseRecord createPurchaseRecord(String type, Product product, int quantity, double purchasePrice, Supplier supplier) {
         PurchaseRecord record = new PurchaseRecord();
-        record.setId(purchaseHistory.size() + 1);
+        record.setId(getNextPurchaseRecordId());
         record.setFecha(new Date());
         record.setTipo(type);
         record.setProductoNombre(product.getName());
@@ -118,34 +132,55 @@ public class PurchaseService {
         return record;
     }
 
+    private int getNextPurchaseRecordId() {
+        // Simplificación: usar contador basado en timestamp
+        return (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
+    }
+
     private PurchaseInvoice createPurchaseInvoice(Supplier supplier) {
-        int numeroFactura = invoiceCounter++;
+        int numeroFactura = getNextInvoiceId();
 
         PurchaseInvoice invoice = new PurchaseInvoice();
         invoice.setIdInvoice(numeroFactura);
         invoice.setInvoiceDate(new Date());
         invoice.setInvoiceNumber("FAC-COMP-" + String.format("%06d", numeroFactura));
-        // FIX: antes usaba "invoiceCounter" ya incrementado, quedando un
-        // número por delante de invoiceNumber. Ahora usan el mismo valor.
         invoice.setPurchaseOrderNumber("PO-" + String.format("%06d", numeroFactura));
         invoice.setSupplier(supplier);
         return invoice;
     }
 
-    @Lock(LockType.READ)
     public List<PurchaseRecord> getPurchaseHistory() {
-        return new ArrayList<>(purchaseHistory);
+        // Generar registros de compra desde las facturas en base de datos
+        List<PurchaseInvoice> invoices = crudGenericService.findWithQuery("SELECT i FROM PurchaseInvoice i ORDER BY i.invoiceDate DESC");
+        List<PurchaseRecord> records = new ArrayList<>();
+        
+        for (PurchaseInvoice invoice : invoices) {
+            if (invoice.getMovement() != null) {
+                for (var pm : invoice.getMovement().getProductMovementList()) {
+                    PurchaseRecord record = new PurchaseRecord();
+                    record.setId(records.size() + 1);
+                    record.setFecha(invoice.getInvoiceDate());
+                    record.setTipo("REABASTECER");
+                    record.setProductoNombre(pm.getProduct().getName());
+                    record.setCantidad(pm.getQuantity());
+                    record.setPrecioCompra(pm.getUnitPrice());
+                    record.setTotal(pm.getSubtotal());
+                    record.setProveedorNombre(invoice.getSupplier() != null ? invoice.getSupplier().getName() : "");
+                    records.add(record);
+                }
+            }
+        }
+        return records;
     }
 
-    @Lock(LockType.READ)
     public List<PurchaseInvoice> getPurchaseInvoices() {
-        return new ArrayList<>(purchaseInvoices);
+        return crudGenericService.findWithQuery("SELECT i FROM PurchaseInvoice i ORDER BY i.invoiceDate DESC");
     }
 
-    @Lock(LockType.READ)
     public double getTotalPurchases() {
-        return purchaseHistory.stream()
-                .mapToDouble(PurchaseRecord::getTotal)
+        List<PurchaseInvoice> invoices = getPurchaseInvoices();
+        return invoices.stream()
+                .mapToDouble(PurchaseInvoice::getTotal)
                 .sum();
     }
 

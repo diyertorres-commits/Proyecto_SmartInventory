@@ -1,27 +1,27 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.ejb.Lock;
-import jakarta.ejb.LockType;
-import jakarta.ejb.Singleton;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
+import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
+import unl.edu.cc.rest.jbrew.domain.Ajuste;
 
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Date;
+import java.util.logging.Logger;
 
-@Singleton
+@Stateless
 public class AjusteService {
 
-    private final List<Ajuste> ajustes = new ArrayList<>();
-    private int contadorAjustes = 1;
+    private static final Logger LOGGER = Logger.getLogger(AjusteService.class.getName());
 
-    @Lock(LockType.WRITE)
+    @Inject
+    private CrudGenericService crudGenericService;
+
     public Ajuste registrarAjuste(String productoNombre, String tipoAjuste, String operacion,
                                   int cantidad, int stockAnterior, int stockNuevo,
                                   String motivo, String responsable) {
         Ajuste ajuste = new Ajuste(
-                contadorAjustes++,
+                getNextAjusteId(),
                 new Date(),
                 productoNombre,
                 tipoAjuste,
@@ -32,77 +32,24 @@ public class AjusteService {
                 motivo,
                 responsable
         );
-        ajustes.add(ajuste);
+        crudGenericService.create(ajuste);
         return ajuste;
     }
 
-    @Lock(LockType.WRITE)
     public void eliminarAjuste(Ajuste ajuste) {
-        ajustes.remove(ajuste);
+        crudGenericService.delete(Ajuste.class, ajuste.getId());
     }
 
-    @Lock(LockType.READ)
     public List<Ajuste> obtenerAjustes() {
-        return new ArrayList<>(ajustes);
+        return crudGenericService.findWithQuery("SELECT a FROM Ajuste a ORDER BY a.fecha DESC");
     }
 
-    public static class Ajuste implements Serializable {
-        private final int id;
-        private final Date fecha;
-        private final String productoNombre;
-        private final String tipoAjuste;
-        private final String operacion;
-        private final int cantidad;
-        private final int stockAnterior;
-        private final int stockNuevo;
-        private final String motivo;
-        private final String responsable;
-
-        private final transient SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-
-        public Ajuste(int id, Date fecha, String productoNombre, String tipoAjuste, String operacion,
-                      int cantidad, int stockAnterior, int stockNuevo, String motivo, String responsable) {
-            this.id = id;
-            this.fecha = fecha;
-            this.productoNombre = productoNombre;
-            this.tipoAjuste = tipoAjuste;
-            this.operacion = operacion;
-            this.cantidad = cantidad;
-            this.stockAnterior = stockAnterior;
-            this.stockNuevo = stockNuevo;
-            this.motivo = motivo;
-            this.responsable = responsable;
+    private int getNextAjusteId() {
+        // Obtener el último ID de ajuste de la base de datos
+        List<Ajuste> ajustes = crudGenericService.findWithQuery("SELECT a FROM Ajuste a ORDER BY a.id DESC");
+        if (ajustes.isEmpty()) {
+            return 1;
         }
-
-        public String getFechaTexto() {
-            return new SimpleDateFormat("dd/MM/yyyy HH:mm").format(fecha);
-        }
-
-        public String getTipoCss() {
-            switch (tipoAjuste) {
-                case "merma":
-                case "robo":
-                case "dano":
-                case "vencimiento":
-                    return "status-agotado";
-                case "error":
-                case "manual":
-                    return "status-bajo";
-                default:
-                    return "status-disponible";
-            }
-        }
-
-        // Getters
-        public int getId() { return id; }
-        public Date getFecha() { return fecha; }
-        public String getProductoNombre() { return productoNombre; }
-        public String getTipoAjuste() { return tipoAjuste; }
-        public String getOperacion() { return operacion; }
-        public int getCantidad() { return cantidad; }
-        public int getStockAnterior() { return stockAnterior; }
-        public int getStockNuevo() { return stockNuevo; }
-        public String getMotivo() { return motivo; }
-        public String getResponsable() { return responsable; }
+        return ajustes.get(0).getIdAjuste() + 1;
     }
 }

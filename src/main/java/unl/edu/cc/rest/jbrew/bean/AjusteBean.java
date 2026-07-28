@@ -7,8 +7,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.PrimeFaces;
 import unl.edu.cc.rest.jbrew.business.AjusteService;
-import unl.edu.cc.rest.jbrew.business.AjusteService.Ajuste;
 import unl.edu.cc.rest.jbrew.business.InventoryService;
+import unl.edu.cc.rest.jbrew.domain.Ajuste;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 
 import java.io.Serializable;

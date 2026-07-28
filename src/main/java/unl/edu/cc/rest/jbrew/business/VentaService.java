@@ -1,9 +1,8 @@
 package unl.edu.cc.rest.jbrew.business;
 
-import jakarta.ejb.Lock;
-import jakarta.ejb.LockType;
-import jakarta.ejb.Singleton;
+import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
+import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Movements.Movement;
@@ -12,14 +11,12 @@ import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.Sales.Carrito;
 import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-@Singleton
+@Stateless
 public class VentaService {
 
     private static final double TASA_IVA = 0.12;
@@ -27,10 +24,9 @@ public class VentaService {
     @Inject
     private InventoryService inventoryService;
 
-    private final List<SaleInvoice> facturas = new ArrayList<>();
-    private int contadorFacturas = 1;
+    @Inject
+    private CrudGenericService crudGenericService;
 
-    @Lock(LockType.WRITE)
     public ResultadoVenta registrarVenta(Carrito carrito, Customer cliente, String metodoPago, double descuento) {
         if (carrito == null || carrito.estaVacio()) {
             return ResultadoVenta.error("El carrito está vacío");
@@ -44,21 +40,33 @@ public class VentaService {
         Movement movimiento = construirMovimientoDeSalida(carrito, metodoPago);
         movimiento.processMovement();
 
+        // Guardar movement en base de datos
+        crudGenericService.create(movimiento);
+
+        // Actualizar productos en base de datos
+        for (ItemCarrito item : carrito.getItems()) {
+            Optional<Product> productoOpt = inventoryService.findProductById(item.getProductoId());
+            if (productoOpt.isPresent()) {
+                inventoryService.saveProduct(productoOpt.get());
+            }
+        }
+
         SaleInvoice factura = construirFactura(movimiento, cliente, metodoPago, descuento);
-        facturas.add(factura);
+        
+        // Guardar factura en base de datos
+        crudGenericService.create(factura);
+        
         carrito.vaciar();
 
         return ResultadoVenta.exito("Venta completada. Factura #" + factura.getInvoiceNumber() + " generada", factura);
     }
 
-    @Lock(LockType.READ)
     public List<SaleInvoice> obtenerFacturas() {
         return obtenerFacturas("recientes");
     }
 
-    @Lock(LockType.READ)
     public List<SaleInvoice> obtenerFacturas(String orden) {
-        List<SaleInvoice> resultado = new ArrayList<>(facturas);
+        List<SaleInvoice> resultado = crudGenericService.findWithQuery("SELECT i FROM SaleInvoice i");
         if ("antiguos".equals(orden)) {
             resultado.sort(Comparator.comparing(SaleInvoice::getInvoiceDate));
         } else {
@@ -82,7 +90,7 @@ public class VentaService {
 
     private Movement construirMovimientoDeSalida(Carrito carrito, String metodoPago) {
         Movement movimiento = new Movement(
-                facturas.size() + 1, // TODO: reemplazar por secuencia real de base de datos
+                getNextMovementId(),
                 MovementType.EXIT,
                 new Date(),
                 "Venta - " + metodoPago
@@ -95,9 +103,27 @@ public class VentaService {
         return movimiento;
     }
 
+    private int getNextMovementId() {
+        // Obtener el último ID de movement de la base de datos
+        List<Movement> movements = crudGenericService.findWithQuery("SELECT m FROM Movement m ORDER BY m.id DESC");
+        if (movements.isEmpty()) {
+            return 1;
+        }
+        return movements.get(0).getIdMovement() + 1;
+    }
+
+    private int getNextInvoiceId() {
+        // Obtener el último ID de factura de venta de la base de datos
+        List<SaleInvoice> invoices = crudGenericService.findWithQuery("SELECT i FROM SaleInvoice i ORDER BY i.id DESC");
+        if (invoices.isEmpty()) {
+            return 1;
+        }
+        return invoices.get(0).getIdInvoice() + 1;
+    }
+
     private SaleInvoice construirFactura(Movement movimiento, Customer cliente, String metodoPago, double descuento) {
         SaleInvoice factura = new SaleInvoice();
-        factura.setIdInvoice(contadorFacturas++);
+        factura.setIdInvoice(getNextInvoiceId());
         factura.setInvoiceDate(new Date());
         factura.setInvoiceNumber("FAC-" + String.format("%06d", factura.getIdInvoice()));
         factura.setPaymentMethod(metodoPago);
