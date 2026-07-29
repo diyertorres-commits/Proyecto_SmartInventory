@@ -60,6 +60,8 @@ public class ProductoBean implements Serializable {
             product.getStock(),
             product.getMinStock()
         );
+        // Copiar el ID de JPA para que merge() funcione correctamente
+        this.selectedProduct.setId(product.getId());
     }
     
     public void editar(Product product) {

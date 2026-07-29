@@ -25,7 +25,6 @@
                     </p:inputText>
 
                     <p:commandButton icon="pi pi-search" title="Buscar" action="#{clienteBean.search()}" update="tablaClientes" />
-                    <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda" action="#{clienteBean.clearSearch()}" update="customersForm" />
                     <p:commandButton value="Nuevo Cliente" icon="pi pi-plus"
                                      action="#{clienteBean.prepareNewCustomer()}"
                                      process="@this"
@@ -42,11 +41,11 @@
                              rows="10" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
 
-                    <p:column headerText="DNI/CI" width="15%" filterBy="#{cli.identificationNumber}" filterMatchMode="contains" filterMaxLength="10" filterPlaceholder="Porfavor introduzca su DNI o CI">
+                    <p:column headerText="DNI/CI" width="15%">
                         <h:outputText value="#{cli.identificationNumber}" />
                     </p:column>
 
-                    <p:column headerText="Cliente" width="25%" filterBy="#{cli.name}" filterMatchMode="contains">
+                    <p:column headerText="Cliente" width="25%">
                         <div style="font-weight:600;color:var(--si-text-primary);">#{cli.name} #{cli.apellido}</div>
                         <div style="font-size:0.8rem;color:var(--si-text-secondary);">#{cli.empresa}</div>
                     </p:column>
@@ -120,7 +119,7 @@
                                      placeholder="Ingrese cédula (10 dígitos)"
                                      maxlength="10"
                                      style="width:100%">
-                            <p:keyFilter regEx="/[0-9]/" />
+                            <p:keyFilter regEx="/[0-9]/" preventPaste="false" />
                             <p:ajax event="blur"
                                     listener="#{clienteBean.validatorCedula}"
                                     update="msgClienteForm"

@@ -109,7 +109,7 @@ public class ProveedorBean implements Serializable {
                 return null;
             }
 
-            String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
             if (!email.matches(emailRegex)) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "El correo electrónico no tiene un formato válido."));
@@ -168,7 +168,10 @@ public class ProveedorBean implements Serializable {
             suma += digito;
         }
 
-        int verificador = (10 - (suma % 10)) % 10;
+        int verificador = 10 - (suma % 10);
+        if (verificador == 10) {
+            verificador = 0;
+        }
 
         return verificador == Character.getNumericValue(cedula.charAt(9));
     }
@@ -240,7 +243,11 @@ public class ProveedorBean implements Serializable {
         }
     }
 
-    public void validatorEmail(String email) {
+    private static final String REGEX_EMAIL = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+
+    public void validatorEmail() {
+        String email = selectedSupplier.getEmail();
+
         if (email == null || email.isBlank()) {
             FacesContext.getCurrentInstance().addMessage(
                     null,
@@ -253,8 +260,10 @@ public class ProveedorBean implements Serializable {
             return;
         }
 
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        if (!email.matches(emailRegex)) {
+        email = email.trim();
+        selectedSupplier.setEmail(email);
+
+        if (!email.matches(REGEX_EMAIL)) {
             FacesContext.getCurrentInstance().addMessage(
                     null,
                     new FacesMessage(
@@ -263,7 +272,17 @@ public class ProveedorBean implements Serializable {
                             "El correo electrónico no tiene un formato válido."
                     )
             );
+            return;
         }
+
+        FacesContext.getCurrentInstance().addMessage(
+                null,
+                new FacesMessage(
+                        FacesMessage.SEVERITY_INFO,
+                        "Correcto",
+                        "Correo electrónico válido."
+                )
+        );
     }
 
     public String guardar() {

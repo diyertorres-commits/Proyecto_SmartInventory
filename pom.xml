@@ -105,12 +105,6 @@
                 <version>${liberty-plugin.version}</version>
             </plugin>
 
-            <!--
-                Copia el driver PostgreSQL al directorio de recursos compartidos de Liberty
-                (${shared.resource.dir}/postgres/) para que el server.xml pueda referenciarlo
-                en la definición del <library id="postgresLib">.
-                Se ejecuta en la fase process-resources para que esté disponible antes de compilar
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

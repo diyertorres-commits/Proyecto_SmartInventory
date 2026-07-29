@@ -161,10 +161,21 @@ public class CompraBean implements Serializable {
         return productoAReabastecer != null ? productoAReabastecer.getIdProduct() : null;
     }
 
+    public Product getProductoAReabastecer() {
+        return productoAReabastecer;
+    }
+
     public void setProductoId(Integer idProducto) {
         productoAReabastecer = (idProducto == null)
                 ? null
                 : inventoryFacade.findProductById(idProducto).orElse(null);
+        
+        // Cargar el precio de compra actual del producto seleccionado
+        if (productoAReabastecer != null) {
+            this.precioCompra = productoAReabastecer.getPurchasePrice();
+        } else {
+            this.precioCompra = 0;
+        }
     }
 
     public int getCantidad() {

@@ -2,7 +2,8 @@ package unl.edu.cc.rest.jbrew.business;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
+import unl.edu.cc.rest.jbrew.dao.SaleInvoiceDAO;
+import unl.edu.cc.rest.jbrew.dao.MovementDAO;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Movements.Movement;
@@ -25,7 +26,10 @@ public class VentaService {
     private InventoryService inventoryService;
 
     @Inject
-    private CrudGenericService crudGenericService;
+    private SaleInvoiceDAO saleInvoiceDAO;
+
+    @Inject
+    private MovementDAO movementDAO;
 
     public ResultadoVenta registrarVenta(Carrito carrito, Customer cliente, String metodoPago, double descuento) {
         if (carrito == null || carrito.estaVacio()) {
@@ -41,7 +45,7 @@ public class VentaService {
         movimiento.processMovement();
 
         // Guardar movement en base de datos
-        crudGenericService.create(movimiento);
+        movementDAO.save(movimiento);
 
         // Actualizar productos en base de datos
         for (ItemCarrito item : carrito.getItems()) {
@@ -54,7 +58,7 @@ public class VentaService {
         SaleInvoice factura = construirFactura(movimiento, cliente, metodoPago, descuento);
         
         // Guardar factura en base de datos
-        crudGenericService.create(factura);
+        saleInvoiceDAO.save(factura);
         
         carrito.vaciar();
 
@@ -66,7 +70,7 @@ public class VentaService {
     }
 
     public List<SaleInvoice> obtenerFacturas(String orden) {
-        List<SaleInvoice> resultado = crudGenericService.findWithQuery("SELECT i FROM SaleInvoice i");
+        List<SaleInvoice> resultado = saleInvoiceDAO.findAll();
         if ("antiguos".equals(orden)) {
             resultado.sort(Comparator.comparing(SaleInvoice::getInvoiceDate));
         } else {
@@ -105,20 +109,23 @@ public class VentaService {
 
     private int getNextMovementId() {
         // Obtener el último ID de movement de la base de datos
-        List<Movement> movements = crudGenericService.findWithQuery("SELECT m FROM Movement m ORDER BY m.id DESC");
-        if (movements.isEmpty()) {
+        Movement lastMovement = movementDAO.findLastMovement();
+        if (lastMovement == null) {
             return 1;
         }
-        return movements.get(0).getIdMovement() + 1;
+        return lastMovement.getIdMovement() + 1;
     }
 
     private int getNextInvoiceId() {
         // Obtener el último ID de factura de venta de la base de datos
-        List<SaleInvoice> invoices = crudGenericService.findWithQuery("SELECT i FROM SaleInvoice i ORDER BY i.id DESC");
+        List<SaleInvoice> invoices = saleInvoiceDAO.findAll();
         if (invoices.isEmpty()) {
             return 1;
         }
-        return invoices.get(0).getIdInvoice() + 1;
+        return invoices.stream()
+                .max(Comparator.comparing(SaleInvoice::getId))
+                .map(SaleInvoice::getIdInvoice)
+                .orElse(0) + 1;
     }
 
     private SaleInvoice construirFactura(Movement movimiento, Customer cliente, String metodoPago, double descuento) {

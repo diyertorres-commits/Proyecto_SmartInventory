@@ -2,7 +2,8 @@ package unl.edu.cc.rest.jbrew.business;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
+import unl.edu.cc.rest.jbrew.dao.PurchaseInvoiceDAO;
+import unl.edu.cc.rest.jbrew.dao.MovementDAO;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductNameException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductStockException;
@@ -13,6 +14,7 @@ import unl.edu.cc.rest.jbrew.domain.Movements.MovementType;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +29,10 @@ public class PurchaseService {
     private InventoryService inventoryService;
 
     @Inject
-    private CrudGenericService crudGenericService;
+    private PurchaseInvoiceDAO purchaseInvoiceDAO;
+
+    @Inject
+    private MovementDAO movementDAO;
 
     public PurchaseResult processRestockPurchase(Product product, int quantity, double purchasePrice, Supplier supplier) {
         if (supplier == null) {
@@ -41,7 +46,14 @@ public class PurchaseService {
 
         Product existingProduct = productOpt.get();
         try {
-            existingProduct.setPurchasePrice(purchasePrice);
+            // Calcular precio promedio ponderado (WAC - Weighted Average Cost)
+            double precioAnterior = existingProduct.getPurchasePrice();
+            int stockActual = existingProduct.getStock();
+            
+            // Fórmula WAC: (Stock actual × Precio anterior + Cantidad nueva × Nuevo precio) / (Stock actual + Cantidad nueva)
+            double nuevoPrecioPromedio = ((stockActual * precioAnterior) + (quantity * purchasePrice)) / (stockActual + quantity);
+            
+            existingProduct.setPurchasePrice(nuevoPrecioPromedio);
 
             Movement movimiento = new Movement(
                     getNextMovementId(),
@@ -53,7 +65,7 @@ public class PurchaseService {
             movimiento.processMovement(); // aumenta stock real y registra Kardex
 
             // Guardar movement en base de datos
-            crudGenericService.create(movimiento);
+            movementDAO.save(movimiento);
 
             // Actualizar producto en base de datos
             inventoryService.saveProduct(existingProduct);
@@ -61,12 +73,18 @@ public class PurchaseService {
             PurchaseInvoice invoice = createPurchaseInvoice(supplier);
             invoice.setMovement(movimiento);
             invoice.generateInvoice(); // total = movimiento.calculateTotal()
-            
+
             // Guardar factura en base de datos
-            crudGenericService.create(invoice);
+            purchaseInvoiceDAO.save(invoice);
 
             PurchaseRecord record = createPurchaseRecord("REABASTECER", existingProduct, quantity, purchasePrice, supplier);
-            return new PurchaseResult(true, "Stock reabastecido correctamente. Factura #" + invoice.getInvoiceNumber() + " generada", record, invoice);
+            record.setPrecioAnterior(precioAnterior);
+            record.setPrecioPromedio(nuevoPrecioPromedio);
+            
+            String mensaje = String.format("Stock reabastecido correctamente. Precio promedio actualizado: $%.2f (Anterior: $%.2f, Nuevo: $%.2f). Factura #%s generada", 
+                nuevoPrecioPromedio, precioAnterior, purchasePrice, invoice.getInvoiceNumber());
+            
+            return new PurchaseResult(true, mensaje, record, invoice);
         } catch (InvalidProductStockException | InvalidProductPriceException e) {
             return new PurchaseResult(false, "Error de validación: " + e.getMessage(), null, null);
         }
@@ -90,9 +108,9 @@ public class PurchaseService {
             // Sin Movement aquí: el stock inicial ya se fijó al crear el
             // producto, así que el total se calcula directamente.
             invoice.setTotal(newProduct.getStock() * newProduct.getPurchasePrice());
-            
+
             // Guardar factura en base de datos
-            crudGenericService.create(invoice);
+            purchaseInvoiceDAO.save(invoice);
 
             PurchaseRecord record = createPurchaseRecord("ADQUIRIR", newProduct, newProduct.getStock(), newProduct.getPurchasePrice(), supplier);
             return new PurchaseResult(true, "Nuevo producto adquirido correctamente. Factura #" + invoice.getInvoiceNumber() + " generada", record, invoice);
@@ -103,20 +121,23 @@ public class PurchaseService {
 
     private int getNextMovementId() {
         // Obtener el último ID de movement de la base de datos
-        List<Movement> movements = crudGenericService.findWithQuery("SELECT m FROM Movement m ORDER BY m.id DESC");
-        if (movements.isEmpty()) {
+        Movement lastMovement = movementDAO.findLastMovement();
+        if (lastMovement == null) {
             return 1;
         }
-        return movements.get(0).getIdMovement() + 1;
+        return lastMovement.getIdMovement() + 1;
     }
 
     private int getNextInvoiceId() {
         // Obtener el último ID de factura de compra de la base de datos
-        List<PurchaseInvoice> invoices = crudGenericService.findWithQuery("SELECT i FROM PurchaseInvoice i ORDER BY i.id DESC");
+        List<PurchaseInvoice> invoices = purchaseInvoiceDAO.findAll();
         if (invoices.isEmpty()) {
             return 1;
         }
-        return invoices.get(0).getIdInvoice() + 1;
+        return invoices.stream()
+                .max(Comparator.comparing(PurchaseInvoice::getId))
+                .map(PurchaseInvoice::getIdInvoice)
+                .orElse(0) + 1;
     }
 
     private PurchaseRecord createPurchaseRecord(String type, Product product, int quantity, double purchasePrice, Supplier supplier) {
@@ -151,9 +172,10 @@ public class PurchaseService {
 
     public List<PurchaseRecord> getPurchaseHistory() {
         // Generar registros de compra desde las facturas en base de datos
-        List<PurchaseInvoice> invoices = crudGenericService.findWithQuery("SELECT i FROM PurchaseInvoice i ORDER BY i.invoiceDate DESC");
+        List<PurchaseInvoice> invoices = purchaseInvoiceDAO.findAll();
+        invoices.sort(Comparator.comparing(PurchaseInvoice::getInvoiceDate).reversed());
         List<PurchaseRecord> records = new ArrayList<>();
-        
+
         for (PurchaseInvoice invoice : invoices) {
             if (invoice.getMovement() != null) {
                 for (var pm : invoice.getMovement().getProductMovementList()) {
@@ -174,7 +196,9 @@ public class PurchaseService {
     }
 
     public List<PurchaseInvoice> getPurchaseInvoices() {
-        return crudGenericService.findWithQuery("SELECT i FROM PurchaseInvoice i ORDER BY i.invoiceDate DESC");
+        List<PurchaseInvoice> invoices = purchaseInvoiceDAO.findAll();
+        invoices.sort(Comparator.comparing(PurchaseInvoice::getInvoiceDate).reversed());
+        return invoices;
     }
 
     public double getTotalPurchases() {
@@ -192,6 +216,8 @@ public class PurchaseService {
         private String productoNombre;
         private int cantidad;
         private double precioCompra;
+        private double precioAnterior;
+        private double precioPromedio;
         private double total;
         private String proveedorNombre;
 
@@ -212,6 +238,12 @@ public class PurchaseService {
 
         public double getPrecioCompra() { return precioCompra; }
         public void setPrecioCompra(double precioCompra) { this.precioCompra = precioCompra; }
+
+        public double getPrecioAnterior() { return precioAnterior; }
+        public void setPrecioAnterior(double precioAnterior) { this.precioAnterior = precioAnterior; }
+
+        public double getPrecioPromedio() { return precioPromedio; }
+        public void setPrecioPromedio(double precioPromedio) { this.precioPromedio = precioPromedio; }
 
         public double getTotal() { return total; }
         public void setTotal(double total) { this.total = total; }

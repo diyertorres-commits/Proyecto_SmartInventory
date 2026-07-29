@@ -67,7 +67,7 @@ public class ClienteBean implements Serializable {
                 return null;
             }
 
-            if (!email.matches(regex)) {
+            if (!email.matches(REGEX_EMAIL)) {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "El correo electrónico no tiene un formato válido."));
                 return null;
@@ -158,9 +158,11 @@ public class ClienteBean implements Serializable {
     }
 
 
-    static String regex ="^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+    private static final String REGEX_EMAIL = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
-    public void validatorEmail(@NotNull @NotEmpty String email){
+    public void validatorEmail() {
+        String email = selectedCustomer.getEmail();
+
         if (email == null || email.isBlank()) {
             FacesContext.getCurrentInstance().addMessage(
                     null,
@@ -173,7 +175,10 @@ public class ClienteBean implements Serializable {
             return;
         }
 
-        if (!email.matches(regex)) {
+        email = email.trim();
+        selectedCustomer.setEmail(email);
+
+        if (!email.matches(REGEX_EMAIL)) {
             FacesContext.getCurrentInstance().addMessage(
                     null,
                     new FacesMessage(
@@ -182,8 +187,17 @@ public class ClienteBean implements Serializable {
                             "El correo electrónico no tiene un formato válido."
                     )
             );
+            return;
         }
 
+        FacesContext.getCurrentInstance().addMessage(
+                null,
+                new FacesMessage(
+                        FacesMessage.SEVERITY_INFO,
+                        "Correcto",
+                        "Correo electrónico válido."
+                )
+        );
     }
     public static boolean validarCedula(@NotNull @NotEmpty String cedula) {
 
@@ -214,7 +228,7 @@ public class ClienteBean implements Serializable {
 
             int digito = Character.getNumericValue(cedula.charAt(i));
 
-            if (i % 2 == 0) { // posiciones 1,3,5,7,9
+            if (i % 2 == 0) { // índices pares (0,2,4,6,8) = posiciones impares (1,3,5,7,9)
                 digito *= 2;
 
                 if (digito > 9) {
@@ -225,7 +239,10 @@ public class ClienteBean implements Serializable {
             suma += digito;
         }
 
-        int verificador = (10 - (suma % 10)) % 10;
+        int verificador = 10 - (suma % 10);
+        if (verificador == 10) {
+            verificador = 0;
+        }
 
         return verificador == Character.getNumericValue(cedula.charAt(9));
     }

@@ -66,6 +66,9 @@ public class ReporteBean implements Serializable {
     }
 
     public void generarReporte() {
+        System.out.println("=== INICIANDO GENERACIÓN DE REPORTE ===");
+        System.out.println("Tipo de reporte: " + tipoReporte);
+        
         datosReporte = new ArrayList<>();
         totalVentas = 0;
         ganancia = 0;
@@ -73,19 +76,29 @@ public class ReporteBean implements Serializable {
         margenPromedio = 0;
 
         if ("ventas".equals(tipoReporte)) {
+            System.out.println("Generando reporte de ventas...");
             generarReporteVentas();
         } else if ("compras".equals(tipoReporte)) {
+            System.out.println("Generando reporte de compras...");
             generarReporteCompras();
         } else if ("rotacion".equals(tipoReporte)) {
+            System.out.println("Generando reporte de rotación...");
             generarReporteRotacion();
         } else if ("stockBajo".equals(tipoReporte)) {
+            System.out.println("Generando reporte de stock bajo...");
             generarReporteStockBajo();
         } else if ("ganancias".equals(tipoReporte)) {
+            System.out.println("Generando reporte de ganancias...");
             generarReporteGanancias();
         } else if ("ventasCliente".equals(tipoReporte)) {
+            System.out.println("Generando reporte de ventas por cliente...");
             generarReporteVentasCliente();
         }
 
+        System.out.println("Total ventas: " + totalVentas);
+        System.out.println("Total transacciones: " + totalTransacciones);
+        System.out.println("Datos reporte: " + datosReporte.size());
+        
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Reporte Generado", "El reporte se ha generado correctamente"));
     }
@@ -95,7 +108,16 @@ public class ReporteBean implements Serializable {
     }
 
     private void generarReporteVentas() {
-        for (SaleInvoice factura : ventaService.obtenerFacturas()) {
+        List<SaleInvoice> facturas = ventaService.obtenerFacturas();
+        System.out.println("Facturas encontradas: " + facturas.size());
+        
+        if (facturas.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Sin Datos", "No hay facturas de ventas registradas. Realice ventas primero para generar este reporte."));
+            return;
+        }
+        
+        for (SaleInvoice factura : facturas) {
             String tercero = factura.getCustomer() != null ? factura.getCustomer().getName() : "Cliente Mostrador";
 
             if (factura.getMovement() == null) {
@@ -121,6 +143,14 @@ public class ReporteBean implements Serializable {
     }
 
     private void generarReporteCompras() {
+        List<PurchaseInvoice> facturas = purchaseService.getPurchaseInvoices();
+        
+        if (facturas.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Sin Datos", "No hay facturas de compras registradas. Realice compras primero para generar este reporte."));
+            return;
+        }
+        
         // TODO: idealmente esto también debería desglosarse por línea de
         // producto comprado, igual que se hizo en generarReporteVentas,
         // en cuanto se comparta la estructura de PurchaseInvoice/Movement.
@@ -141,7 +171,15 @@ public class ReporteBean implements Serializable {
     }
 
     private void generarReporteRotacion() {
-        for (Product producto : inventoryService.getAllProducts()) {
+        List<Product> productos = inventoryService.getAllProducts();
+        
+        if (productos.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Sin Datos", "No hay productos registrados. Agregue productos primero para generar este reporte."));
+            return;
+        }
+        
+        for (Product producto : productos) {
             DatoReporte dato = new DatoReporte();
             dato.setDescripcion(producto.getName());
             dato.setCantidad(producto.getStock());
@@ -186,10 +224,21 @@ public class ReporteBean implements Serializable {
     }
 
     private void generarReporteGanancias() {
-        for (SaleInvoice factura : ventaService.obtenerFacturas()) {
+        List<SaleInvoice> facturas = ventaService.obtenerFacturas();
+        System.out.println("=== GENERANDO REPORTE DE GANANCIAS ===");
+        System.out.println("Facturas encontradas: " + facturas.size());
+        
+        if (facturas.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Sin Datos", "No hay facturas de ventas registradas. Realice ventas primero para generar este reporte."));
+            return;
+        }
+        
+        for (SaleInvoice factura : facturas) {
             String tercero = factura.getCustomer() != null ? factura.getCustomer().getName() : "Cliente Mostrador";
 
             if (factura.getMovement() == null) {
+                System.out.println("Factura sin movimiento: " + factura.getInvoiceNumber());
                 continue;
             }
 
@@ -205,7 +254,12 @@ public class ReporteBean implements Serializable {
                 
                 // Calcular ganancia: (precio venta - precio compra) * cantidad
                 double precioCompra = linea.getProduct().getPurchasePrice();
-                double gananciaLinea = (linea.getUnitPrice() - precioCompra) * linea.getQuantity();
+                double precioVenta = linea.getUnitPrice();
+                int cantidad = linea.getQuantity();
+                
+                System.out.println("Producto: " + linea.getProduct().getName() + " | PrecioCompra: " + precioCompra + " | PrecioVenta: " + precioVenta + " | Cantidad: " + cantidad);
+                
+                double gananciaLinea = (precioVenta - precioCompra) * cantidad;
                 dato.setGanancia(gananciaLinea);
                 datosReporte.add(dato);
 
@@ -215,6 +269,8 @@ public class ReporteBean implements Serializable {
             totalTransacciones++;
         }
         
+        System.out.println("Ganancia total calculada: " + ganancia);
+        
         // Calcular margen promedio
         if (totalVentas > 0) {
             margenPromedio = (ganancia / totalVentas) * 100;
@@ -222,6 +278,14 @@ public class ReporteBean implements Serializable {
     }
 
     private void generarReporteVentasCliente() {
+        List<SaleInvoice> facturas = ventaService.obtenerFacturas();
+        
+        if (facturas.isEmpty()) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "Sin Datos", "No hay facturas de ventas registradas. Realice ventas primero para generar este reporte."));
+            return;
+        }
+        
         // Agrupar ventas por cliente
         java.util.Map<String, java.util.Map<String, Object>> ventasPorCliente = new java.util.HashMap<>();
         

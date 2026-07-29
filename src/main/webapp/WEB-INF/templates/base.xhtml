@@ -32,6 +32,19 @@
 
         <!-- Contenido principal -->
         <div class="si-main-content">
+            <!-- Banner de alerta de stock bajo -->
+            <h:form id="alertaForm">
+                <h:panelGroup id="bannerAlerta" rendered="#{alertaStockBean.mostrarBanner and not alertaStockBean.bannerCerrado}" 
+                             style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.75rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1rem; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="pi pi-exclamation-triangle" style="font-size: 1rem;" />
+                        <span style="font-weight: 600; font-size: 0.85rem;">#{alertaStockBean.cantidadAlertas} productos con stock bajo</span>
+                    </div>
+                    <p:commandButton icon="pi pi-times" action="#{alertaStockBean.cerrarBanner()}" update="alertaForm" ajax="true" process="@this"
+                                   style="background: transparent; border: none; color: white; font-size: 1rem; cursor: pointer; padding: 0.25rem;" />
+                </h:panelGroup>
+            </h:form>
+
             <!-- Contenido de cada página -->
             <div class="si-page">
                 <ui:insert name="content">

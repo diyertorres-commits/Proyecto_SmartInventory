@@ -2,7 +2,7 @@ package unl.edu.cc.rest.jbrew.business;
 
 import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
-import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
+import unl.edu.cc.rest.jbrew.dao.AjusteDAO;
 import unl.edu.cc.rest.jbrew.domain.Ajuste;
 
 import java.util.List;
@@ -15,7 +15,7 @@ public class AjusteService {
     private static final Logger LOGGER = Logger.getLogger(AjusteService.class.getName());
 
     @Inject
-    private CrudGenericService crudGenericService;
+    private AjusteDAO ajusteDAO;
 
     public Ajuste registrarAjuste(String productoNombre, String tipoAjuste, String operacion,
                                   int cantidad, int stockAnterior, int stockNuevo,
@@ -32,24 +32,24 @@ public class AjusteService {
                 motivo,
                 responsable
         );
-        crudGenericService.create(ajuste);
+        ajusteDAO.save(ajuste);
         return ajuste;
     }
 
     public void eliminarAjuste(Ajuste ajuste) {
-        crudGenericService.delete(Ajuste.class, ajuste.getId());
+        ajusteDAO.delete(ajuste);
     }
 
     public List<Ajuste> obtenerAjustes() {
-        return crudGenericService.findWithQuery("SELECT a FROM Ajuste a ORDER BY a.fecha DESC");
+        return ajusteDAO.findAllOrderByDateDesc();
     }
 
     private int getNextAjusteId() {
         // Obtener el último ID de ajuste de la base de datos
-        List<Ajuste> ajustes = crudGenericService.findWithQuery("SELECT a FROM Ajuste a ORDER BY a.id DESC");
-        if (ajustes.isEmpty()) {
+        Ajuste lastAjuste = ajusteDAO.findLastAjuste();
+        if (lastAjuste == null) {
             return 1;
         }
-        return ajustes.get(0).getIdAjuste() + 1;
+        return lastAjuste.getIdAjuste() + 1;
     }
 }

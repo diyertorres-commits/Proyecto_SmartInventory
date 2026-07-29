@@ -27,6 +27,9 @@ public class LoginBean implements Serializable {
     @Inject
     private SesionUsuario sesionUsuario;
 
+    @Inject
+    private AlertaStockBean alertaStockBean;
+
     private String username;
     private String password;
     private boolean rememberMe;
@@ -40,6 +43,10 @@ public class LoginBean implements Serializable {
         try {
             AuthenticationService.AuthenticationResult resultado = securityFacade.authenticate(username, password);
             sesionUsuario.iniciarSesion(username);
+            
+            // Verificar alertas de stock bajo al iniciar sesión
+            alertaStockBean.verificarStockBajo();
+            
             LOGGER.info("Login exitoso para usuario: " + username);
             mostrarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", resultado.getMessage());
             return "/products.xhtml?faces-redirect=true";

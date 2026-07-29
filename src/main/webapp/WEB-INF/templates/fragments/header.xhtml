@@ -17,7 +17,9 @@
             <!-- Menú de navegación -->
             <h:form id="navForm">
                 <p:menu styleClass="si-sidebar-menu">
-                    <p:menuitem value="Inventario" icon="pi pi-warehouse" outcome="/products.xhtml" />
+                    <p:menuitem id="menuInventario" value="Inventario" icon="pi pi-warehouse" outcome="/products.xhtml"
+                                styleClass="#{alertaStockBean.badgeStyleClass}"
+                                style="#{alertaStockBean.badgeInlineStyle}" />
                     <p:menuitem value="Ventas" icon="pi pi-money-bill" outcome="/sell.xhtml" />
                     <p:menuitem value="Compras" icon="pi pi-shopping-cart" outcome="/purchase.xhtml" />
 
@@ -35,6 +37,10 @@
                     <p:menuitem value="Reportes" icon="pi pi-chart-line" outcome="/reports.xhtml" />
                 </p:menu>
 
+                <!-- El badge se dibuja 100% con CSS (::after sobre .si-menu-badge),
+                     usando una custom property CSS inyectada por el bean.
+                     No requiere JS ni ningún atributo especial de p:menuitem. -->
+
                 <script type="text/javascript">
                 //<![CDATA[
                     var currentPath = window.location.pathname;
@@ -48,7 +54,6 @@
                             link.classList.add('ui-state-active');
                         }
 
-                        // Add event listeners to handle hover states
                         link.addEventListener('mouseenter', function() {
                             this.classList.add('ui-state-active');
                         });

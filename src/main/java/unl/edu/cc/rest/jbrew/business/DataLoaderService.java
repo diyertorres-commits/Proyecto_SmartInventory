@@ -6,7 +6,13 @@ import jakarta.ejb.Startup;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import unl.edu.cc.rest.jbrew.business.service.CrudGenericService;
+import unl.edu.cc.rest.jbrew.dao.CategoryDAO;
+import unl.edu.cc.rest.jbrew.dao.ProductDAO;
+import unl.edu.cc.rest.jbrew.dao.CustomerDAO;
+import unl.edu.cc.rest.jbrew.dao.SupplierDAO;
+import unl.edu.cc.rest.jbrew.dao.MovementDAO;
+import unl.edu.cc.rest.jbrew.dao.PurchaseInvoiceDAO;
+import unl.edu.cc.rest.jbrew.dao.SaleInvoiceDAO;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.PurchaseInvoice;
@@ -29,7 +35,25 @@ public class DataLoaderService {
     private EntityManager em;
 
     @Inject
-    private CrudGenericService crudGenericService;
+    private CategoryDAO categoryDAO;
+
+    @Inject
+    private ProductDAO productDAO;
+
+    @Inject
+    private CustomerDAO customerDAO;
+
+    @Inject
+    private SupplierDAO supplierDAO;
+
+    @Inject
+    private MovementDAO movementDAO;
+
+    @Inject
+    private PurchaseInvoiceDAO purchaseInvoiceDAO;
+
+    @Inject
+    private SaleInvoiceDAO saleInvoiceDAO;
 
     @PostConstruct
     public void initializeData() {
@@ -49,10 +73,10 @@ public class DataLoaderService {
             Category postres = new Category(3, "Postres");
             Category snacks = new Category(4, "Snacks");
 
-            crudGenericService.create(bebidas);
-            crudGenericService.create(alimentos);
-            crudGenericService.create(postres);
-            crudGenericService.create(snacks);
+            categoryDAO.save(bebidas);
+            categoryDAO.save(alimentos);
+            categoryDAO.save(postres);
+            categoryDAO.save(snacks);
 
             LOGGER.info("Categorías creadas: " + categoryCount);
 
@@ -63,11 +87,11 @@ public class DataLoaderService {
             Product producto4 = new Product(4, "POS-002", "Croissant", "Croissant de mantequilla", snacks, "croissant.jpg", 2.00, 0.80, 40, 15);
             Product producto5 = new Product(5, "DES-001", "Cheesecake", "Cheesecake de frutos rojos", postres, "cheesecake.jpg", 4.50, 2.00, 15, 5);
 
-            crudGenericService.create(producto1);
-            crudGenericService.create(producto2);
-            crudGenericService.create(producto3);
-            crudGenericService.create(producto4);
-            crudGenericService.create(producto5);
+            productDAO.save(producto1);
+            productDAO.save(producto2);
+            productDAO.save(producto3);
+            productDAO.save(producto4);
+            productDAO.save(producto5);
 
             LOGGER.info("Productos creados: 5");
 
@@ -75,8 +99,8 @@ public class DataLoaderService {
             Customer cliente1 = new Customer(1L, "0912345678", "Juan", "Pérez", "0991234567", "juan.perez@email.com", "Av. Principal 123", "Empresa ABC", 1000.00);
             Customer cliente2 = new Customer(2L, "0923456789", "María", "García", "0992345678", "maria.garcia@email.com", "Calle Secundaria 456", "Comercial XYZ", 500.00);
 
-            crudGenericService.create(cliente1);
-            crudGenericService.create(cliente2);
+            customerDAO.save(cliente1);
+            customerDAO.save(cliente2);
 
             LOGGER.info("Clientes creados: 2");
 
@@ -84,8 +108,8 @@ public class DataLoaderService {
             Supplier proveedor1 = new Supplier(1L, "1712345678001", "Distribuidora Central", "Distribuidora Central S.A.", "Carlos Rodríguez", "022345678", "central@distribuidora.com", "Av. Industrial 789");
             Supplier proveedor2 = new Supplier(2L, "1723456789001", "Proveedores del Sur", "Proveedores del Sur Ltda.", "Ana Martínez", "022345679", "sur@proveedores.com", "Calle Comercial 321");
 
-            crudGenericService.create(proveedor1);
-            crudGenericService.create(proveedor2);
+            supplierDAO.save(proveedor1);
+            supplierDAO.save(proveedor2);
 
             LOGGER.info("Proveedores creados: 2");
 
@@ -93,7 +117,7 @@ public class DataLoaderService {
             Movement movementCompra1 = new Movement(1, MovementType.ENTRY, new Date(), "Compra de prueba - Café Americano");
             movementCompra1.addProductMovement(producto1, 20, 1.20);
             movementCompra1.processMovement();
-            crudGenericService.create(movementCompra1);
+            movementDAO.save(movementCompra1);
 
             PurchaseInvoice purchaseInvoice1 = new PurchaseInvoice();
             purchaseInvoice1.setIdInvoice(1);
@@ -103,12 +127,12 @@ public class DataLoaderService {
             purchaseInvoice1.setSupplier(proveedor1);
             purchaseInvoice1.setMovement(movementCompra1);
             purchaseInvoice1.generateInvoice();
-            crudGenericService.create(purchaseInvoice1);
+            purchaseInvoiceDAO.save(purchaseInvoice1);
 
             Movement movementCompra2 = new Movement(2, MovementType.ENTRY, new Date(), "Compra de prueba - Cappuccino");
             movementCompra2.addProductMovement(producto2, 15, 1.80);
             movementCompra2.processMovement();
-            crudGenericService.create(movementCompra2);
+            movementDAO.save(movementCompra2);
 
             PurchaseInvoice purchaseInvoice2 = new PurchaseInvoice();
             purchaseInvoice2.setIdInvoice(2);
@@ -118,7 +142,7 @@ public class DataLoaderService {
             purchaseInvoice2.setSupplier(proveedor2);
             purchaseInvoice2.setMovement(movementCompra2);
             purchaseInvoice2.generateInvoice();
-            crudGenericService.create(purchaseInvoice2);
+            purchaseInvoiceDAO.save(purchaseInvoice2);
 
             LOGGER.info("Compras de prueba creadas: 2");
 
@@ -126,7 +150,7 @@ public class DataLoaderService {
             Movement movementVenta1 = new Movement(3, MovementType.EXIT, new Date(), "Venta de prueba - Café Americano");
             movementVenta1.addProductMovement(producto1, 5, 2.50);
             movementVenta1.processMovement();
-            crudGenericService.create(movementVenta1);
+            movementDAO.save(movementVenta1);
 
             SaleInvoice saleInvoice1 = new SaleInvoice();
             saleInvoice1.setIdInvoice(1);
@@ -140,12 +164,12 @@ public class DataLoaderService {
             saleInvoice1.setTax(saleInvoice1.getTotal() * 0.12);
             saleInvoice1.setDiscount(0);
             saleInvoice1.setTotal(saleInvoice1.getSubtotal() + saleInvoice1.getTax());
-            crudGenericService.create(saleInvoice1);
+            saleInvoiceDAO.save(saleInvoice1);
 
             Movement movementVenta2 = new Movement(4, MovementType.EXIT, new Date(), "Venta de prueba - Cappuccino");
             movementVenta2.addProductMovement(producto2, 3, 3.50);
             movementVenta2.processMovement();
-            crudGenericService.create(movementVenta2);
+            movementDAO.save(movementVenta2);
 
             SaleInvoice saleInvoice2 = new SaleInvoice();
             saleInvoice2.setIdInvoice(2);
@@ -159,7 +183,7 @@ public class DataLoaderService {
             saleInvoice2.setTax(saleInvoice2.getTotal() * 0.12);
             saleInvoice2.setDiscount(0);
             saleInvoice2.setTotal(saleInvoice2.getSubtotal() + saleInvoice2.getTax());
-            crudGenericService.create(saleInvoice2);
+            saleInvoiceDAO.save(saleInvoice2);
 
             LOGGER.info("Ventas de prueba creadas: 2");
 

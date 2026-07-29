@@ -25,7 +25,6 @@
                     </p:inputText>
 
                     <p:commandButton icon="pi pi-search" title="Buscar" action="#{proveedorBean.search()}" update="tablaProveedores" />
-                    <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda" action="#{proveedorBean.clearSearch()}" update="suppliersForm" />
                     <p:commandButton value="Nuevo Proveedor" icon="pi pi-plus"
                                      action="#{proveedorBean.prepareNewSupplier()}"
                                      process="@this"
@@ -42,11 +41,11 @@
                              rows="10" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
 
-                    <p:column headerText="RUC/DNI" width="15%" filterBy="#{prov.identificationNumber}" filterMatchMode="contains">
+                    <p:column headerText="RUC/DNI" width="15%">
                         <h:outputText value="#{prov.identificationNumber}" />
                     </p:column>
 
-                    <p:column headerText="Empresa" width="25%" filterBy="#{prov.name}" filterMatchMode="contains">
+                    <p:column headerText="Empresa" width="25%">
                         <div style="font-weight:600;color:var(--si-text-primary);">#{prov.name}</div>
                         <div style="font-size:0.8rem;color:var(--si-text-secondary);">#{prov.razonSocial}</div>
                     </p:column>
@@ -131,7 +130,7 @@
 
                         <p:outputLabel for="email" value="Email:" />
                         <p:inputText id="email" value="#{proveedorBean.proveedor.email}" placeholder="correo@empresa.com" style="width:100%">
-                            <p:ajax event="blur" listener="#{proveedorBean.validatorEmail(proveedorBean.proveedor.email)}" update="msgEmail msgProveedorForm" process="@this" />
+                            <p:ajax event="blur" listener="#{proveedorBean.validatorEmail}" update="msgEmail msgProveedorForm" process="@this" />
                         </p:inputText>
                         <p:message id="msgEmail" for="email" />
 

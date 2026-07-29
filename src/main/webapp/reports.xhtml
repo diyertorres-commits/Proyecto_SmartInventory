@@ -53,7 +53,7 @@
                 
                 <div style="margin-top:1rem;display:flex;gap:0.5rem;">
                     <p:commandButton value="Generar Reporte" icon="pi pi-search" action="#{reporteBean.generarReporte()}" 
-                                    update="reportePanel msgReportes" styleClass="p-button-rounded" />
+                                    update="reportePanel msgReportes tablaReporte kpiTotalVentas kpiGanancia kpiTransacciones kpiMargen" styleClass="p-button-rounded" />
                     <p:commandButton value="Exportar PDF" icon="pi pi-file-pdf" action="#{reporteBean.exportarPDF()}" 
                                     styleClass="p-button-rounded p-button-secondary" />
                     <p:commandButton value="Exportar Excel" icon="pi pi-file-excel" action="#{reporteBean.exportarExcel()}" 
@@ -67,7 +67,7 @@
                 
                 <!-- ===== Resumen de KPIs del reporte ===== -->
                 <div class="si-kpi-grid" style="margin-bottom:1.5rem;">
-                    <div class="si-kpi-card">
+                    <div class="si-kpi-card" id="kpiTotalVentas">
                         <span class="si-kpi-icon blue"><i class="pi pi-dollar" /></span>
                         <div>
                             <div class="si-kpi-value">
@@ -78,7 +78,7 @@
                             <div class="si-kpi-label">Total Ventas</div>
                         </div>
                     </div>
-                    <div class="si-kpi-card">
+                    <div class="si-kpi-card" id="kpiGanancia">
                         <span class="si-kpi-icon green"><i class="pi pi-chart-line" /></span>
                         <div>
                             <div class="si-kpi-value">
@@ -89,14 +89,14 @@
                             <div class="si-kpi-label">Ganancia Neta</div>
                         </div>
                     </div>
-                    <div class="si-kpi-card">
+                    <div class="si-kpi-card" id="kpiTransacciones">
                         <span class="si-kpi-icon orange"><i class="pi pi-shopping-cart" /></span>
                         <div>
                             <div class="si-kpi-value">#{reporteBean.totalTransacciones}</div>
                             <div class="si-kpi-label">Transacciones</div>
                         </div>
                     </div>
-                    <div class="si-kpi-card">
+                    <div class="si-kpi-card" id="kpiMargen">
                         <span class="si-kpi-icon purple"><i class="pi pi-percentage" /></span>
                         <div>
                             <div class="si-kpi-value">#{reporteBean.margenPromedio}%</div>
@@ -112,7 +112,9 @@
                              style="width:100%">
                     
                     <p:column headerText="Fecha">
-                        <h:outputText value="#{dato.fecha}" />
+                        <h:outputText value="#{dato.fecha}">
+                            <f:convertDateTime pattern="dd/MM/yyyy" />
+                        </h:outputText>
                     </p:column>
                     
                     <p:column headerText="Producto/Servicio">
@@ -151,28 +153,8 @@
                 </p:dataTable>
             </div>
 
-            <!-- ===== Gráficos del reporte ===== -->
-            <div class="si-section-title">
-                <i class="pi pi-chart-bar" />
-                <span>Gráficos del Reporte</span>
-            </div>
-
-            <div class="si-dash-grid">
-                <div class="si-glass-card si-chart-card">
-                    <h5><i class="pi pi-chart-bar" style="margin-right:.4rem;color:var(--si-primary);" />Ventas por Categoría</h5>
-                    <p:chart value="#{reporteBean.chartVentasCategoria}" style="height:280px" />
-                </div>
-
-                <div class="si-glass-card si-chart-card">
-                    <h5><i class="pi pi-chart-line" style="margin-right:.4rem;color:var(--si-success);" />Tendencia de Ventas</h5>
-                    <p:chart value="#{reporteBean.chartTendenciaVentas}" style="height:280px" />
-                </div>
-
-                <div class="si-glass-card si-chart-card">
-                    <h5><i class="pi pi-chart-pie" style="margin-right:.4rem;color:var(--si-accent);" />Distribución por Método de Pago</h5>
-                    <p:chart value="#{reporteBean.chartMetodosPago}" style="height:280px" />
-                </div>
-            </div>
+            <!-- Gráficos del reporte deshabilitados temporalmente -->
+            <!-- Requieren implementación de modelos de gráficos en ReporteBean -->
 
         </h:form>
 

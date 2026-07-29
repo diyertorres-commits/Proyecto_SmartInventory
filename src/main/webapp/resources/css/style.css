@@ -1,6 +1,6 @@
 /* =========================================================
    SmartInventory - estilos generales
-   Cafetería · gestión de inventario con PrimeFaces 15
+    · gestión de inventario con PrimeFaces 15
    ========================================================= */
 
 :root {
@@ -354,6 +354,41 @@ html, body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+/* Badge de alertas de stock bajo sobre el menuitem "Inventario" del sidebar */
+
+.si-sidebar-menu .si-menu-badge {
+    position: relative; /* ancla para el ::after */
+}
+
+.si-sidebar-menu .si-menu-badge::after {
+    content: var(--badge-count);
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    z-index: 2;
+}
+
+/* Banner de alerta de stock bajo */
+.si-stock-alert-banner {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    border-radius: 8px;
 }
 
 .si-user-info {
