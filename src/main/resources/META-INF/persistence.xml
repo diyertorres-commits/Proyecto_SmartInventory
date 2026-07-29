@@ -11,9 +11,11 @@
         <properties>
             <!-- 1. Configuración de generación / actualización de tablas (esquema de BD) -->
             <!-- Configuración de Jakarta persistence puede ser: none, create, drop-and-create, drop -->
+            <!-- Temporalmente create para recrear tablas con nueva columna purchase_price -->
             <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
 
             <!-- Configuración de EclipseLink values: none, drop-and-create-tables, create-tables, create-or-extend-tables -->
+            <!-- Temporalmente create-tables para recrear tablas con nueva columna purchase_price -->
             <property name="eclipselink.ddl-generation" value="create-tables"/>
 
             <!-- database = ejecuta los comandos DDL directamente en la base de datos -->

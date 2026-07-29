@@ -18,7 +18,7 @@
 
             <div class="si-form-grid">
                 <div class="si-glass-card si-form-card">
-                    <p:tabView id="panelCampos" widgetVar="wPanelCampos" activeIndex="#{compraBean.indicePestanaActiva}" dynamic="true" cache="false" style="border:none;">
+                    <p:tabView id="panelCampos" widgetVar="wPanelCampos" activeIndex="#{compraBean.indicePestanaActiva}" dynamic="true" cache="true" style="border:none;">
                         <p:ajax event="tabChange" listener="#{compraBean.alCambiarPestana}" />
                         <p:tab title="🔄 Reabastecer Producto Existente">
                             <div class="p-field">
@@ -33,7 +33,7 @@
 
                             <div class="p-field">
                                 <label for="cantidad">Cantidad a agregar</label>
-                                <p:inputNumber id="cantidad" value="#{compraBean.cantidad}" decimalPlaces="0" minValue="1" maxValue="1000" style="width:100%" />
+                                <p:inputNumber id="cantidad" widgetVar="wCantidad" value="#{compraBean.cantidad}" decimalPlaces="0" minValue="1" maxValue="1000" style="width:100%" />
                             </div>
                         </p:tab>
 
@@ -65,22 +65,17 @@
 
                             <div class="p-field">
                                 <label for="precioVenta">Precio Venta</label>
-                                <p:inputNumber id="precioVenta" value="#{compraBean.productoNuevo.salePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
+                                <p:inputNumber id="precioVenta" widgetVar="wPrecioVenta" value="#{compraBean.productoNuevo.salePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
                             </div>
 
                             <div class="p-field">
                                 <label for="stockInicial">Stock Inicial</label>
-                                <p:inputNumber id="stockInicial" value="#{compraBean.productoNuevo.stock}" decimalPlaces="0" minValue="0" maxValue="1000" style="width:100%" />
+                                <p:inputNumber id="stockInicial" widgetVar="wStockInicial" value="#{compraBean.productoNuevo.stock}" decimalPlaces="0" minValue="0" maxValue="1000" style="width:100%" />
                             </div>
 
                             <div class="p-field">
                                 <label for="stockMinimo">Stock Mínimo</label>
-                                <p:inputNumber id="stockMinimo" value="#{compraBean.productoNuevo.minStock}" decimalPlaces="0" minValue="0" style="width:100%" />
-                            </div>
-
-                            <div class="p-field">
-                                <label for="imagen">Imagen</label>
-                                <p:inputText id="imagen" value="#{compraBean.productoNuevo.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
+                                <p:inputNumber id="stockMinimo" widgetVar="wStockMinimo" value="#{compraBean.productoNuevo.minStock}" decimalPlaces="0" minValue="0" style="width:100%" />
                             </div>
                         </p:tab>
                     </p:tabView>
@@ -89,7 +84,7 @@
                         <label for="proveedor">🚚 Proveedor/Distribuidor</label>
                         <p:selectOneMenu id="proveedor" widgetVar="wProveedor" value="#{compraBean.proveedorId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Seleccionar proveedor" itemValue="#{null}" noSelectionOption="true" />
-                            <f:selectItems value="#{proveedorBean.proveedores}" var="prov"
+                            <f:selectItems value="#{proveedorBean.filteredSuppliers}" var="prov"
                                            itemLabel="#{prov.name} (#{prov.identificationNumber})" itemValue="#{prov.idSupplier}" />
                         </p:selectOneMenu>
                     </div>
@@ -97,7 +92,7 @@
                     <div class="p-field">
                         <label for="precioCompra">💰 Precio Compra Unitario</label>
                         <div style="display:flex;gap:0.5rem;align-items:center;">
-                            <p:inputNumber id="precioCompra" value="#{compraBean.precioCompra}" symbol="$" decimalPlaces="2" style="flex:1" />
+                            <p:inputNumber id="precioCompra" widgetVar="wPrecioCompra" value="#{compraBean.precioCompra}" symbol="$" decimalPlaces="2" style="flex:1" />
                             <h:panelGroup id="precioCompraAnterior" style="font-size:0.85rem;color:var(--si-text-secondary);">
                                 <h:outputText value="#{compraBean.productoAReabastecer != null ? '(Anterior: $' : ''}" />
                                 <h:outputText value="#{compraBean.productoAReabastecer != null ? compraBean.productoAReabastecer.purchasePrice : ''}">
@@ -327,7 +322,6 @@
 
             function guardarFormularioCompra() {
                 try {
-                    // El tabView antepone "panelCampos:" a sus campos hijos
                     const datos = {
                         pestanaActiva: obtenerValor('panelCampos_activeIndex') || '0',
                         productoId: obtenerValor('panelCampos:producto_input'),
@@ -338,7 +332,6 @@
                         precioVenta: obtenerValor('panelCampos:precioVenta_input'),
                         stockInicial: obtenerValor('panelCampos:stockInicial_input'),
                         stockMinimo: obtenerValor('panelCampos:stockMinimo_input'),
-                        imagen: obtenerValor('panelCampos:imagen'),
                         proveedor: obtenerValor('proveedor_input'),
                         precioCompra: obtenerValor('precioCompra_input')
                     };
@@ -355,9 +348,21 @@
 
             function establecerValor(id, valor) {
                 const el = document.getElementById(id);
-                if (el && valor) {
+                if (el && valor !== null && valor !== undefined && valor !== '') {
                     el.value = valor;
                 }
+            }
+
+            function establecerValorNumerico(id, valor) {
+                if (valor === null || valor === undefined || valor === '') return;
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                el.value = valor;
+
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+                el.dispatchEvent(new Event('blur', { bubbles: true }));
             }
 
             function seleccionarValorWidget(widgetVar, valor) {
@@ -370,43 +375,77 @@
                 }
             }
 
+            function restaurarCamposDeTexto(datos) {
+                if (datos.nombre && datos.nombre !== '') {
+                    establecerValor('panelCampos:nombre', datos.nombre);
+                }
+                if (datos.descripcion && datos.descripcion !== '') {
+                    establecerValor('panelCampos:descripcion', datos.descripcion);
+                }
+
+                // Campos numéricos: usar la función que sincroniza el widget
+                if (datos.cantidad !== undefined && datos.cantidad !== null && datos.cantidad !== '') {
+                    establecerValorNumerico('panelCampos:cantidad_input', datos.cantidad);
+                }
+                if (datos.precioVenta && datos.precioVenta !== 0 && datos.precioVenta !== '') {
+                    establecerValorNumerico('panelCampos:precioVenta_input', datos.precioVenta);
+                }
+                if (datos.stockInicial !== undefined && datos.stockInicial !== null && datos.stockInicial !== '') {
+                    establecerValorNumerico('panelCampos:stockInicial_input', datos.stockInicial);
+                }
+                if (datos.stockMinimo !== undefined && datos.stockMinimo !== null && datos.stockMinimo !== '') {
+                    establecerValorNumerico('panelCampos:stockMinimo_input', datos.stockMinimo);
+                }
+                if (datos.precioCompra && datos.precioCompra !== 0 && datos.precioCompra !== '') {
+                    establecerValorNumerico('precioCompra_input', datos.precioCompra);
+                }
+            }
+
             function restaurarFormularioCompra() {
                 try {
                     const datosStr = localStorage.getItem(CLAVE_FORMULARIO_COMPRA);
-                    if (!datosStr) return;
+                    if (!datosStr) {
+                        console.log('No hay datos guardados en localStorage');
+                        return;
+                    }
 
                     const datos = JSON.parse(datosStr);
-                    if (!datos) return;
+                    if (!datos) {
+                        console.log('Datos parseados son null');
+                        return;
+                    }
 
-                    // Restaurar pestaña vía widget de PrimeFaces, no el DOM
+                    console.log('Restaurando formulario con datos:', datos);
+
+                    // Restaurar pestaña vía widget de PrimeFaces
                     if (datos.pestanaActiva && typeof PF === 'function' && PF('wPanelCampos')) {
                         PF('wPanelCampos').select(parseInt(datos.pestanaActiva, 10));
                     }
 
-                    // Esperar a que el tabView renderice antes de setear valores
+                    // Esperar a que el tabView renderice (dynamic="true") antes
+                    // de tocar los campos de la pestaña seleccionada.
                     setTimeout(function () {
-                        seleccionarValorWidget('wProducto', datos.productoId);
-                        seleccionarValorWidget('wCategoria', datos.categoria);
-                        seleccionarValorWidget('wProveedor', datos.proveedor);
+                        if (datos.productoId && datos.productoId !== 'null') {
+                            seleccionarValorWidget('wProducto', datos.productoId);
+                        }
+                        if (datos.categoria && datos.categoria !== 'null') {
+                            seleccionarValorWidget('wCategoria', datos.categoria);
+                        }
+                        if (datos.proveedor && datos.proveedor !== 'null') {
+                            seleccionarValorWidget('wProveedor', datos.proveedor);
+                        }
 
-                        // Forzar el evento change para que dispare el p:ajax de categoría
-                        if (datos.categoria) {
+                        if (datos.categoria && datos.categoria !== 'null') {
                             const categoriaEl = document.getElementById('panelCampos:categoria_input');
                             if (categoriaEl) {
                                 categoriaEl.dispatchEvent(new Event('change', { bubbles: true }));
                             }
                         }
 
-                        establecerValor('panelCampos:cantidad_input', datos.cantidad);
-                        establecerValor('panelCampos:nombre', datos.nombre);
-                        establecerValor('panelCampos:descripcion', datos.descripcion);
-                        establecerValor('panelCampos:precioVenta_input', datos.precioVenta);
-                        establecerValor('panelCampos:stockInicial_input', datos.stockInicial);
-                        establecerValor('panelCampos:stockMinimo_input', datos.stockMinimo);
-                        establecerValor('panelCampos:imagen', datos.imagen);
+                        restaurarCamposDeTexto(datos);
 
-                        establecerValor('precioCompra_input', datos.precioCompra);
-                    }, 300);
+                        console.log('Formulario restaurado correctamente');
+                    }, 400);
                 } catch (e) {
                     console.log('Error al restaurar formulario:', e);
                 }

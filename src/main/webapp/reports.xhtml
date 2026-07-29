@@ -54,10 +54,6 @@
                 <div style="margin-top:1rem;display:flex;gap:0.5rem;">
                     <p:commandButton value="Generar Reporte" icon="pi pi-search" action="#{reporteBean.generarReporte()}" 
                                     update="reportePanel msgReportes tablaReporte kpiTotalVentas kpiGanancia kpiTransacciones kpiMargen" styleClass="p-button-rounded" />
-                    <p:commandButton value="Exportar PDF" icon="pi pi-file-pdf" action="#{reporteBean.exportarPDF()}" 
-                                    styleClass="p-button-rounded p-button-secondary" />
-                    <p:commandButton value="Exportar Excel" icon="pi pi-file-excel" action="#{reporteBean.exportarExcel()}" 
-                                    styleClass="p-button-rounded p-button-success" />
                 </div>
             </div>
 

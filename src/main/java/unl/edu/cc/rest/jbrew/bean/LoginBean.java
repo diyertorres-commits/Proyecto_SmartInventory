@@ -16,9 +16,6 @@ import java.util.logging.Logger;
 @RequestScoped
 public class LoginBean implements Serializable {
 
-    private static final int USUARIO_LONGITUD_MINIMA = 5;
-    private static final int PASSWORD_LONGITUD_MINIMA = 6;
-
     private static final Logger LOGGER = Logger.getLogger(LoginBean.class.getName());
 
     @Inject
@@ -35,10 +32,6 @@ public class LoginBean implements Serializable {
     private boolean rememberMe;
 
     public String login() {
-        if (!credencialesValidas()) {
-            return null;
-        }
-
         LOGGER.info("Intento de login para usuario: " + username);
         try {
             AuthenticationService.AuthenticationResult resultado = securityFacade.authenticate(username, password);
@@ -61,28 +54,6 @@ public class LoginBean implements Serializable {
         sesionUsuario.cerrarSesion();
         FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
         return "/login.xhtml?faces-redirect=true";
-    }
-
-    private boolean credencialesValidas() {
-        if (username == null || username.isBlank()) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "El usuario es requerido");
-            return false;
-        }
-        if (username.length() < USUARIO_LONGITUD_MINIMA) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia",
-                    "El usuario debe tener al menos " + USUARIO_LONGITUD_MINIMA + " caracteres");
-            return false;
-        }
-        if (password == null || password.isBlank()) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "La contraseña es requerida");
-            return false;
-        }
-        if (password.length() < PASSWORD_LONGITUD_MINIMA) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia",
-                    "La contraseña debe tener al menos " + PASSWORD_LONGITUD_MINIMA + " caracteres");
-            return false;
-        }
-        return true;
     }
 
     private void mostrarMensaje(FacesMessage.Severity severidad, String resumen, String detalle) {

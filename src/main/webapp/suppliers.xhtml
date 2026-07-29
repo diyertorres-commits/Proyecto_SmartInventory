@@ -21,10 +21,10 @@
                 <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
                     <p:inputText id="search" value="#{proveedorBean.searchTerm}" placeholder="Buscar por nombre, RUC o contacto"
                                  style="flex:1;min-width:250px;">
-                        <p:ajax event="keyup" listener="#{proveedorBean.search()}" update="tablaProveedores" delay="300" />
+                        <p:ajax event="keyup" listener="#{proveedorBean.searchSuppliers()}" update="tablaProveedores" delay="300" />
                     </p:inputText>
 
-                    <p:commandButton icon="pi pi-search" title="Buscar" action="#{proveedorBean.search()}" update="tablaProveedores" />
+                    <p:commandButton icon="pi pi-search" title="Buscar" action="#{proveedorBean.searchSuppliers()}" update="tablaProveedores" />
                     <p:commandButton value="Nuevo Proveedor" icon="pi pi-plus"
                                      action="#{proveedorBean.prepareNewSupplier()}"
                                      process="@this"
@@ -36,7 +36,7 @@
 
             <!-- ===== Tabla de proveedores ===== -->
             <div class="si-glass-card">
-                <p:dataTable id="tablaProveedores" value="#{proveedorBean.proveedoresFiltrados}" var="prov"
+                <p:dataTable id="tablaProveedores" value="#{proveedorBean.filteredSuppliers}" var="prov"
                              emptyMessage="No se encontraron proveedores."
                              rows="10" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
@@ -65,11 +65,11 @@
 
                     <p:column headerText="Acciones" width="10%">
                         <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button mr-2"
-                                         action="#{proveedorBean.editar(prov)}" 
+                                         action="#{proveedorBean.editSupplier(prov)}" 
                                          process="@this"
                                          update="dialogProveedor" oncomplete="PF('dialogProveedor').show()" />
                         <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="rounded-button ui-button-danger"
-                                         action="#{proveedorBean.eliminar(prov)}" 
+                                         action="#{proveedorBean.deleteSupplier(prov)}" 
                                          process="@this"
                                          update="msgProveedores tablaProveedores">
                             <p:confirm header="Confirmar eliminación"
@@ -87,7 +87,7 @@
             </p:confirmDialog>
 
             <!-- ===== Diálogo para crear/editar proveedor ===== -->
-            <p:dialog id="dialogProveedor" widgetVar="dialogProveedor" header="#{proveedorBean.proveedor.idSupplier == null ? 'Nuevo Proveedor' : 'Editar Proveedor'}"
+            <p:dialog id="dialogProveedor" widgetVar="dialogProveedor" header="#{proveedorBean.selectedSupplier.idSupplier == null ? 'Nuevo Proveedor' : 'Editar Proveedor'}"
                       modal="true" closable="true" resizable="false" width="650" showEffect="fade" hideEffect="fade"
                       style="max-height:90vh;">
 
@@ -109,33 +109,33 @@
                     <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
 
                         <p:outputLabel for="ruc" value="RUC/DNI:" />
-                        <p:inputText id="ruc" value="#{proveedorBean.proveedor.identificationNumber}" placeholder="RUC (13) o Cédula (10)" style="width:100%" maxlength="13">
-                            <p:keyFilter regEx="/[0-9]/" />
-                            <p:ajax event="blur" listener="#{proveedorBean.validatorIdentificacion}" update="msgProveedorForm" process="@this" />
+                        <p:inputText id="ruc" value="#{proveedorBean.selectedSupplier.identificationNumber}" placeholder="Cédula (10) o RUC (13)" required="true" requiredMessage="Ingrese cédula o RUC" style="width:100%" maxlength="13">
+                            <p:keyFilter regEx="/[0-9]/" preventPaste="false" />
+                            <p:ajax event="blur" listener="#{proveedorBean.validateIdentification}" update="msgProveedorForm" process="@this" />
                         </p:inputText>
 
                         <p:outputLabel for="nombre" value="Nombre Comercial:" />
-                        <p:inputText id="nombre" value="#{proveedorBean.proveedor.name}" placeholder="Nombre de la empresa" required="true" style="width:100%" />
+                        <p:inputText id="nombre" value="#{proveedorBean.selectedSupplier.name}" placeholder="Nombre de la empresa" required="true" requiredMessage="El nombre comercial es obligatorio" style="width:100%" />
 
                         <p:outputLabel for="razonSocial" value="Razón Social:" />
-                        <p:inputText id="razonSocial" value="#{proveedorBean.proveedor.razonSocial}" placeholder="Razón social completa" style="width:100%" />
+                        <p:inputText id="razonSocial" value="#{proveedorBean.selectedSupplier.razonSocial}" placeholder="Razón social completa" style="width:100%" />
 
                         <p:outputLabel for="contacto" value="Persona Contacto:" />
-                        <p:inputText id="contacto" value="#{proveedorBean.proveedor.contacto}" placeholder="Nombre del contacto" required="true" style="width:100%" />
+                        <p:inputText id="contacto" value="#{proveedorBean.selectedSupplier.contacto}" placeholder="Nombre del contacto" required="true" requiredMessage="La persona de contacto es obligatoria" style="width:100%" />
 
                         <p:outputLabel for="telefono" value="Teléfono:" />
-                        <p:inputText id="telefono" value="#{proveedorBean.proveedor.phone}" placeholder="Número de teléfono" required="true" style="width:100%" maxlength="10">
+                        <p:inputText id="telefono" value="#{proveedorBean.selectedSupplier.phone}" placeholder="Número de teléfono" required="true" requiredMessage="El teléfono es obligatorio" style="width:100%" maxlength="10">
                             <p:keyFilter regEx="/[0-9]/" />
                         </p:inputText>
 
                         <p:outputLabel for="email" value="Email:" />
-                        <p:inputText id="email" value="#{proveedorBean.proveedor.email}" placeholder="correo@empresa.com" style="width:100%">
-                            <p:ajax event="blur" listener="#{proveedorBean.validatorEmail}" update="msgEmail msgProveedorForm" process="@this" />
+                        <p:inputText id="email" value="#{proveedorBean.selectedSupplier.email}" placeholder="correo@empresa.com" required="true" requiredMessage="Ingrese email" style="width:100%">
+                            <p:ajax event="blur" listener="#{proveedorBean.validateEmail}" update="msgEmail msgProveedorForm" process="@this" />
                         </p:inputText>
                         <p:message id="msgEmail" for="email" />
 
                         <p:outputLabel for="direccion" value="Dirección:" />
-                        <p:inputTextarea id="direccion" value="#{proveedorBean.proveedor.address}" rows="2" style="width:100%" />
+                        <p:inputTextarea id="direccion" value="#{proveedorBean.selectedSupplier.address}" rows="2" style="width:100%" />
 
 
                     </p:panelGrid>
@@ -144,7 +144,7 @@
                 <div style="margin-top:1.5rem;text-align:right;">
                     <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogProveedor').hide()"
                                      styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
-                    <p:commandButton value="Guardar" icon="pi pi-check" action="#{proveedorBean.guardar()}"
+                    <p:commandButton value="Guardar" icon="pi pi-check" action="#{proveedorBean.saveSupplier()}"
                                      update="msgProveedorForm suppliersForm:tablaProveedores" oncomplete="if(!args.validationFailed) PF('dialogProveedor').hide()" />
                 </div>
             </p:dialog>

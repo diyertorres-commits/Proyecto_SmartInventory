@@ -24,6 +24,10 @@ public class ProductMovement {
     @Column(name = "unit_price", nullable = false)
     private double unitPrice;
     
+    // Temporalmente comentado hasta que se agregue la columna a la BD
+    // @Column(name = "purchase_price")
+    // private double purchasePrice;
+    
     @Column(name = "subtotal", nullable = false)
     private double subtotal;
     
@@ -35,11 +39,13 @@ public class ProductMovement {
         // Constructor sin argumentos requerido por JPA
     }
 
-    public ProductMovement(int idProductMovement, Product product, int quantity, double unitPrice) { // Asociación con Product
+    public ProductMovement(int idProductMovement, Product product, int quantity, double unitPrice, double purchasePrice) { // Asociación con Product
         this.idProductMovement = idProductMovement;
         this.product = product;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+        // Temporalmente comentado hasta que se agregue la columna a la BD
+        // this.purchasePrice = purchasePrice;
         this.subtotal = calculateSubtotal();
     }
 
@@ -95,6 +101,15 @@ public class ProductMovement {
     public void setUnitPrice(double unitPrice) {
         this.unitPrice = unitPrice;
     }
+
+    // Temporalmente comentado hasta que se agregue la columna a la BD
+    // public double getPurchasePrice() {
+    //     return purchasePrice;
+    // }
+
+    // public void setPurchasePrice(double purchasePrice) {
+    //     this.purchasePrice = purchasePrice;
+    // }
 
     public double getSubtotal() {
         return subtotal;

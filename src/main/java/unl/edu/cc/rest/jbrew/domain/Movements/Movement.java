@@ -50,7 +50,8 @@ public class Movement {
     }
 
     public void addProductMovement(Product product, int quantity, double unitPrice) { // Asociación con Product
-        ProductMovement productMovement = new ProductMovement(productMovementList.size() + 1, product, quantity, unitPrice); // Composición con ProductMovement
+        // Temporalmente sin purchasePrice hasta que se agregue la columna a la BD
+        ProductMovement productMovement = new ProductMovement(productMovementList.size() + 1, product, quantity, unitPrice, 0); // Composición con ProductMovement
         productMovement.setMovement(this);
         productMovementList.add(productMovement);
     }

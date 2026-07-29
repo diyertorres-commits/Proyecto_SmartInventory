@@ -9,6 +9,7 @@ import org.primefaces.PrimeFaces;
 import unl.edu.cc.rest.jbrew.business.AjusteService;
 import unl.edu.cc.rest.jbrew.business.InventoryService;
 import unl.edu.cc.rest.jbrew.domain.Ajuste;
+import unl.edu.cc.rest.jbrew.domain.AjusteRequest;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 
 import java.io.Serializable;
@@ -24,68 +25,23 @@ public class AjusteBean implements Serializable {
     @Inject
     private AjusteService ajusteService;
 
-    // Id del producto elegido en el combo. Integer (no int) para poder
-    // representar "sin selección" como null.
-    private Integer productoId;
-
-    private String tipoAjuste;
-    private int cantidadAjuste;
-    private String tipoOperacion; // "restar" o "sumar"
-    private String observacion;
-    private String responsable;
-
+    private AjusteRequest ajusteRequest = new AjusteRequest();
     private String mensajeStockBajo;
 
     public String registrarAjuste() {
         FacesContext ctx = FacesContext.getCurrentInstance();
 
-        if (productoId == null || tipoAjuste == null || tipoOperacion == null || cantidadAjuste <= 0) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
-                    "Advertencia", "Por favor complete todos los campos requeridos"));
+        AjusteService.AjusteResult resultado = ajusteService.procesarAjuste(ajusteRequest);
+        
+        if (!resultado.isExitoso()) {
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", resultado.getMensaje()));
             return null;
         }
 
-        Product producto = inventoryService.findProductById(productoId).orElse(null);
-        if (producto == null) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Error", "El producto seleccionado ya no existe"));
-            return null;
-        }
+        ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", resultado.getMensaje()));
 
-        int stockAnterior = producto.getStock();
-        int stockNuevo;
-
-        if ("restar".equals(tipoOperacion)) {
-            if (stockAnterior < cantidadAjuste) {
-                ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                        "Error", "Stock insuficiente para restar"));
-                return null;
-            }
-            stockNuevo = stockAnterior - cantidadAjuste;
-        } else {
-            stockNuevo = stockAnterior + cantidadAjuste;
-        }
-
-        producto.setStock(stockNuevo);
-        inventoryService.saveProduct(producto);
-
-        ajusteService.registrarAjuste(
-                producto.getName(),
-                tipoAjuste,
-                tipoOperacion,
-                cantidadAjuste,
-                stockAnterior,
-                stockNuevo,
-                observacion != null ? observacion : "",
-                responsable != null ? responsable : "No especificado"
-        );
-
-        ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
-                "Éxito", "Ajuste registrado correctamente"));
-
-        if (producto.verifyStockMinimo()) {
-            mensajeStockBajo = "Advertencia: poco stock del producto \"" + producto.getName()
-                    + "\" (quedan " + stockNuevo + " unidades, mínimo recomendado: " + producto.getMinStock() + ")";
+        if (resultado.isStockBajo()) {
+            mensajeStockBajo = resultado.getMensajeStockBajo();
             PrimeFaces.current().executeScript("PF('dlgStockBajo').show()");
         }
 
@@ -94,26 +50,13 @@ public class AjusteBean implements Serializable {
     }
 
     public void revertir(Ajuste ajuste) {
-        Product producto = inventoryService.findProductByName(ajuste.getProductoNombre()).orElse(null);
-        if (producto != null) {
-            producto.setStock(ajuste.getStockAnterior());
-            inventoryService.saveProduct(producto);
-            ajusteService.eliminarAjuste(ajuste);
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
-        } else {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo revertir el ajuste"));
-        }
+        ajusteService.revertirAjuste(ajuste);
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
     }
 
     private void limpiarCampos() {
-        productoId = null;
-        tipoAjuste = null;
-        cantidadAjuste = 0;
-        tipoOperacion = null;
-        observacion = null;
-        responsable = null;
+        ajusteRequest = new AjusteRequest();
     }
 
     // ---------- Estadísticas ----------
@@ -138,56 +81,65 @@ public class AjusteBean implements Serializable {
 
     // ---------- Getters y Setters ----------
 
+    public AjusteRequest getAjusteRequest() {
+        return ajusteRequest;
+    }
+
+    public void setAjusteRequest(AjusteRequest ajusteRequest) {
+        this.ajusteRequest = ajusteRequest;
+    }
+
+    // Getters para compatibilidad con vistas existentes
     public Integer getProductoId() {
-        return productoId;
+        return ajusteRequest.getProductoId();
     }
 
     public void setProductoId(Integer productoId) {
-        this.productoId = productoId;
+        ajusteRequest.setProductoId(productoId);
+    }
+
+    public String getTipoAjuste() {
+        return ajusteRequest.getTipoAjuste();
+    }
+
+    public void setTipoAjuste(String tipoAjuste) {
+        ajusteRequest.setTipoAjuste(tipoAjuste);
+    }
+
+    public int getCantidadAjuste() {
+        return ajusteRequest.getCantidadAjuste();
+    }
+
+    public void setCantidadAjuste(int cantidadAjuste) {
+        ajusteRequest.setCantidadAjuste(cantidadAjuste);
+    }
+
+    public String getTipoOperacion() {
+        return ajusteRequest.getTipoOperacion();
+    }
+
+    public void setTipoOperacion(String tipoOperacion) {
+        ajusteRequest.setTipoOperacion(tipoOperacion);
+    }
+
+    public String getObservacion() {
+        return ajusteRequest.getObservacion();
+    }
+
+    public void setObservacion(String observacion) {
+        ajusteRequest.setObservacion(observacion);
+    }
+
+    public String getResponsable() {
+        return ajusteRequest.getResponsable();
+    }
+
+    public void setResponsable(String responsable) {
+        ajusteRequest.setResponsable(responsable);
     }
 
     public List<Product> getProductos() {
         return inventoryService.getAllProducts();
-    }
-
-    public String getTipoAjuste() {
-        return tipoAjuste;
-    }
-
-    public void setTipoAjuste(String tipoAjuste) {
-        this.tipoAjuste = tipoAjuste;
-    }
-
-    public int getCantidadAjuste() {
-        return cantidadAjuste;
-    }
-
-    public void setCantidadAjuste(int cantidadAjuste) {
-        this.cantidadAjuste = cantidadAjuste;
-    }
-
-    public String getTipoOperacion() {
-        return tipoOperacion;
-    }
-
-    public void setTipoOperacion(String tipoOperacion) {
-        this.tipoOperacion = tipoOperacion;
-    }
-
-    public String getObservacion() {
-        return observacion;
-    }
-
-    public void setObservacion(String observacion) {
-        this.observacion = observacion;
-    }
-
-    public String getResponsable() {
-        return responsable;
-    }
-
-    public void setResponsable(String responsable) {
-        this.responsable = responsable;
     }
 
     public String getMensajeStockBajo() {

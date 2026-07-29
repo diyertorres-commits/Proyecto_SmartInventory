@@ -7,13 +7,13 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
+import unl.edu.cc.rest.jbrew.business.CategoryService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.People.Supplier;
 
 import java.util.List;
-import java.util.Objects;
 
 @Named
 @ViewScoped
@@ -21,6 +21,9 @@ public class InventarioBean implements java.io.Serializable {
 
     @Inject
     private InventoryFacade inventoryFacade;
+
+    @Inject
+    private CategoryService categoryService;
 
     private List<Category> categorias;
     private List<Product> productos;
@@ -49,26 +52,16 @@ public class InventarioBean implements java.io.Serializable {
     }
 
     public void guardarCategoria() {
+        CategoryService.CategoryResult resultado = categoryService.guardarCategoria(nuevaCategoria);
+        
+        if (!resultado.isExitoso()) {
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", resultado.getMensaje()));
+            return;
+        }
+
         FacesContext ctx = FacesContext.getCurrentInstance();
-
-        String nombre = nuevaCategoria.getName();
-        if (nombre == null || nombre.isBlank()) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Error", "El nombre de la categoría no puede estar vacío"));
-            return;
-        }
-
-        if (existeNombre(nombre.trim(), null)) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
-                    "Atención", "Ya existe una categoría con ese nombre"));
-            return;
-        }
-
-        nuevaCategoria.setName(nombre.trim());
-        inventoryFacade.saveCategory(nuevaCategoria);
-
-        ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
-                "Categoría creada", "Se agregó \"" + nombre.trim() + "\" correctamente"));
+        ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Categoría creada", resultado.getMensaje()));
 
         cargarDatos();
         this.nuevaCategoria = new Category();
@@ -84,38 +77,21 @@ public class InventarioBean implements java.io.Serializable {
     }
 
     public void actualizarCategoria() {
+        CategoryService.CategoryResult resultado = categoryService.actualizarCategoria(categoriaEnEdicion);
+        
+        if (!resultado.isExitoso()) {
+            FacesContext ctx = FacesContext.getCurrentInstance();
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", resultado.getMensaje()));
+            return;
+        }
+
         FacesContext ctx = FacesContext.getCurrentInstance();
-
-        String nombre = categoriaEnEdicion.getName();
-        if (nombre == null || nombre.isBlank()) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Error", "El nombre de la categoría no puede estar vacío"));
-            return;
-        }
-
-        if (existeNombre(nombre.trim(), categoriaEnEdicion.getId())) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
-                    "Atención", "Ya existe otra categoría con ese nombre"));
-            return;
-        }
-
-        categoriaEnEdicion.setName(nombre.trim());
-        inventoryFacade.updateCategory(categoriaEnEdicion);
-
         ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
-                "Categoría actualizada",
-                "Se renombró correctamente. Los productos asociados se actualizaron automáticamente."));
+                "Categoría actualizada", resultado.getMensaje()));
 
         cargarDatos();
     }
 
-    private boolean existeNombre(String nombre, Long idExcluir) {
-        if (categorias == null)
-            return false;
-        return categorias.stream()
-                .filter(c -> idExcluir == null || !Objects.equals(c.getId(), idExcluir))
-                .anyMatch(c -> c.getName().equalsIgnoreCase(nombre));
-    }
 
     // ---------- Getters ----------
 

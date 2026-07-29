@@ -7,7 +7,9 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.PrimeFaces;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
+import unl.edu.cc.rest.jbrew.business.ProductCodeService;
 import unl.edu.cc.rest.jbrew.business.PurchaseService;
+import unl.edu.cc.rest.jbrew.domain.CompraRequest;
 import unl.edu.cc.rest.jbrew.domain.Exception.InvalidProductPriceException;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
@@ -27,17 +29,17 @@ public class CompraBean implements Serializable {
     private InventoryFacade inventoryFacade;
 
     @Inject
+    private ProductCodeService productCodeService;
+
+    @Inject
     private PurchaseService purchaseService;
 
     private int indicePestanaActiva = PESTANA_REABASTECER;
 
     private Product productoAReabastecer;
-    private int cantidad = 1;
+    private CompraRequest compraRequest = new CompraRequest();
 
     private Product productoNuevo = new Product();
-
-    private double precioCompra;
-
     private Supplier proveedorSeleccionado;
 
     private List<PurchaseService.PurchaseRecord> historialCompras = List.of();
@@ -80,40 +82,19 @@ public class CompraBean implements Serializable {
     }
 
     private PurchaseService.PurchaseResult registrarReabastecimiento() {
-        if (productoAReabastecer == null) {
-            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "Seleccione un producto");
-            return null;
-        }
-        if (precioCompra <= 0) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese un precio de compra válido");
-            return null;
-        }
-        return purchaseService.processRestockPurchase(productoAReabastecer, cantidad, precioCompra, proveedorSeleccionado);
+        return purchaseService.processRestockPurchase(productoAReabastecer, compraRequest.getCantidad(), compraRequest.getPrecioCompra(), proveedorSeleccionado);
     }
 
     private PurchaseService.PurchaseResult registrarAdquisicionNuevoProducto() {
-        if (productoNuevo.getName() == null || productoNuevo.getName().isBlank()) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese el nombre del producto");
-            return null;
+        // Validar precio de compra antes de intentar establecerlo
+        if (compraRequest.getPrecioCompra() <= 0) {
+            return new PurchaseService.PurchaseResult(false, "El precio de compra debe ser mayor que cero", null, null);
         }
-        if (productoNuevo.getCategory() == null) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Seleccione una categoría");
-            return null;
-        }
-        if (productoNuevo.getSalePrice() <= 0) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese un precio de venta válido");
-            return null;
-        }
-        if (precioCompra <= 0) {
-            mostrarMensaje(FacesMessage.SEVERITY_WARN, "Advertencia", "Ingrese un precio de compra válido");
-            return null;
-        }
-
+        
         try {
-            productoNuevo.setPurchasePrice(precioCompra);
+            productoNuevo.setPurchasePrice(compraRequest.getPrecioCompra());
         } catch (InvalidProductPriceException e) {
-            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", e.getMessage());
-            return null;
+            return new PurchaseService.PurchaseResult(false, e.getMessage(), null, null);
         }
         return purchaseService.processNewProductPurchase(productoNuevo, proveedorSeleccionado);
     }
@@ -124,13 +105,12 @@ public class CompraBean implements Serializable {
 
     private void limpiarReabastecimiento() {
         this.productoAReabastecer = null;
-        this.cantidad = 1;
-        this.precioCompra = 0;
+        this.compraRequest = new CompraRequest();
     }
 
     private void limpiarProductoNuevo() {
         this.productoNuevo = new Product();
-        this.precioCompra = 0;
+        this.compraRequest = new CompraRequest();
     }
 
     private void mostrarMensaje(FacesMessage.Severity severidad, String resumen, String detalle) {
@@ -172,18 +152,18 @@ public class CompraBean implements Serializable {
         
         // Cargar el precio de compra actual del producto seleccionado
         if (productoAReabastecer != null) {
-            this.precioCompra = productoAReabastecer.getPurchasePrice();
+            this.compraRequest.setPrecioCompra(productoAReabastecer.getPurchasePrice());
         } else {
-            this.precioCompra = 0;
+            this.compraRequest.setPrecioCompra(0);
         }
     }
 
     public int getCantidad() {
-        return cantidad;
+        return compraRequest.getCantidad();
     }
 
     public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+        compraRequest.setCantidad(cantidad);
     }
 
     public Product getProductoNuevo() {
@@ -206,38 +186,15 @@ public class CompraBean implements Serializable {
                 .findFirst()
                 .orElse(null);
         productoNuevo.setCategory(categoria);
-        productoNuevo.setCodigo(categoria != null ? generarCodigo(categoria) : null);
-    }
-
-    private String generarCodigo(Category categoria) {
-        String prefijo = obtenerPrefijo(categoria.getName());
-        long cantidadExistente = inventoryFacade.getAllProducts().stream()
-                .filter(p -> p.getCodigo() != null && p.getCodigo().startsWith(prefijo + "-"))
-                .count();
-        return prefijo + "-" + String.format("%04d", cantidadExistente + 1);
-    }
-
-    private String obtenerPrefijo(String nombreCategoria) {
-        String[] palabras = nombreCategoria.trim().split("\\s+");
-        if (palabras.length > 1) {
-            StringBuilder iniciales = new StringBuilder();
-            for (String palabra : palabras) {
-                if (!palabra.isEmpty()) {
-                    iniciales.append(Character.toUpperCase(palabra.charAt(0)));
-                }
-            }
-            return iniciales.toString();
-        }
-        String palabra = palabras[0].toUpperCase();
-        return palabra.substring(0, Math.min(4, palabra.length()));
+        productoNuevo.setCodigo(categoria != null ? productCodeService.generateCode(categoria) : null);
     }
 
     public double getPrecioCompra() {
-        return precioCompra;
+        return compraRequest.getPrecioCompra();
     }
 
     public void setPrecioCompra(double precioCompra) {
-        this.precioCompra = precioCompra;
+        compraRequest.setPrecioCompra(precioCompra);
     }
 
     public Long getProveedorId() {

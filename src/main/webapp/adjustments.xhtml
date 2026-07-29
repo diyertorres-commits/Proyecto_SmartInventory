@@ -63,7 +63,7 @@
 
                     <div class="p-field">
                         <label for="operacion">Operación:</label>
-                        <p:selectOneRadio id="operacion" value="#{ajusteBean.tipoOperacion}" layout="responsive" columns="2">
+                        <p:selectOneRadio id="operacion" value="#{ajusteBean.tipoOperacion}" layout="responsive" columns="2" required="true" requiredMessage="Seleccione una operación">
                             <f:selectItem itemLabel="Restar (-)" itemValue="restar" />
                             <f:selectItem itemLabel="Sumar (+)" itemValue="sumar" />
                         </p:selectOneRadio>
@@ -82,7 +82,7 @@
 
                 <div style="margin-top:1rem;">
                     <p:commandButton value="Registrar Ajuste" icon="pi pi-check" action="#{ajusteBean.registrarAjuste()}"
-                                    update="msgAjustes tablaAjustes dlgStockBajo @form" styleClass="p-button-rounded p-button-warning" />
+                                    update="msgAjustes tablaAjustes dlgStockBajo @form producto" styleClass="p-button-rounded p-button-warning" />
                 </div>
             </div>
 

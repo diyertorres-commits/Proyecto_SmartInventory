@@ -81,7 +81,7 @@
                         <p:selectOneMenu id="cliente" value="#{ventaBean.clienteId}" style="width:100%" filter="true"
                             filterMatchMode="contains">
                             <f:selectItem itemLabel="Cliente Mostrador" itemValue="#{null}" />
-                            <f:selectItems value="#{clienteBean.clientes}" var="c" itemLabel="#{c.name} #{c.apellido}"
+                            <f:selectItems value="#{clienteBean.filteredCustomers}" var="c" itemLabel="#{c.name} #{c.apellido}"
                                 itemValue="#{c.idCustomer}" />
                         </p:selectOneMenu>
                     </div>

@@ -39,6 +39,14 @@ public class PurchaseService {
             return new PurchaseResult(false, "Proveedor no seleccionado", null, null);
         }
 
+        if (product == null) {
+            return new PurchaseResult(false, "Seleccione un producto", null, null);
+        }
+
+        if (purchasePrice <= 0) {
+            return new PurchaseResult(false, "Ingrese un precio de compra válido", null, null);
+        }
+
         Optional<Product> productOpt = inventoryService.findProductById(product.getIdProduct());
         if (productOpt.isEmpty()) {
             return new PurchaseResult(false, "Producto no encontrado", null, null);
@@ -95,9 +103,23 @@ public class PurchaseService {
             return new PurchaseResult(false, "Proveedor no seleccionado", null, null);
         }
 
-        if (newProduct.getCodigo() == null || newProduct.getCodigo().isEmpty() ||
-                newProduct.getName() == null || newProduct.getName().isEmpty() ||
-                newProduct.getCategory() == null) {
+        if (newProduct.getName() == null || newProduct.getName().isBlank()) {
+            return new PurchaseResult(false, "Ingrese el nombre del producto", null, null);
+        }
+
+        if (newProduct.getCategory() == null) {
+            return new PurchaseResult(false, "Seleccione una categoría", null, null);
+        }
+
+        if (newProduct.getSalePrice() <= 0) {
+            return new PurchaseResult(false, "Ingrese un precio de venta válido", null, null);
+        }
+
+        if (newProduct.getPurchasePrice() <= 0) {
+            return new PurchaseResult(false, "Ingrese un precio de compra válido", null, null);
+        }
+
+        if (newProduct.getCodigo() == null || newProduct.getCodigo().isEmpty()) {
             return new PurchaseResult(false, "Complete los campos obligatorios", null, null);
         }
 

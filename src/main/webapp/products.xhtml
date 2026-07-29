@@ -21,7 +21,7 @@
                 <div class="si-kpi-card">
                     <span class="si-kpi-icon blue"><i class="pi pi-box" /></span>
                     <div>
-                        <div class="si-kpi-value">#{productoBean.totalProductos}</div>
+                        <div class="si-kpi-value">#{productoBean.totalProducts}</div>
                         <div class="si-kpi-label">Total Productos</div>
                     </div>
                 </div>
@@ -29,7 +29,7 @@
                     <span class="si-kpi-icon green"><i class="pi pi-dollar" /></span>
                     <div>
                         <div class="si-kpi-value">
-                            <h:outputText value="#{productoBean.valorTotalInventario}">
+                            <h:outputText value="#{productoBean.totalInventoryValue}">
                                 <f:convertNumber type="currency" currencySymbol="$" />
                             </h:outputText>
                         </div>
@@ -39,14 +39,14 @@
                 <div class="si-kpi-card">
                     <span class="si-kpi-icon orange"><i class="pi pi-exclamation-triangle" /></span>
                     <div>
-                        <div class="si-kpi-value">#{productoBean.stockBajo}</div>
+                        <div class="si-kpi-value">#{productoBean.lowStockCount}</div>
                         <div class="si-kpi-label">Stock Bajo</div>
                     </div>
                 </div>
                 <div class="si-kpi-card">
                     <span class="si-kpi-icon purple"><i class="pi pi-check-circle" /></span>
                     <div>
-                        <div class="si-kpi-value">#{productoBean.stockDisponible}</div>
+                        <div class="si-kpi-value">#{productoBean.availableStockCount}</div>
                         <div class="si-kpi-label">Disponibles</div>
                     </div>
                 </div>
@@ -58,26 +58,26 @@
                     <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;flex:1;">
                         <p:inputText id="search" value="#{productoBean.searchTerm}" placeholder="Buscar por nombre..." 
                                     style="flex:1;min-width:200px;padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--si-border);">
-                            <p:ajax event="keyup" listener="#{productoBean.search()}" update="tablaProductos" delay="300" />
+                            <p:ajax event="keyup" listener="#{productoBean.searchProducts()}" update="tablaProductos" delay="300" />
                         </p:inputText>
                         
                         <p:inputText id="searchCodigo" value="#{productoBean.searchCodigo}" placeholder="Buscar por código..." 
                                     style="flex:1;min-width:200px;padding:0.75rem 1rem;border-radius:8px;border:1px solid var(--si-border);">
-                            <p:ajax event="keyup" listener="#{productoBean.search()}" update="tablaProductos" delay="300" />
+                            <p:ajax event="keyup" listener="#{productoBean.searchProducts()}" update="tablaProductos" delay="300" />
                         </p:inputText>
                         
-                        <p:selectOneMenu id="filtroCategoria" value="#{productoBean.filtroCategoria}" style="width:200px;padding:0.75rem;border-radius:8px;">
+                        <p:selectOneMenu id="filtroCategoria" value="#{productoBean.categoryFilter}" style="width:200px;padding:0.75rem;border-radius:8px;">
                             <f:selectItem itemLabel="Todas las categorías" itemValue="#{null}" />
                             <f:selectItems value="#{inventarioBean.categorias}" var="cat" itemLabel="#{cat.name}" itemValue="#{cat.name}" />
-                            <p:ajax listener="#{productoBean.filter()}" update="tablaProductos" />
+                            <p:ajax listener="#{productoBean.searchProducts()}" update="tablaProductos" />
                         </p:selectOneMenu>
                         
-                        <p:selectOneMenu id="filtroEstado" value="#{productoBean.filtroEstado}" style="width:150px;padding:0.75rem;border-radius:8px;">
+                        <p:selectOneMenu id="filtroEstado" value="#{productoBean.statusFilter}" style="width:150px;padding:0.75rem;border-radius:8px;">
                             <f:selectItem itemLabel="Todos los estados" itemValue="#{null}" />
                             <f:selectItem itemLabel="Disponible" itemValue="disponible" />
                             <f:selectItem itemLabel="Stock bajo" itemValue="bajo" />
                             <f:selectItem itemLabel="Agotado" itemValue="agotado" />
-                            <p:ajax listener="#{productoBean.filter()}" update="tablaProductos" />
+                            <p:ajax listener="#{productoBean.searchProducts()}" update="tablaProductos" />
                         </p:selectOneMenu>
                     </div>
                     
@@ -95,10 +95,10 @@
             <!-- ===== Tabla de productos ===== -->
             <div class="si-glass-card">
 
-                <p:dataTable id="tablaProductos" value="#{productoBean.productosFiltrados}" var="p"
+                <p:dataTable id="tablaProductos" value="#{productoBean.filteredProducts}" var="p"
                              emptyMessage="No se encontraron productos."
                              rows="15" paginator="true" paginatorPosition="bottom"
-                             style="width:100%" filteredValue="#{productoBean.productosFiltrados}"
+                             style="width:100%" filteredValue="#{productoBean.filteredProducts}"
                              rowStyleClass="#{p.stock lt p.minStock ? 'row-warning' : ''}">
                     
                     <p:column headerText="Código" width="10%">
@@ -151,12 +151,12 @@
                     <p:column headerText="Acciones" width="14%" style="text-align:center;">
                         <div style="display:flex;gap:0.5rem;justify-content:center;">
                             <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button ui-button-info"
-                                            action="#{productoBean.editar(p)}" 
+                                            action="#{productoBean.editProduct(p)}" 
                                             process="@this"
                                             update="@form" oncomplete="PF('dialogProducto').show()" />
                             
                             <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="rounded-button ui-button-danger"
-                                            action="#{productoBean.eliminar(p)}"
+                                            action="#{productoBean.deleteProduct(p)}"
                                             process="@this"
                                             update="msgProductos tablaProductos productsForm">
                                 <p:confirm header="Confirmar eliminación"
@@ -175,7 +175,7 @@
             </p:confirmDialog>
 
             <!-- ===== Diálogo para crear/editar producto ===== -->
-            <p:dialog id="dialogProducto" widgetVar="dialogProducto" header="#{productoBean.producto.idProduct == null ? 'Nuevo Producto' : 'Editar Producto'}" 
+            <p:dialog id="dialogProducto" widgetVar="dialogProducto" header="#{productoBean.selectedProduct.idProduct == null ? 'Nuevo Producto' : 'Editar Producto'}" 
                       modal="true" closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade"
                       style="max-height:90vh;">
                 
@@ -185,10 +185,10 @@
                     <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
                         
                         <p:outputLabel for="codigo" value="Código/SKU:" />
-                        <p:inputText id="codigo" value="#{productoBean.producto.codigo}" placeholder="Ej. CAF-001" style="width:100%" />
+                        <p:inputText id="codigo" value="#{productoBean.selectedProduct.codigo}" placeholder="Ej. CAF-001" style="width:100%" />
                         
                         <p:outputLabel for="nombre" value="Nombre:" />
-                        <p:inputText id="nombre" value="#{productoBean.producto.name}" placeholder="Nombre del producto" style="width:100%" />
+                        <p:inputText id="nombre" value="#{productoBean.selectedProduct.name}" placeholder="Nombre del producto" style="width:100%" />
                         
                         <p:outputLabel for="categoria" value="Categoría:" />
                         <p:selectOneMenu id="categoria" value="#{productoBean.categoryName}" style="width:100%">
@@ -197,28 +197,28 @@
                         </p:selectOneMenu>
                         
                         <p:outputLabel for="descripcion" value="Descripción:" />
-                        <p:inputTextarea id="descripcion" value="#{productoBean.producto.description}" rows="3" style="width:100%" />
+                        <p:inputTextarea id="descripcion" value="#{productoBean.selectedProduct.description}" rows="3" style="width:100%" />
                         
                         <p:outputLabel for="precioVenta" value="Precio Venta:" />
-                        <p:inputNumber id="precioVenta" value="#{productoBean.producto.salePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
+                        <p:inputNumber id="precioVenta" value="#{productoBean.selectedProduct.salePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
                         
                         <p:outputLabel for="precioCompra" value="Precio Compra:" />
-                        <p:inputNumber id="precioCompra" value="#{productoBean.producto.purchasePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
+                        <p:inputNumber id="precioCompra" value="#{productoBean.selectedProduct.purchasePrice}" symbol="$" decimalPlaces="2" style="width:100%" />
                         
                         <p:outputLabel for="stock" value="Stock Inicial:" />
                         <div>
-                            <p:spinner id="stock" value="#{productoBean.producto.stock}" min="0" style="width:100%"
-                                       disabled="#{productoBean.producto.idProduct != 0}" />
-                            <h:panelGroup rendered="#{productoBean.producto.idProduct != 0}">
+                            <p:spinner id="stock" value="#{productoBean.selectedProduct.stock}" min="0" style="width:100%"
+                                       disabled="#{productoBean.selectedProduct.idProduct != 0}" />
+                            <h:panelGroup rendered="#{productoBean.selectedProduct.idProduct != 0}">
                                 <small style="color:var(--si-text-secondary);">Para modificar el stock usa la sección de Ajustes.</small>
                             </h:panelGroup>
                         </div>
                         
                         <p:outputLabel for="stockMinimo" value="Stock Mínimo:" />
-                        <p:spinner id="stockMinimo" value="#{productoBean.producto.minStock}" min="0" style="width:100%" />
+                        <p:spinner id="stockMinimo" value="#{productoBean.selectedProduct.minStock}" min="0" style="width:100%" />
                         
                         <p:outputLabel for="imagen" value="Imagen:" />
-                        <p:inputText id="imagen" value="#{productoBean.producto.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
+                        <p:inputText id="imagen" value="#{productoBean.selectedProduct.imagen}" placeholder="nombre_imagen.jpg" style="width:100%" />
                         
                     </p:panelGrid>
                 </div>
@@ -226,7 +226,7 @@
                 <div style="margin-top:1.5rem;text-align:right;">
                     <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogProducto').hide()" 
                                     styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
-                    <p:commandButton value="Guardar" icon="pi pi-check" action="#{productoBean.guardar()}"
+                    <p:commandButton value="Guardar" icon="pi pi-check" action="#{productoBean.saveProduct()}"
                                     update="msgProductoForm productsForm:tablaProductos" oncomplete="PF('dialogProducto').hide()" />
                 </div>
             </p:dialog>

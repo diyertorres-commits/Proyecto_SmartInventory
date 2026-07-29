@@ -8,13 +8,32 @@ import java.util.logging.Logger;
 @Stateless
 public class AuthenticationService {
     
+    private static final int USUARIO_LONGITUD_MINIMA = 5;
+    private static final int PASSWORD_LONGITUD_MINIMA = 6;
+    
     private static final Logger LOGGER = Logger.getLogger(AuthenticationService.class.getName());
     
     public AuthenticationResult authenticate(String username, String password) {
         LOGGER.info("Intento de autenticación para usuario: " + username);
-        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            LOGGER.warning("Autenticación fallida: credenciales vacías");
-            throw new CredentialInvalidException("Por favor ingrese usuario y contraseña");
+        
+        if (username == null || username.isBlank()) {
+            LOGGER.warning("Autenticación fallida: usuario vacío");
+            throw new CredentialInvalidException("El usuario es requerido");
+        }
+        
+        if (username.length() < USUARIO_LONGITUD_MINIMA) {
+            LOGGER.warning("Autenticación fallida: usuario muy corto");
+            throw new CredentialInvalidException("El usuario debe tener al menos " + USUARIO_LONGITUD_MINIMA + " caracteres");
+        }
+        
+        if (password == null || password.isBlank()) {
+            LOGGER.warning("Autenticación fallida: contraseña vacía");
+            throw new CredentialInvalidException("La contraseña es requerida");
+        }
+        
+        if (password.length() < PASSWORD_LONGITUD_MINIMA) {
+            LOGGER.warning("Autenticación fallida: contraseña muy corta");
+            throw new CredentialInvalidException("La contraseña debe tener al menos " + PASSWORD_LONGITUD_MINIMA + " caracteres");
         }
         
         if ("admin".equals(username) && "admin123".equals(password)) {

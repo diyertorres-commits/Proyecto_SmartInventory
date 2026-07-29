@@ -6,6 +6,7 @@ import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import unl.edu.cc.rest.jbrew.business.InventoryFacade;
+import unl.edu.cc.rest.jbrew.business.ProductSearchService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Category;
 import unl.edu.cc.rest.jbrew.domain.Inventory.ProductStatus;
@@ -21,6 +22,9 @@ public class ProductoBean implements Serializable {
     
     @Inject
     private InventoryFacade inventoryFacade;
+
+    @Inject
+    private ProductSearchService productSearchService;
     
     private Product selectedProduct;
     private List<Product> filteredProducts;
@@ -64,10 +68,6 @@ public class ProductoBean implements Serializable {
         this.selectedProduct.setId(product.getId());
     }
     
-    public void editar(Product product) {
-        editProduct(product);
-    }
-    
     public String saveProduct() {
         try {
             if (selectedProduct.getIdProduct() != 0) {
@@ -92,10 +92,6 @@ public class ProductoBean implements Serializable {
         }
     }
     
-    public String guardar() {
-        return saveProduct();
-    }
-    
     public void deleteProduct(Product product) {
         try {
             inventoryFacade.deleteProduct(product);
@@ -108,44 +104,15 @@ public class ProductoBean implements Serializable {
         }
     }
     
-    public void eliminar(Product product) {
-        deleteProduct(product);
-    }
-    
     public void searchProducts() {
-        List<Product> allProducts = inventoryFacade.getAllProducts();
-        
-        boolean hasNameFilter = searchTerm != null && !searchTerm.isEmpty();
-        boolean hasCodeFilter = searchCodigo != null && !searchCodigo.isEmpty();
-        
-        filteredProducts = allProducts.stream()
-                .filter(p -> {
-                    if (!hasNameFilter && !hasCodeFilter) {
-                        return true; // Sin filtros, mostrar todos
-                    }
-                    
-                    boolean matchesName = !hasNameFilter || 
-                        p.getName().toLowerCase().contains(searchTerm.toLowerCase());
-                    boolean matchesCode = !hasCodeFilter || 
-                        p.getCodigo().toLowerCase().contains(searchCodigo.toLowerCase());
-                    
-                    return matchesName && matchesCode;
-                })
-                .toList();
-        applyFilters();
+        ProductSearchService.ProductSearchCriteria criteria = new ProductSearchService.ProductSearchCriteria();
+        criteria.setSearchTerm(searchTerm);
+        criteria.setSearchCodigo(searchCodigo);
+        criteria.setCategoryFilter(categoryFilter);
+        criteria.setStatusFilter(statusFilter);
+
+        filteredProducts = productSearchService.search(criteria);
         initialized = true;
-    }
-    
-    public void search() {
-        searchProducts();
-    }
-    
-    public void filterProducts() {
-        searchProducts();
-    }
-    
-    public void filter() {
-        filterProducts();
     }
     
     public void clearFilters() {
@@ -156,42 +123,13 @@ public class ProductoBean implements Serializable {
         filteredProducts = inventoryFacade.getAllProducts();
         initialized = true;
     }
-    
-    private void applyFilters() {
-        if (categoryFilter != null && !categoryFilter.isEmpty()) {
-            filteredProducts = filteredProducts.stream()
-                    .filter(p -> categoryFilter.equals(p.getCategory() != null ? p.getCategory().getName() : ""))
-                    .toList();
-        }
-        
-        if (statusFilter != null && !statusFilter.isEmpty()) {
-            filteredProducts = filteredProducts.stream()
-                    .filter(p -> statusFilter.equals(getStatusText(p.getEstado())))
-                    .toList();
-        }
-    }
-    
-    private String getStatusText(ProductStatus status) {
-        if (status == ProductStatus.DISPONIBLE) return "disponible";
-        if (status == ProductStatus.STOCK_BAJO) return "bajo";
-        if (status == ProductStatus.AGOTADO) return "agotado";
-        return "";
-    }
-    
+
     public Product getSelectedProduct() {
         return selectedProduct;
     }
-    
-    public Product getProducto() {
-        return selectedProduct;
-    }
-    
+
     public void setSelectedProduct(Product selectedProduct) {
         this.selectedProduct = selectedProduct;
-    }
-    
-    public void setProducto(Product selectedProduct) {
-        setSelectedProduct(selectedProduct);
     }
 
     public List<Product> getFilteredProducts() {
@@ -200,18 +138,6 @@ public class ProductoBean implements Serializable {
             initialized = true;
         }
         return filteredProducts;
-    }
-    
-    public List<Product> getProductosFiltrados() {
-        return getFilteredProducts();
-    }
-    
-    public List<Product> getProductos() {
-        return getFilteredProducts();
-    }
-    
-    public void setProductosFiltrados(List<Product> filteredProducts) {
-        setFilteredProducts(filteredProducts);
     }
     
     public void setFilteredProducts(List<Product> filteredProducts) {
@@ -226,10 +152,6 @@ public class ProductoBean implements Serializable {
         this.searchTerm = searchTerm;
     }
     
-    public void setTerminoBusqueda(String searchTerm) {
-        setSearchTerm(searchTerm);
-    }
-    
     public String getSearchCodigo() {
         return searchCodigo;
     }
@@ -241,14 +163,6 @@ public class ProductoBean implements Serializable {
     public String getCategoryFilter() {
         return categoryFilter;
     }
-    
-    public String getFiltroCategoria() {
-        return getCategoryFilter();
-    }
-
-    public void setFiltroCategoria(String categoryFilter) {
-        setCategoryFilter(categoryFilter);
-    }
 
     public void setCategoryFilter(String categoryFilter) {
         this.categoryFilter = categoryFilter;
@@ -257,19 +171,11 @@ public class ProductoBean implements Serializable {
     public String getStatusFilter() {
         return statusFilter;
     }
-    
-    public String getFiltroEstado() {
-        return getStatusFilter();
-    }
-    
+
     public void setStatusFilter(String statusFilter) {
         this.statusFilter = statusFilter;
     }
-    
-    public void setFiltroEstado(String statusFilter) {
-        setStatusFilter(statusFilter);
-    }
-    
+
     // ===== KPIs calculados en vivo, siempre consistentes con p.getEstado() =====
     
     public int getTotalStock() {
@@ -284,38 +190,22 @@ public class ProductoBean implements Serializable {
                 .count();
     }
     
-    public int getStockBajo() {
-        return getLowStockCount();
-    }
-    
     public int getAvailableStockCount() {
         return (int) inventoryFacade.getAllProducts().stream()
                 .filter(p -> p.getEstado() == ProductStatus.DISPONIBLE)
                 .count();
     }
     
-    public int getStockDisponible() {
-        return getAvailableStockCount();
-    }
-    
     public int getTotalProducts() {
         return inventoryFacade.getAllProducts().size();
     }
-    
-    public int getTotalProductos() {
-        return getTotalProducts();
-    }
-    
+
     public double getTotalInventoryValue() {
         return inventoryFacade.getAllProducts().stream()
                 .mapToDouble(p -> p.getStock() * p.getPurchasePrice())
                 .sum();
     }
-    
-    public double getValorTotalInventario() {
-        return getTotalInventoryValue();
-    }
-    
+
     public String getCategoryName() {
         if (selectedProduct != null && selectedProduct.getCategory() != null) {
             return selectedProduct.getCategory().getName();

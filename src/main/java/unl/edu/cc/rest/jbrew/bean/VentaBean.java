@@ -11,6 +11,7 @@ import unl.edu.cc.rest.jbrew.business.InventoryFacade;
 import unl.edu.cc.rest.jbrew.business.ResultadoCarrito;
 import unl.edu.cc.rest.jbrew.business.ResultadoVenta;
 import unl.edu.cc.rest.jbrew.business.VentaService;
+import unl.edu.cc.rest.jbrew.business.CartSerializationService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
 import unl.edu.cc.rest.jbrew.domain.Movements.ProductMovement;
@@ -34,6 +35,9 @@ public class VentaBean implements Serializable {
 
     @Inject
     private VentaService ventaService;
+
+    @Inject
+    private CartSerializationService cartSerializationService;
 
     private Carrito carrito;
     private VentaDTO ventaDTO;
@@ -75,22 +79,24 @@ public class VentaBean implements Serializable {
     }
 
     public void procesarVenta() {
+        System.out.println("=== procesarVenta() llamado ===");
+        System.out.println("Carrito vacío: " + (carrito == null || carrito.estaVacio()));
+        System.out.println("Items en carrito: " + (carrito != null ? carrito.getItems().size() : 0));
+        
         ResultadoVenta resultado = ventaService.registrarVenta(
             carrito, 
             ventaDTO.getClienteSeleccionado(), 
             ventaDTO.getMetodoPago(), 
             ventaDTO.getDescuento()
         );
+        
+        System.out.println("Resultado venta: exitoso=" + resultado.isExitoso() + ", mensaje=" + resultado.getMensaje());
+        
         mostrarResultadoVenta(resultado);
         if (resultado.isExitoso()) {
             this.facturas = ventaService.obtenerFacturas(ordenFacturas);
             ventaDTO.limpiarDatosVenta();
         }
-    }
-
-    // Método alias para compatibilidad con vistas antiguas
-    public void completarVenta() {
-        procesarVenta();
     }
 
     public void vaciarCarrito() {
@@ -143,50 +149,13 @@ public class VentaBean implements Serializable {
     }
 
     public void restaurarCarritoDesdeJson(String carritoJson) {
-        try {
-            if (carritoJson != null && !carritoJson.isEmpty()) {
-                // Parsear JSON simple (sin usar librerías externas)
-                String[] parts = carritoJson.split("\"items\":\\[");
-                if (parts.length > 1) {
-                    String itemsPart = parts[1].split("\\],\"descuento\"")[0];
-                    String[] itemStrings = itemsPart.split("\\},\\{");
-                    
-                    carrito.vaciar();
-                    
-                    for (String itemStr : itemStrings) {
-                        // Extraer datos del item
-                        String nombre = extraerValor(itemStr, "productoNombre");
-                        int cantidad = Integer.parseInt(extraerValor(itemStr, "cantidad"));
-                        double precio = Double.parseDouble(extraerValor(itemStr, "precio"));
-                        
-                        // Buscar producto por nombre
-                        var productoOpt = inventoryFacade.findProductByName(nombre);
-                        if (productoOpt.isPresent()) {
-                            carrito.agregarItem(productoOpt.get(), cantidad);
-                        }
-                    }
-                    
-                    // Restaurar descuento
-                    String descuentoStr = carritoJson.split("\"descuento\":")[1].split("}")[0];
-                    ventaDTO.setDescuento(Double.parseDouble(descuentoStr));
-                    
-                    mostrarMensaje(FacesMessage.SEVERITY_INFO, "Info", "Carrito restaurado con " + carrito.getItems().size() + " productos");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo restaurar el carrito");
+        CartSerializationService.CartRestoreResult resultado = cartSerializationService.restoreFromJson(carritoJson, carrito, ventaDTO);
+        
+        if (resultado.isExitoso()) {
+            mostrarMensaje(FacesMessage.SEVERITY_INFO, "Info", resultado.getMensaje());
+        } else {
+            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", resultado.getMensaje());
         }
-    }
-    
-    private String extraerValor(String json, String clave) {
-        String pattern = "\"" + clave + "\":\"?([^,}\\\"]+)\"?";
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
-        java.util.regex.Matcher m = p.matcher(json);
-        if (m.find()) {
-            return m.group(1);
-        }
-        return "";
     }
 
     // ===== Helpers privados (sin lógica de negocio, solo orquestación de UI) =====
