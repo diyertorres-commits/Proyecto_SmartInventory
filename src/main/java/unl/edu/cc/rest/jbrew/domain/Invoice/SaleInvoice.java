@@ -16,11 +16,6 @@ public class SaleInvoice extends Invoice { // Herencia de Invoice
     @Column(name = "payment_method")
     private String paymentMethod;
 
-    // NUEVO: antes solo existía "total" (heredado de Invoice), que además
-    // nunca se llenaba porque nada llamaba a generateInvoice(). Se agregan
-    // estos campos para que la factura quede trazable: cuánto era el
-    // subtotal de productos, cuánto de IVA, y cuánto de descuento se aplicó,
-    // sin perder esa información al limpiar el carrito.
     @Column(name = "subtotal")
     private double subtotal;
     

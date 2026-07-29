@@ -1,9 +1,6 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core"
-      xmlns:ui="jakarta.faces.facelets"
-      xmlns:p="primefaces">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core"
+    xmlns:ui="jakarta.faces.facelets" xmlns:p="primefaces">
 
 <ui:composition template="WEB-INF/templates/base.xhtml">
     <ui:define name="content">
@@ -23,37 +20,34 @@
 
                     <div class="p-field">
                         <label for="producto">Producto</label>
-                        <p:selectOneMenu id="producto" value="#{ventaBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
-                            <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}" noSelectionOption="true" />
+                        <p:selectOneMenu id="producto" value="#{ventaBean.productoId}" style="width:100%" filter="true"
+                            filterMatchMode="contains">
+                            <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}"
+                                noSelectionOption="true" />
                             <f:selectItems value="#{inventarioBean.productos}" var="p"
-                                           itemLabel="#{p.name} (disponible: #{p.stock} - $#{p.salePrice})" itemValue="#{p.idProduct}" />
+                                itemLabel="#{p.name} (disponible: #{p.stock} - $#{p.salePrice})"
+                                itemValue="#{p.idProduct}" />
                         </p:selectOneMenu>
                     </div>
 
                     <div class="p-field">
                         <label for="cantidad">Cantidad</label>
-                        <!-- FIX: p:spinner está deprecado/removido en versiones
-                             recientes de PrimeFaces; se reemplaza por p:inputNumber,
-                             igual que ya se usa para el descuento más abajo.
-                             Si tu versión de PrimeFaces sí soporta p:spinner,
-                             puedes revertir este cambio sin problema. -->
-                        <p:inputNumber id="cantidad" value="#{ventaBean.cantidad}" decimalPlaces="0" minValue="1" maxValue="1000" style="width:100%" />
+
+                        <p:inputNumber id="cantidad" value="#{ventaBean.cantidad}" decimalPlaces="0" minValue="1"
+                            maxValue="1000" style="width:100%" />
                     </div>
 
-                    <!-- FIX: se agregan ventaForm:producto y ventaForm:cantidad al
-                         update para que el combo y la cantidad se limpien
-                         visualmente después de agregar al carrito (el bean ya
-                         limpia selectedProduct/selectedQuantity internamente,
-                         pero antes no se refrescaban en pantalla). -->
-                    <p:commandButton value="Agregar al Carrito" icon="pi pi-plus" action="#{ventaBean.agregarProductoAlCarrito()}"
-                                     update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel" styleClass="p-button-rounded" style="margin-top:.5rem" />
+                    <p:commandButton value="Agregar al Carrito" icon="pi pi-plus"
+                        action="#{ventaBean.agregarProductoAlCarrito()}"
+                        update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel"
+                        styleClass="p-button-rounded" style="margin-top:.5rem" />
 
                     <p:divider />
 
                     <!-- ===== Carrito de compras ===== -->
                     <h6 style="color:var(--si-text-primary);">Carrito de Compras</h6>
                     <p:dataTable id="carritoTable" value="#{ventaBean.itemsCarrito}" var="item"
-                                 emptyMessage="El carrito está vacío" style="width:100%" size="small">
+                        emptyMessage="El carrito está vacío" style="width:100%" size="small">
                         <p:column headerText="Producto">
                             <h:outputText value="#{item.productoNombre}" />
                         </p:column>
@@ -72,7 +66,8 @@
                         </p:column>
                         <p:column headerText="" style="width:50px;">
                             <p:commandButton icon="pi pi-times" styleClass="rounded-button ui-button-danger"
-                                             action="#{ventaBean.eliminarProductoDelCarrito(item)}" update="ventaForm:carritoTable ventaForm:resumenPanel" />
+                                action="#{ventaBean.eliminarProductoDelCarrito(item)}"
+                                update="ventaForm:carritoTable ventaForm:resumenPanel" />
                         </p:column>
                     </p:dataTable>
                 </div>
@@ -83,16 +78,18 @@
 
                     <div class="p-field">
                         <label for="cliente">Cliente</label>
-                        <p:selectOneMenu id="cliente" value="#{ventaBean.clienteId}" style="width:100%" filter="true" filterMatchMode="contains">
+                        <p:selectOneMenu id="cliente" value="#{ventaBean.clienteId}" style="width:100%" filter="true"
+                            filterMatchMode="contains">
                             <f:selectItem itemLabel="Cliente Mostrador" itemValue="#{null}" />
-                            <f:selectItems value="#{clienteBean.clientes}" var="c"
-                                           itemLabel="#{c.name} #{c.apellido}" itemValue="#{c.idCustomer}" />
+                            <f:selectItems value="#{clienteBean.clientes}" var="c" itemLabel="#{c.name} #{c.apellido}"
+                                itemValue="#{c.idCustomer}" />
                         </p:selectOneMenu>
                     </div>
 
                     <div class="p-field">
                         <label for="metodoPago">Método de Pago</label>
-                        <p:selectOneRadio id="metodoPago" value="#{ventaBean.metodoPago}" layout="responsive" columns="1">
+                        <p:selectOneRadio id="metodoPago" value="#{ventaBean.metodoPago}" layout="responsive"
+                            columns="1">
                             <f:selectItem itemLabel="Efectivo" itemValue="efectivo" />
                             <f:selectItem itemLabel="Tarjeta" itemValue="tarjeta" />
                             <f:selectItem itemLabel="Transferencia" itemValue="transferencia" />
@@ -122,12 +119,14 @@
 
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
                         <span>Descuento:</span>
-                        <p:inputNumber value="#{ventaBean.descuento}" symbol="$" decimalPlaces="2" size="8" style="text-align:right;">
+                        <p:inputNumber value="#{ventaBean.descuento}" symbol="$" decimalPlaces="2" size="8"
+                            style="text-align:right;">
                             <p:ajax listener="#{ventaBean.recalcularTotal()}" update="ventaForm:resumenPanel" />
                         </p:inputNumber>
                     </div>
 
-                    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--si-border);">
+                    <div
+                        style="display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--si-border);">
                         <span>Total:</span>
                         <span style="color:var(--si-primary);">
                             <h:outputText value="#{ventaBean.total}">
@@ -137,12 +136,12 @@
                     </div>
 
                     <p:commandButton value="Completar Venta" icon="pi pi-check" action="#{ventaBean.procesarVenta()}"
-                                     update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel tablaVentas :navForm"
-                                     styleClass="p-button-rounded p-button-success" style="width:100%;margin-top:1rem;" />
+                        update="ventaForm:msgVenta ventaForm:carritoTable ventaForm:resumenPanel tablaVentas :navForm"
+                        styleClass="p-button-rounded p-button-success" style="width:100%;margin-top:1rem;" />
 
                     <p:commandButton value="Cancelar" icon="pi pi-times" action="#{ventaBean.vaciarCarrito()}"
-                                     update="ventaForm:carritoTable ventaForm:resumenPanel"
-                                     styleClass="p-button-outlined p-button-secondary" style="width:100%;margin-top:0.5rem;" />
+                        update="ventaForm:carritoTable ventaForm:resumenPanel"
+                        styleClass="p-button-outlined p-button-secondary" style="width:100%;margin-top:0.5rem;" />
                 </h:panelGroup>
             </div>
 
@@ -155,11 +154,13 @@
             <div class="si-glass-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
                     <h6 style="margin:0;color:var(--si-text-primary);">Historial de Ventas</h6>
-                    <p:commandButton icon="pi pi-sort-amount-down" title="Cambiar orden" action="#{ventaBean.cambiarOrdenFacturas()}"
-                                     update="tablaVentas" styleClass="p-button-rounded p-button-outlined" />
+                    <p:commandButton icon="pi pi-sort-amount-down" title="Cambiar orden"
+                        action="#{ventaBean.cambiarOrdenFacturas()}" update="tablaVentas"
+                        styleClass="p-button-rounded p-button-outlined" />
                 </div>
-                <p:dataTable id="tablaVentas" value="#{ventaBean.facturas}" var="m" emptyMessage="Todavía no se han registrado ventas."
-                             rows="10" paginator="true" paginatorPosition="bottom">
+                <p:dataTable id="tablaVentas" value="#{ventaBean.facturas}" var="m"
+                    emptyMessage="Todavía no se han registrado ventas." rows="10" paginator="true"
+                    paginatorPosition="bottom">
                     <p:column headerText="N° Factura">
                         <h:outputText value="#{m.invoiceNumber}" />
                     </p:column>
@@ -180,27 +181,184 @@
                         </h:outputText>
                     </p:column>
                     <p:column headerText="Acciones" style="width:80px;">
-                        <p:commandButton icon="pi pi-print" title="Imprimir" styleClass="rounded-button" />
+                        <p:commandButton icon="pi pi-print" title="Imprimir" styleClass="rounded-button"
+                            action="#{ventaBean.prepararImpresion(m)}" process="@this" update="detalleFacturaPanel"
+                            oncomplete="PF('dialogFactura').show()" />
                     </p:column>
                 </p:dataTable>
             </div>
 
+            <!-- ===== Diálogo de detalle / impresión de factura ===== -->
+            <p:dialog id="dialogFactura" widgetVar="dialogFactura" header="Detalle de Factura" modal="true"
+                closable="true" resizable="false" width="600" showEffect="fade" hideEffect="fade"
+                style="max-height:90vh;">
+
+                <h:panelGroup id="detalleFacturaPanel">
+                    <div id="facturaPrintArea" class="factura-print-area" style="padding:0.5rem;">
+
+                        <div style="text-align:center;margin-bottom:1rem;">
+                            <h4 style="margin:0;">Factura de Venta</h4>
+                            <div style="font-size:0.9rem;color:var(--si-text-secondary);">N°
+                                #{ventaBean.facturaSeleccionada.invoiceNumber}</div>
+                        </div>
+
+                        <div style="display:flex;justify-content:space-between;margin-bottom:1rem;font-size:0.9rem;">
+                            <div>
+                                <strong>Cliente:</strong> #{ventaBean.clienteFacturaSeleccionada}<br />
+                                <strong>Método de pago:</strong> #{ventaBean.facturaSeleccionada.paymentMethod}
+                            </div>
+                            <div style="text-align:right;">
+                                <strong>Fecha:</strong>
+                                <h:outputText value="#{ventaBean.facturaSeleccionada.invoiceDate}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                                </h:outputText>
+                            </div>
+                        </div>
+
+                        <p:dataTable value="#{ventaBean.detalleFacturaSeleccionada}" var="detalle" style="width:100%"
+                            size="small">
+                            <p:column headerText="Producto">
+                                <h:outputText value="#{detalle.product.name}" />
+                            </p:column>
+                            <p:column headerText="Cant." style="text-align:center;">
+                                <h:outputText value="#{detalle.quantity}" />
+                            </p:column>
+                            <p:column headerText="P. Unitario">
+                                <h:outputText value="#{detalle.unitPrice}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Subtotal">
+                                <h:outputText value="#{detalle.subtotal}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div style="margin-top:1rem;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
+                                <span>Subtotal:</span>
+                                <h:outputText value="#{ventaBean.subtotalFacturaSeleccionada}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
+                                <span>IVA:</span>
+                                <h:outputText value="#{ventaBean.ivaFacturaSeleccionada}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
+                                <span>Descuento:</span>
+                                <h:outputText value="#{ventaBean.descuentoFacturaSeleccionada}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;padding-top:0.5rem;border-top:1px solid var(--si-border);">
+                                <span>Total:</span>
+                                <h:outputText value="#{ventaBean.totalFacturaSeleccionada}">
+                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                </h:outputText>
+                            </div>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <div style="margin-top:1.5rem;text-align:right;">
+                    <p:commandButton value="Cerrar" icon="pi pi-times" onclick="PF('dialogFactura').hide()"
+                        type="button" styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
+                    <p:commandButton value="Imprimir" icon="pi pi-print" onclick="window.print(); return false;"
+                        type="button" />
+                </div>
+            </p:dialog>
+
         </h:form>
 
         <!-- RemoteCommand para restaurar carrito desde localStorage -->
-        <p:remoteCommand name="restaurarCarrito" action="#{ventaBean.restaurarCarritoDesdeJson(param.carritoData)}" 
-                         update="ventaForm:carritoTable ventaForm:resumenPanel" />
+        <p:remoteCommand name="restaurarCarrito" action="#{ventaBean.restaurarCarritoDesdeJson(param.carritoData)}"
+            update="ventaForm:carritoTable ventaForm:resumenPanel" />
+
+        <style type="text/css">
+            @media print {
+                body * {
+                    visibility: hidden;
+                    height: 0 !important;
+                    overflow: hidden !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+
+                /* Anula el positioning fijo que PrimeFaces agrega al dialogo */
+                .ui-dialog {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                    height: auto !important;
+                    max-height: none !important;
+                    max-width: none !important;
+                    overflow: visible !important;
+                    box-shadow: none !important;
+                    transform: none !important;
+                    margin: 0 !important;
+                }
+
+                .ui-dialog-titlebar,
+                .ui-widget-overlay,
+                .ui-dialog .p-button,
+                .ui-dialog-footer {
+                    display: none !important;
+                }
+
+                .ui-dialog-content {
+                    overflow: visible !important;
+                    max-height: none !important;
+                    height: auto !important;
+                    padding: 0 !important;
+                }
+
+                /* Restaurar SOLO el área de la factura */
+                .factura-print-area,
+                .factura-print-area * {
+                    visibility: visible !important;
+                    height: auto !important;
+                    overflow: visible !important;
+                    margin: revert !important;
+                    padding: revert !important;
+                }
+
+                .factura-print-area {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                }
+
+                html,
+                body {
+                    height: auto !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+
+                @page {
+                    margin: 1.5cm;
+                    size: auto;
+                }
+            }
+        </style>
 
         <script type="text/javascript">
-        //<![CDATA[
+            //<![CDATA[
             // Guardar carrito en localStorage antes de navegar
-            window.addEventListener('beforeunload', function(e) {
+            window.addEventListener('beforeunload', function (e) {
                 try {
                     const carritoData = {
                         items: [],
                         descuento: 0
                     };
-                    
+
                     // Extraer items del dataTable
                     const rows = document.querySelectorAll('#ventaForm\\:carritoTable tbody tr');
                     rows.forEach(row => {
@@ -213,13 +371,13 @@
                             });
                         }
                     });
-                    
+
                     // Extraer descuento
                     const descuentoInput = document.querySelector('[id$="descuento"] input');
                     if (descuentoInput) {
                         carritoData.descuento = parseFloat(descuentoInput.value) || 0;
                     }
-                    
+
                     localStorage.setItem('carritoVenta', JSON.stringify(carritoData));
                 } catch (error) {
                     console.log('Error guardando carrito:', error);
@@ -227,7 +385,7 @@
             });
 
             // Recuperar carrito al cargar la página
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 try {
                     const carritoGuardado = localStorage.getItem('carritoVenta');
                     if (carritoGuardado) {
@@ -235,16 +393,17 @@
                         console.log('Carrito recuperado:', carritoData);
                         // Enviar datos al servidor para restaurar el carrito
                         if (carritoData.items && carritoData.items.length > 0) {
-                            restaurarCarrito([{name: 'carritoData', value: JSON.stringify(carritoData)}]);
+                            restaurarCarrito([{ name: 'carritoData', value: JSON.stringify(carritoData) }]);
                         }
                     }
                 } catch (error) {
                     console.log('Error recuperando carrito:', error);
                 }
             });
-        //]]>
+            //]]>
         </script>
 
     </ui:define>
 </ui:composition>
+
 </html>

@@ -23,6 +23,7 @@ public class ClienteBean implements Serializable {
     private Customer selectedCustomer;
     private List<Customer> filteredCustomers;
     private String searchTerm;
+    private boolean initialized = false;
 
     public ClienteBean() {
         this.selectedCustomer = new Customer();
@@ -107,6 +108,7 @@ public class ClienteBean implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito",
                             selectedCustomer.getIdCustomer() == 0 ? "Cliente creado correctamente" : "Cliente actualizado correctamente"));
             prepareNewCustomer();
+            searchCustomers();
             return null;
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -124,6 +126,7 @@ public class ClienteBean implements Serializable {
             inventoryFacade.deleteCustomer(customer);
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Cliente eliminado correctamente"));
+            searchCustomers();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al eliminar cliente: " + e.getMessage()));
@@ -141,6 +144,7 @@ public class ClienteBean implements Serializable {
                         c.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
                         c.getEmail().toLowerCase().contains(searchTerm.toLowerCase()))
                 .toList();
+        initialized = true;
     }
 
     public void search() {
@@ -150,6 +154,7 @@ public class ClienteBean implements Serializable {
     public void clearSearch() {
         searchTerm = "";
         filteredCustomers = inventoryFacade.getAllCustomers();
+        initialized = true;
     }
 
 
@@ -279,8 +284,9 @@ public class ClienteBean implements Serializable {
     }
 
     public List<Customer> getFilteredCustomers() {
-        if (filteredCustomers.isEmpty()) {
+        if (!initialized) {
             filteredCustomers = inventoryFacade.getAllCustomers();
+            initialized = true;
         }
         return filteredCustomers;
     }

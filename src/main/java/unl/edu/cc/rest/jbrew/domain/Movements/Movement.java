@@ -51,6 +51,7 @@ public class Movement {
 
     public void addProductMovement(Product product, int quantity, double unitPrice) { // Asociación con Product
         ProductMovement productMovement = new ProductMovement(productMovementList.size() + 1, product, quantity, unitPrice); // Composición con ProductMovement
+        productMovement.setMovement(this);
         productMovementList.add(productMovement);
     }
 

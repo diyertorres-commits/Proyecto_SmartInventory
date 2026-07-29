@@ -31,17 +31,17 @@
             <!-- ===== Formulario de ajuste ===== -->
             <div class="si-glass-card" style="margin-bottom:1.5rem;">
                 <h5 style="margin-top:0;color:var(--si-text-primary);">Registrar Ajuste de Inventario</h5>
-                
+
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;">
                     <div class="p-field">
                         <label for="producto">Producto:</label>
                         <p:selectOneMenu id="producto" value="#{ajusteBean.productoId}" style="width:100%" filter="true" filterMatchMode="contains">
                             <f:selectItem itemLabel="Selecciona un producto" itemValue="#{null}" noSelectionOption="true" />
-                            <f:selectItems value="#{inventarioBean.productos}" var="p"
+                            <f:selectItems value="#{ajusteBean.productos}" var="p"
                                            itemLabel="#{p.name} (stock actual: #{p.stock})" itemValue="#{p.idProduct}" />
                         </p:selectOneMenu>
                     </div>
-                    
+
                     <div class="p-field">
                         <label for="tipoAjuste">Tipo de Ajuste:</label>
                         <p:selectOneMenu id="tipoAjuste" value="#{ajusteBean.tipoAjuste}" style="width:100%">
@@ -54,34 +54,35 @@
                             <f:selectItem itemLabel="Ajuste Manual" itemValue="manual" />
                         </p:selectOneMenu>
                     </div>
-                    
+
                     <div class="p-field">
                         <label for="cantidad">Cantidad a Ajustar:</label>
-                        <p:spinner id="cantidad" value="#{ajusteBean.cantidad}" min="1" max="1000" style="width:100%" />
+                        <p:inputNumber id="cantidad" value="#{ajusteBean.cantidadAjuste}"
+                                       decimalPlaces="0" minValue="1" maxValue="1000" style="width:100%" />
                     </div>
-                    
+
                     <div class="p-field">
                         <label for="operacion">Operación:</label>
-                        <p:selectOneRadio id="operacion" value="#{ajusteBean.operacion}" layout="responsive" columns="2">
+                        <p:selectOneRadio id="operacion" value="#{ajusteBean.tipoOperacion}" layout="responsive" columns="2">
                             <f:selectItem itemLabel="Restar (-)" itemValue="restar" />
                             <f:selectItem itemLabel="Sumar (+)" itemValue="sumar" />
                         </p:selectOneRadio>
                     </div>
-                    
+
                     <div class="p-field">
                         <label for="motivo">Motivo/Observación:</label>
-                        <p:inputText id="motivo" value="#{ajusteBean.motivo}" placeholder="Descripción del ajuste" style="width:100%" />
+                        <p:inputText id="motivo" value="#{ajusteBean.observacion}" placeholder="Descripción del ajuste" style="width:100%" />
                     </div>
-                    
+
                     <div class="p-field">
                         <label for="responsable">Responsable:</label>
                         <p:inputText id="responsable" value="#{ajusteBean.responsable}" placeholder="Persona autorizada" style="width:100%" />
                     </div>
                 </div>
-                
+
                 <div style="margin-top:1rem;">
                     <p:commandButton value="Registrar Ajuste" icon="pi pi-check" action="#{ajusteBean.registrarAjuste()}"
-                                    update="msgAjustes tablaAjustes dlgStockBajo" styleClass="p-button-rounded p-button-warning" />
+                                    update="msgAjustes tablaAjustes dlgStockBajo @form" styleClass="p-button-rounded p-button-warning" />
                 </div>
             </div>
 
@@ -96,43 +97,43 @@
                              emptyMessage="No hay ajustes registrados."
                              rows="10" paginator="true" paginatorPosition="bottom"
                              style="width:100%">
-                    
+
                     <p:column headerText="Fecha">
                         <h:outputText value="#{ajuste.fechaTexto}" />
                     </p:column>
-                    
+
                     <p:column headerText="Producto">
                         <h:outputText value="#{ajuste.productoNombre}" />
                     </p:column>
-                    
+
                     <p:column headerText="Tipo">
                         <span class="product-badge #{ajuste.tipoCss}">#{ajuste.tipoAjuste}</span>
                     </p:column>
-                    
+
                     <p:column headerText="Operación">
                         <h:outputText value="#{ajuste.operacion}" styleClass="#{ajuste.operacion eq 'restar' ? 'text-danger' : 'text-success'}" />
                     </p:column>
-                    
+
                     <p:column headerText="Cantidad">
                         <h:outputText value="#{ajuste.cantidad}" />
                     </p:column>
-                    
+
                     <p:column headerText="Stock Anterior">
                         <h:outputText value="#{ajuste.stockAnterior}" />
                     </p:column>
-                    
+
                     <p:column headerText="Stock Nuevo">
                         <h:outputText value="#{ajuste.stockNuevo}" style="font-weight:600;" />
                     </p:column>
-                    
+
                     <p:column headerText="Motivo">
                         <h:outputText value="#{ajuste.motivo}" style="font-size:0.85rem;" />
                     </p:column>
-                    
+
                     <p:column headerText="Responsable">
                         <h:outputText value="#{ajuste.responsable}" />
                     </p:column>
-                    
+
                     <p:column headerText="Acciones" style="width:80px;">
                         <p:commandButton icon="pi pi-undo" title="Revertir" styleClass="rounded-button ui-button-secondary"
                                         action="#{ajusteBean.revertir(ajuste)}" update="msgAjustes tablaAjustes" />

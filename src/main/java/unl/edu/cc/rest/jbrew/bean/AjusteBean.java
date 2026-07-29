@@ -24,69 +24,73 @@ public class AjusteBean implements Serializable {
     @Inject
     private AjusteService ajusteService;
 
-    private Product selectedProduct;
+    // Id del producto elegido en el combo. Integer (no int) para poder
+    // representar "sin selección" como null.
+    private Integer productoId;
+
     private String tipoAjuste;
-    private int cantidad;
-    private String operacion;
-    private String motivo;
+    private int cantidadAjuste;
+    private String tipoOperacion; // "restar" o "sumar"
+    private String observacion;
     private String responsable;
 
     private String mensajeStockBajo;
 
-    public AjusteBean() {
-        this.selectedProduct = new Product();
-    }
-
     public String registrarAjuste() {
-        if (selectedProduct == null || tipoAjuste == null || cantidad <= 0 || operacion == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", "Por favor complete todos los campos requeridos"));
+        FacesContext ctx = FacesContext.getCurrentInstance();
+
+        if (productoId == null || tipoAjuste == null || tipoOperacion == null || cantidadAjuste <= 0) {
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN,
+                    "Advertencia", "Por favor complete todos los campos requeridos"));
             return null;
         }
 
-        int stockAnterior = selectedProduct.getStock();
-        int stockNuevo = stockAnterior;
-
-        if ("restar".equals(operacion)) {
-            if (stockAnterior < cantidad) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Stock insuficiente para restar"));
-                return null;
-            }
-            stockNuevo = stockAnterior - cantidad;
-        } else {
-            stockNuevo = stockAnterior + cantidad;
+        Product producto = inventoryService.findProductById(productoId).orElse(null);
+        if (producto == null) {
+            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Error", "El producto seleccionado ya no existe"));
+            return null;
         }
 
-        selectedProduct.setStock(stockNuevo);
-        inventoryService.saveProduct(selectedProduct);
+        int stockAnterior = producto.getStock();
+        int stockNuevo;
+
+        if ("restar".equals(tipoOperacion)) {
+            if (stockAnterior < cantidadAjuste) {
+                ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                        "Error", "Stock insuficiente para restar"));
+                return null;
+            }
+            stockNuevo = stockAnterior - cantidadAjuste;
+        } else {
+            stockNuevo = stockAnterior + cantidadAjuste;
+        }
+
+        producto.setStock(stockNuevo);
+        inventoryService.saveProduct(producto);
 
         ajusteService.registrarAjuste(
-            selectedProduct.getName(),
-            tipoAjuste,
-            operacion,
-            cantidad,
-            stockAnterior,
-            stockNuevo,
-            motivo != null ? motivo : "",
-            responsable != null ? responsable : "No especificado"
+                producto.getName(),
+                tipoAjuste,
+                tipoOperacion,
+                cantidadAjuste,
+                stockAnterior,
+                stockNuevo,
+                observacion != null ? observacion : "",
+                responsable != null ? responsable : "No especificado"
         );
 
-        FacesContext.getCurrentInstance().addMessage(null,
-            new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste registrado correctamente"));
+        ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+                "Éxito", "Ajuste registrado correctamente"));
 
-        if (selectedProduct.verifyStockMinimo()) {
-            mensajeStockBajo = "Advertencia: poco stock del producto \"" + selectedProduct.getName()
-                + "\" (quedan " + stockNuevo + " unidades, mínimo recomendado: " + selectedProduct.getMinStock() + ")";
+        if (producto.verifyStockMinimo()) {
+            mensajeStockBajo = "Advertencia: poco stock del producto \"" + producto.getName()
+                    + "\" (quedan " + stockNuevo + " unidades, mínimo recomendado: " + producto.getMinStock() + ")";
             PrimeFaces.current().executeScript("PF('dlgStockBajo').show()");
         }
 
         limpiarCampos();
         return null;
-    }
-
-    public String getMensajeStockBajo() {
-        return mensajeStockBajo;
     }
 
     public void revertir(Ajuste ajuste) {
@@ -96,72 +100,54 @@ public class AjusteBean implements Serializable {
             inventoryService.saveProduct(producto);
             ajusteService.eliminarAjuste(ajuste);
             FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Ajuste revertido correctamente"));
         } else {
             FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo revertir el ajuste"));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo revertir el ajuste"));
         }
     }
 
     private void limpiarCampos() {
-        selectedProduct = null;
+        productoId = null;
         tipoAjuste = null;
-        cantidad = 0;
-        operacion = null;
-        motivo = null;
+        cantidadAjuste = 0;
+        tipoOperacion = null;
+        observacion = null;
         responsable = null;
     }
 
+    // ---------- Estadísticas ----------
+
     public int getTotalRestado() {
         return ajusteService.obtenerAjustes().stream()
-            .filter(a -> "restar".equals(a.getOperacion()))
-            .mapToInt(Ajuste::getCantidad)
-            .sum();
+                .filter(a -> "restar".equals(a.getOperacion()))
+                .mapToInt(Ajuste::getCantidad)
+                .sum();
     }
 
     public int getTotalSumado() {
         return ajusteService.obtenerAjustes().stream()
-            .filter(a -> "sumar".equals(a.getOperacion()))
-            .mapToInt(Ajuste::getCantidad)
-            .sum();
+                .filter(a -> "sumar".equals(a.getOperacion()))
+                .mapToInt(Ajuste::getCantidad)
+                .sum();
     }
 
     public int getTotalAjustes() {
         return ajusteService.obtenerAjustes().size();
     }
 
-    // Getters and Setters
-    public Product getSelectedProduct() {
-        return selectedProduct;
-    }
-    
-    public Product getProducto() {
-        return getSelectedProduct();
-    }
-    
-    public int getProductoId() {
-        return selectedProduct != null ? selectedProduct.getIdProduct() : 0;
+    // ---------- Getters y Setters ----------
+
+    public Integer getProductoId() {
+        return productoId;
     }
 
-    public void setSelectedProduct(Product selectedProduct) {
-        this.selectedProduct = selectedProduct;
-    }
-    
-    public void setProducto(Product selectedProduct) {
-        setSelectedProduct(selectedProduct);
-    }
-    
-    public void setProductoId(int productId) {
-        Product product = inventoryService.findProductById(productId).orElse(null);
-        setSelectedProduct(product);
+    public void setProductoId(Integer productoId) {
+        this.productoId = productoId;
     }
 
-    public List<Product> getAvailableProducts() {
-        return inventoryService.getAllProducts();
-    }
-    
     public List<Product> getProductos() {
-        return getAvailableProducts();
+        return inventoryService.getAllProducts();
     }
 
     public String getTipoAjuste() {
@@ -172,28 +158,28 @@ public class AjusteBean implements Serializable {
         this.tipoAjuste = tipoAjuste;
     }
 
-    public int getCantidad() {
-        return cantidad;
+    public int getCantidadAjuste() {
+        return cantidadAjuste;
     }
 
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+    public void setCantidadAjuste(int cantidadAjuste) {
+        this.cantidadAjuste = cantidadAjuste;
     }
 
-    public String getOperacion() {
-        return operacion;
+    public String getTipoOperacion() {
+        return tipoOperacion;
     }
 
-    public void setOperacion(String operacion) {
-        this.operacion = operacion;
+    public void setTipoOperacion(String tipoOperacion) {
+        this.tipoOperacion = tipoOperacion;
     }
 
-    public String getMotivo() {
-        return motivo;
+    public String getObservacion() {
+        return observacion;
     }
 
-    public void setMotivo(String motivo) {
-        this.motivo = motivo;
+    public void setObservacion(String observacion) {
+        this.observacion = observacion;
     }
 
     public String getResponsable() {
@@ -202,6 +188,10 @@ public class AjusteBean implements Serializable {
 
     public void setResponsable(String responsable) {
         this.responsable = responsable;
+    }
+
+    public String getMensajeStockBajo() {
+        return mensajeStockBajo;
     }
 
     public List<Ajuste> getAjustes() {

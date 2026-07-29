@@ -9,39 +9,154 @@
 <ui:composition template="WEB-INF/templates/base.xhtml">
     <ui:define name="content">
 
-        <div class="si-section-title">
-            <i class="pi pi-th-large" />
-            <span>Categorías y productos</span>
+        <div class="si-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:.5rem;">
+                <i class="pi pi-th-large" />
+                <span>Categorías y productos</span>
+            </span>
         </div>
 
         <h:form id="catForm">
+            <p:growl id="msgs" showDetail="true" />
+
             <div class="si-glass-card">
+                <div style="display:flex;justify-content:flex-end;gap:.5rem;padding-bottom:.75rem;">
+                    <p:commandButton value="Gestionar categorías"
+                                      icon="pi pi-cog"
+                                      styleClass="ui-button-secondary"
+                                      process="@this"
+                                      update="@form"
+                                      oncomplete="PF('dlgGestion').show()" />
+                    <p:commandButton value="Nueva categoría"
+                                      icon="pi pi-plus"
+                                      actionListener="#{inventarioBean.prepararNuevaCategoria}"
+                                      process="@this"
+                                      update="@form"
+                                      oncomplete="PF('dlgCategoria').show()" />
+                </div>
+
                 <p:tabView>
                     <c:forEach items="#{inventarioBean.categorias}" var="cat">
                         <p:tab title="#{cat.name}">
                             <div class="si-category-grid">
-                                <ui:repeat value="#{inventarioBean.productos}" var="p">
-                                    <h:panelGroup rendered="#{p.category != null and p.category.name eq cat.name}">
-                                        <div class="product-item">
-                                            <div class="product-item-content">
-                                                <p:graphicImage library="images" name="products/#{p.imagen}" styleClass="product-image" />
-                                                <h4>#{p.name}</h4>
-                                                <p style="color:#6b7280;font-size:.8rem;min-height:2.4em;">#{p.description}</p>
-                                                <h6>
-                                                    <h:outputText value="#{p.salePrice}">
-                                                        <f:convertNumber type="currency" currencySymbol="$" />
-                                                    </h:outputText>
-                                                </h6>
-                                                <span class="product-badge #{p.estado.cssClass}">#{p.estado.texto} · #{p.stock} u.</span>
+                                <ui:repeat value="#{inventarioBean.getProductosPorCategoria(cat)}" var="p">
+                                    <div class="product-item">
+                                        <div class="product-item-content">
+                                            <div class="product-icon-placeholder">
+                                                <i class="pi pi-box" />
                                             </div>
+                                            <h4>#{p.name}</h4>
+                                            <p style="color:#6b7280;font-size:.8rem;min-height:2.4em;">#{p.description}</p>
+                                            <h6>
+                                                <h:outputText value="#{p.salePrice}">
+                                                    <f:convertNumber type="currency" currencySymbol="$" />
+                                                </h:outputText>
+                                            </h6>
+                                            <span class="product-badge #{p.estado.cssClass}">#{p.estado.texto} · #{p.stock} u.</span>
                                         </div>
-                                    </h:panelGroup>
+                                    </div>
                                 </ui:repeat>
+
+                                <p:outputPanel rendered="#{empty inventarioBean.getProductosPorCategoria(cat)}">
+                                    <p style="color:#9ca3af;">No hay productos registrados en esta categoría.</p>
+                                </p:outputPanel>
                             </div>
                         </p:tab>
                     </c:forEach>
                 </p:tabView>
             </div>
+
+            <!-- Diálogo: crear categoría -->
+            <p:dialog id="dlgCategoria" widgetVar="dlgCategoria" header="Nueva categoría"
+                      modal="true" width="360" resizable="false">
+                <h:panelGroup id="dlgCategoriaContent" layout="block">
+                    <p:outputLabel for="catNombre" value="Nombre" />
+                    <p:inputText id="catNombre" value="#{inventarioBean.nuevaCategoria.name}"
+                                 required="true" requiredMessage="El nombre de la categoría es obligatorio"
+                                 style="width:100%;margin-top:.25rem;" />
+                    <p:message for="catNombre" />
+
+                    <div style="text-align:right;margin-top:1rem;">
+                        <p:commandButton value="Cancelar" type="button"
+                                          onclick="PF('dlgCategoria').hide()"
+                                          styleClass="ui-button-secondary" />
+                        <p:commandButton value="Guardar" icon="pi pi-check"
+                                          action="#{inventarioBean.guardarCategoria}"
+                                          process="@this dlgCategoriaContent"
+                                          update="@form"
+                                          oncomplete="if (!args.validationFailed) PF('dlgCategoria').hide()" />
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+            <!-- Diálogo: gestionar (listar / editar / eliminar) categorías -->
+            <p:dialog id="dlgGestion" widgetVar="dlgGestion" header="Gestionar categorías"
+                      modal="true" width="520" resizable="false">
+                <h:panelGroup id="dlgGestionContent" layout="block">
+
+                    <p:dataTable id="tablaCategorias" widgetVar="tablaCategorias"
+                                 value="#{inventarioBean.categorias}" var="cat"
+                                 scrollable="true" scrollHeight="320"
+                                 emptyMessage="No se encontraron categorías.">
+
+                        <f:facet name="header">
+                            <p:inputText id="globalFilter" onkeyup="PF('tablaCategorias').filter()"
+                                         placeholder="Buscar categoría..." style="width:100%;" />
+                        </f:facet>
+
+                        <p:column headerText="Nombre" filterBy="#{cat.name}"
+                                  filterMatchMode="contains" globalFilterOnly="true">
+                            <h:outputText value="#{cat.name}" />
+                        </p:column>
+                        <p:column headerText="Productos" style="width:100px;text-align:center;">
+                            <h:outputText value="#{inventarioBean.getProductosPorCategoria(cat).size()}" />
+                        </p:column>
+                        <p:column style="width:90px;text-align:center;">
+                            <p:commandButton icon="pi pi-pencil"
+                                              styleClass="ui-button-secondary rounded-button"
+                                              actionListener="#{inventarioBean.prepararEdicionCategoria(cat)}"
+                                              process="@this"
+                                              update="@form"
+                                              oncomplete="PF('dlgEditar').show()" />
+                        </p:column>
+                    </p:dataTable>
+
+                    <div style="text-align:right;margin-top:1rem;">
+                        <p:commandButton value="Cerrar" type="button"
+                                          onclick="PF('dlgGestion').hide()"
+                                          styleClass="ui-button-secondary" />
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+
+            <!-- Diálogo: editar categoría -->
+            <p:dialog id="dlgEditar" widgetVar="dlgEditar" header="Editar categoría"
+                      modal="true" width="360" resizable="false">
+                <h:panelGroup id="dlgEditarContent" layout="block">
+                    <p:outputLabel for="catNombreEdit" value="Nombre" />
+                    <p:inputText id="catNombreEdit" value="#{inventarioBean.categoriaEnEdicion.name}"
+                                 required="true" requiredMessage="El nombre de la categoría es obligatorio"
+                                 style="width:100%;margin-top:.25rem;" />
+                    <p:message for="catNombreEdit" />
+
+                    <p style="color:#6b7280;font-size:.8rem;margin-top:.5rem;">
+                        Esta categoría tiene
+                        <h:outputText value="#{inventarioBean.getProductosPorCategoria(inventarioBean.categoriaEnEdicion).size()}" />
+                        producto(s) asociado(s). Al renombrarla, esos productos se actualizan automáticamente.
+                    </p>
+
+                    <div style="text-align:right;margin-top:1rem;">
+                        <p:commandButton value="Cancelar" type="button"
+                                          onclick="PF('dlgEditar').hide()"
+                                          styleClass="ui-button-secondary" />
+                        <p:commandButton value="Guardar cambios" icon="pi pi-check"
+                                          action="#{inventarioBean.actualizarCategoria}"
+                                          process="@this dlgEditarContent"
+                                          update="@form"
+                                          oncomplete="if (!args.validationFailed) PF('dlgEditar').hide()" />
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
         </h:form>
 
     </ui:define>

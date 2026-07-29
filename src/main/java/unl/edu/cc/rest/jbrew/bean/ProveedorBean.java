@@ -20,6 +20,7 @@ public class ProveedorBean implements Serializable {
     private Supplier selectedSupplier;
     private List<Supplier> filteredSuppliers;
     private String searchTerm;
+    private boolean initialized = false;
 
     public ProveedorBean() {
         this.selectedSupplier = new Supplier();
@@ -120,6 +121,7 @@ public class ProveedorBean implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito",
                             selectedSupplier.getIdSupplier() == 0 ? "Proveedor creado correctamente" : "Proveedor actualizado correctamente"));
             prepareNewSupplier();
+            searchSuppliers();
             return null;
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
@@ -273,6 +275,7 @@ public class ProveedorBean implements Serializable {
             inventoryFacade.deleteSupplier(supplier);
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Proveedor eliminado correctamente"));
+            searchSuppliers();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al eliminar proveedor: " + e.getMessage()));
@@ -290,6 +293,7 @@ public class ProveedorBean implements Serializable {
                         s.getIdentificationNumber().toLowerCase().contains(searchTerm.toLowerCase()) ||
                         s.getContacto().toLowerCase().contains(searchTerm.toLowerCase()))
                 .toList();
+        initialized = true;
     }
 
     public void search() {
@@ -299,6 +303,7 @@ public class ProveedorBean implements Serializable {
     public void clearSearch() {
         searchTerm = "";
         filteredSuppliers = inventoryFacade.getAllSuppliers();
+        initialized = true;
     }
 
     // Getters and Setters
@@ -319,8 +324,9 @@ public class ProveedorBean implements Serializable {
     }
 
     public List<Supplier> getFilteredSuppliers() {
-        if (filteredSuppliers.isEmpty()) {
+        if (!initialized) {
             filteredSuppliers = inventoryFacade.getAllSuppliers();
+            initialized = true;
         }
         return filteredSuppliers;
     }

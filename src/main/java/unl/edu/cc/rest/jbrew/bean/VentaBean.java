@@ -13,6 +13,7 @@ import unl.edu.cc.rest.jbrew.business.ResultadoVenta;
 import unl.edu.cc.rest.jbrew.business.VentaService;
 import unl.edu.cc.rest.jbrew.domain.Inventory.Product;
 import unl.edu.cc.rest.jbrew.domain.Invoice.SaleInvoice;
+import unl.edu.cc.rest.jbrew.domain.Movements.ProductMovement;
 import unl.edu.cc.rest.jbrew.domain.People.Customer;
 import unl.edu.cc.rest.jbrew.domain.Sales.Carrito;
 import unl.edu.cc.rest.jbrew.domain.Sales.ItemCarrito;
@@ -38,6 +39,9 @@ public class VentaBean implements Serializable {
     private VentaDTO ventaDTO;
     private List<SaleInvoice> facturas;
     private String ordenFacturas = "recientes";
+
+    // Factura seleccionada actualmente para ver/imprimir el detalle
+    private SaleInvoice facturaSeleccionada;
 
     @PostConstruct
     public void inicializar() {
@@ -96,6 +100,46 @@ public class VentaBean implements Serializable {
 
     public void recalcularTotal() {
         // Disparado por AJAX; el total se recalcula dinámicamente en getTotal()
+    }
+
+    // ===== Impresión de factura =====
+
+    public void prepararImpresion(SaleInvoice factura) {
+        this.facturaSeleccionada = factura;
+    }
+
+    public SaleInvoice getFacturaSeleccionada() {
+        return facturaSeleccionada;
+    }
+
+    public List<ProductMovement> getDetalleFacturaSeleccionada() {
+        if (facturaSeleccionada == null || facturaSeleccionada.getMovement() == null) {
+            return List.of();
+        }
+        return facturaSeleccionada.getMovement().getProductMovementList();
+    }
+
+    public double getSubtotalFacturaSeleccionada() {
+        return facturaSeleccionada != null ? facturaSeleccionada.getSubtotal() : 0;
+    }
+
+    public double getIvaFacturaSeleccionada() {
+        return facturaSeleccionada != null ? facturaSeleccionada.getTax() : 0;
+    }
+
+    public double getDescuentoFacturaSeleccionada() {
+        return facturaSeleccionada != null ? facturaSeleccionada.getDiscount() : 0;
+    }
+
+    public double getTotalFacturaSeleccionada() {
+        return facturaSeleccionada != null ? facturaSeleccionada.getTotal() : 0;
+    }
+
+    public String getClienteFacturaSeleccionada() {
+        if (facturaSeleccionada == null || facturaSeleccionada.getCustomer() == null) {
+            return "Cliente Mostrador";
+        }
+        return facturaSeleccionada.getCustomer().getName();
     }
 
     public void restaurarCarritoDesdeJson(String carritoJson) {

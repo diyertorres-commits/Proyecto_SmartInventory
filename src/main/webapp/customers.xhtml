@@ -26,7 +26,12 @@
 
                     <p:commandButton icon="pi pi-search" title="Buscar" action="#{clienteBean.search()}" update="tablaClientes" />
                     <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda" action="#{clienteBean.clearSearch()}" update="customersForm" />
-                    <p:commandButton value="Nuevo Cliente" icon="pi pi-plus" onclick="PF('dialogCliente').show()" styleClass="p-button-rounded" />
+                    <p:commandButton value="Nuevo Cliente" icon="pi pi-plus"
+                                     action="#{clienteBean.prepareNewCustomer()}"
+                                     process="@this"
+                                     update="dialogCliente"
+                                     oncomplete="PF('dialogCliente').show()"
+                                     styleClass="p-button-rounded" />
                 </div>
             </div>
 
@@ -66,16 +71,31 @@
 
                     <p:column headerText="Acciones" width="10%">
                         <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button mr-2"
-                                         action="#{clienteBean.editar(cli)}" update="dialogCliente" oncomplete="PF('dialogCliente').show()" />
+                                         action="#{clienteBean.editar(cli)}" 
+                                         process="@this"
+                                         update="dialogCliente" oncomplete="PF('dialogCliente').show()" />
                         <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="rounded-button ui-button-danger"
-                                         action="#{clienteBean.eliminar(cli)}" update="msgClientes tablaClientes" />
+                                         action="#{clienteBean.eliminar(cli)}" 
+                                         process="@this"
+                                         update="msgClientes tablaClientes">
+                            <p:confirm header="Confirmar eliminación"
+                                       message="¿Está seguro de que desea eliminar al cliente &quot;#{cli.name} #{cli.apellido}&quot;?"
+                                       icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
                     </p:column>
                 </p:dataTable>
             </div>
 
+            <!-- ===== Diálogo de confirmación global (eliminar) ===== -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+                <p:commandButton value="Sí, eliminar" type="button" styleClass="ui-confirmdialog-yes p-button-danger" icon="pi pi-check" />
+                <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no p-button-outlined p-button-secondary" icon="pi pi-times" />
+            </p:confirmDialog>
+
             <!-- ===== Diálogo para crear/editar cliente ===== -->
             <p:dialog id="dialogCliente" widgetVar="dialogCliente" header="#{clienteBean.cliente.idCustomer == null ? 'Nuevo Cliente' : 'Editar Cliente'}"
-                      modal="true" closable="true" resizable="false" width="650" showEffect="fade" hideEffect="fade">
+                      modal="true" closable="true" resizable="false" width="650" showEffect="fade" hideEffect="fade"
+                      style="max-height:90vh;">
 
                 <style>
                     #dialogCliente .ui-dialog-titlebar {
@@ -91,7 +111,7 @@
 
                 <p:growl id="msgClienteForm" showDetail="true" life="4000" />
 
-                <div class="si-form-card">
+                <div class="si-form-card" style="max-height:65vh;overflow-y:auto;padding-right:0.5rem;">
                     <p:panelGrid columns="2" layout="grid" styleClass="ui-noborder" columnClasses="label-column,input-column">
 
                         <p:outputLabel for="cedula" value="DNI/CI:" />
@@ -99,12 +119,12 @@
                                      value="#{clienteBean.selectedCustomer.identificationNumber}"
                                      placeholder="Ingrese cédula (10 dígitos)"
                                      maxlength="10"
-                                     required="true"
                                      style="width:100%">
                             <p:keyFilter regEx="/[0-9]/" />
                             <p:ajax event="blur"
                                     listener="#{clienteBean.validatorCedula}"
-                                    update="msgClienteForm"/>
+                                    update="msgClienteForm"
+                                    process="@this"/>
                         </p:inputText>
 
                         <p:outputLabel for="nombre" value="Nombre:" />
@@ -126,7 +146,8 @@
                                      style="width:100%">
                             <p:ajax event="blur"
                                     listener="#{clienteBean.validatorEmail}"
-                                    update="msgEmail msgClienteForm"/>
+                                    update="msgEmail msgClienteForm"
+                                    process="@this"/>
                         </p:inputText>
 
                         <p:message id="msgEmail" for="email"/>
@@ -142,13 +163,13 @@
 
 
                     </p:panelGrid>
+                </div>
 
-                    <div style="margin-top:1.5rem;text-align:right;">
-                        <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogCliente').hide()"
-                                         styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
-                        <p:commandButton value="Guardar" icon="pi pi-check" action="#{clienteBean.guardar()}"
-                                         update="msgClienteForm customersForm:tablaClientes" oncomplete="if(!args.validationFailed) PF('dialogCliente').hide()" />
-                    </div>
+                <div style="margin-top:1.5rem;text-align:right;">
+                    <p:commandButton value="Cancelar" icon="pi pi-times" onclick="PF('dialogCliente').hide()"
+                                     styleClass="p-button-outlined p-button-secondary" style="margin-right:0.5rem;" />
+                    <p:commandButton value="Guardar" icon="pi pi-check" action="#{clienteBean.guardar()}"
+                                     update="msgClienteForm customersForm:tablaClientes" oncomplete="if(!args.validationFailed) PF('dialogCliente').hide()" />
                 </div>
             </p:dialog>
 

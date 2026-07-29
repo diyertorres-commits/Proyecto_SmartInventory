@@ -31,7 +31,6 @@ public class CompraBean implements Serializable {
 
     private int indicePestanaActiva = PESTANA_REABASTECER;
 
-    // Pestaña "Reabastecer producto existente"
     private Product productoAReabastecer;
     private int cantidad = 1;
 
@@ -42,6 +41,8 @@ public class CompraBean implements Serializable {
     private Supplier proveedorSeleccionado;
 
     private List<PurchaseService.PurchaseRecord> historialCompras = List.of();
+
+    private PurchaseService.PurchaseRecord compraSeleccionada;
 
     public void registrarCompra() {
         if (proveedorSeleccionado == null) {
@@ -54,7 +55,7 @@ public class CompraBean implements Serializable {
                 : registrarReabastecimiento();
 
         if (resultado == null) {
-            return; // el guard clause correspondiente ya mostró su propio mensaje
+            return;
         }
 
         mostrarMensaje(
@@ -136,7 +137,17 @@ public class CompraBean implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severidad, resumen, detalle));
     }
 
-    // ===== Propiedades usadas por compras.xhtml =====
+    // Impresión de comprobante de compra
+
+    public void prepararImpresionCompra(PurchaseService.PurchaseRecord compra) {
+        this.compraSeleccionada = compra;
+    }
+
+    public PurchaseService.PurchaseRecord getCompraSeleccionada() {
+        return compraSeleccionada;
+    }
+
+    // Propiedades usadas por compras.xhtml
 
     public int getIndicePestanaActiva() {
         return indicePestanaActiva;

@@ -32,9 +32,6 @@ public class ProductoBean implements Serializable {
     private String categoryFilter;
     private String statusFilter;
     
-    private int totalStock;
-    private int lowStockCount;
-    private int availableStockCount;
     private boolean initialized = false;
     
     public ProductoBean() {
@@ -85,7 +82,6 @@ public class ProductoBean implements Serializable {
                     selectedProduct.getIdProduct() == 0 ? "Producto creado correctamente" : "Producto actualizado correctamente"));
             prepareNewProduct();
             searchProducts();
-            updateStatistics();
             return null;
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
@@ -104,7 +100,6 @@ public class ProductoBean implements Serializable {
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto eliminado correctamente"));
             searchProducts();
-            updateStatistics();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al eliminar producto: " + e.getMessage()));
@@ -157,7 +152,6 @@ public class ProductoBean implements Serializable {
         categoryFilter = null;
         statusFilter = null;
         filteredProducts = inventoryFacade.getAllProducts();
-        updateStatistics();
         initialized = true;
     }
     
@@ -182,19 +176,6 @@ public class ProductoBean implements Serializable {
         return "";
     }
     
-    private void updateStatistics() {
-        List<Product> allProducts = inventoryFacade.getAllProducts();
-        totalStock = allProducts.stream()
-                .mapToInt(Product::getStock)
-                .sum();
-        lowStockCount = (int) allProducts.stream()
-                .filter(p -> p.getStock() <= p.getMinStock())
-                .count();
-        availableStockCount = (int) allProducts.stream()
-                .filter(p -> p.getStock() > p.getMinStock())
-                .count();
-    }
-    
     public Product getSelectedProduct() {
         return selectedProduct;
     }
@@ -214,7 +195,6 @@ public class ProductoBean implements Serializable {
     public List<Product> getFilteredProducts() {
         if (!initialized) {
             filteredProducts = inventoryFacade.getAllProducts();
-            updateStatistics();
             initialized = true;
         }
         return filteredProducts;
@@ -288,36 +268,32 @@ public class ProductoBean implements Serializable {
         setStatusFilter(statusFilter);
     }
     
-    public int getTotalStock() {
-        return totalStock;
-    }
+    // ===== KPIs calculados en vivo, siempre consistentes con p.getEstado() =====
     
-    public void setTotalStock(int totalStock) {
-        this.totalStock = totalStock;
+    public int getTotalStock() {
+        return inventoryFacade.getAllProducts().stream()
+                .mapToInt(Product::getStock)
+                .sum();
     }
     
     public int getLowStockCount() {
-        return lowStockCount;
+        return (int) inventoryFacade.getAllProducts().stream()
+                .filter(p -> p.getEstado() == ProductStatus.STOCK_BAJO)
+                .count();
     }
     
     public int getStockBajo() {
         return getLowStockCount();
     }
     
-    public void setLowStockCount(int lowStockCount) {
-        this.lowStockCount = lowStockCount;
-    }
-    
     public int getAvailableStockCount() {
-        return availableStockCount;
+        return (int) inventoryFacade.getAllProducts().stream()
+                .filter(p -> p.getEstado() == ProductStatus.DISPONIBLE)
+                .count();
     }
     
     public int getStockDisponible() {
         return getAvailableStockCount();
-    }
-    
-    public void setAvailableStockCount(int availableStockCount) {
-        this.availableStockCount = availableStockCount;
     }
     
     public int getTotalProducts() {
